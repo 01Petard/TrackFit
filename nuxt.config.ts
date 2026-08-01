@@ -9,6 +9,10 @@ export default defineNuxtConfig({
       meta: [
         { name: 'description', content: '个人身体指标记录与趋势分析' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
+        { name: 'theme-color', content: '#10b981' },
+      ],
+      link: [
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
       ],
     },
   },
@@ -17,7 +21,7 @@ export default defineNuxtConfig({
     fonts: false,
   },
   runtimeConfig: {
-    databaseUrl: process.env.DATABASE_URL ?? '',
+    dataFile: process.env.TRACKFIT_DATA_FILE ?? '',
   },
   compatibilityDate: '2026-07-31',
   typescript: {

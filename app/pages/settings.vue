@@ -1,23 +1,21 @@
 <script setup lang="ts">
 import type { AppSettingsDto } from '../../shared/types/api'
+import { backupSchema } from '../../shared/schemas/trackfit'
 
-interface HealthDto { status: string, version: string, expectedVersion: string, versionMatched: boolean }
-const { data: settings, refresh } = await useFetch<AppSettingsDto>('/api/settings')
-const { data: health, refresh: refreshHealth } = await useFetch<HealthDto>('/api/health')
+const store = useTrackFitData()
+await store.ensureLoaded()
 const colorMode = useColorMode()
-const heightCm = ref<number | null>(null)
-const defaultDateRange = ref<AppSettingsDto['defaultDateRange']>('30d')
-const theme = ref<AppSettingsDto['theme']>('system')
+const heightCm = ref<number | null>(store.settings.value.heightCm)
+const defaultDateRange = ref<AppSettingsDto['defaultDateRange']>(store.settings.value.defaultDateRange)
+const theme = ref<AppSettingsDto['theme']>(store.settings.value.theme)
 const saving = ref(false)
 const message = ref('')
 const restoreInput = ref<HTMLInputElement>()
-
-watch(settings, (value) => {
-  if (!value) return
-  heightCm.value = value.heightCm
-  defaultDateRange.value = value.defaultDateRange
-  theme.value = value.theme
-}, { immediate: true })
+const counts = computed(() => ({
+  metrics: store.data.value?.metrics.length ?? 0,
+  sessions: store.data.value?.sessions.length ?? 0,
+  values: store.data.value?.values.length ?? 0,
+}))
 
 async function save() {
   if (heightCm.value == null) {
@@ -26,12 +24,11 @@ async function save() {
   }
   saving.value = true
   try {
-    await $fetch('/api/settings', { method: 'PUT', body: { heightCm: heightCm.value, defaultDateRange: defaultDateRange.value, theme: theme.value } })
+    await store.saveSettings({ heightCm: heightCm.value, defaultDateRange: defaultDateRange.value, theme: theme.value })
     colorMode.preference = theme.value
     message.value = '设置已保存'
-    await refresh()
-  } catch {
-    message.value = '保存失败'
+  } catch (error) {
+    message.value = getTrackFitErrorMessage(error)
   } finally {
     saving.value = false
   }
@@ -42,15 +39,31 @@ async function restore(event: Event) {
   if (!file) return
   if (!window.confirm('恢复备份会替换当前全部数据，确认继续？')) return
   try {
-    const backup = JSON.parse(await file.text())
-    await $fetch('/api/backup/restore', { method: 'POST', body: backup })
+    const backup = backupSchema.parse(JSON.parse(await file.text()))
+    await store.restore(backup)
     message.value = '备份恢复完成'
-    await Promise.all([refresh(), refreshHealth()])
-  } catch {
-    message.value = '备份文件无效或恢复失败，当前数据未被部分覆盖'
+  } catch (error) {
+    message.value = `恢复失败：${getTrackFitErrorMessage(error)}`
   } finally {
     if (restoreInput.value) restoreInput.value.value = ''
   }
+}
+
+function downloadJson() {
+  downloadFile(store.exportJson(), 'trackfit-backup.json', 'application/json;charset=utf-8')
+}
+
+function downloadCsv() {
+  downloadFile(store.exportCsv(), 'trackfit-measurements.csv', 'text/csv;charset=utf-8')
+}
+
+function downloadFile(content: string, filename: string, type: string) {
+  const url = URL.createObjectURL(new Blob([content], { type }))
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = filename
+  anchor.click()
+  URL.revokeObjectURL(url)
 }
 </script>
 
@@ -72,17 +85,22 @@ async function restore(event: Event) {
       <section class="app-card rounded-3xl p-5 sm:p-6">
         <h2 class="font-bold">数据备份</h2><p class="mt-1 text-xs text-muted">JSON 可完整恢复，CSV 适合在表格软件中查看</p>
         <div class="mt-6 grid gap-3">
-          <a href="/api/backup" download class="rounded-xl border border-default px-4 py-3 text-center text-sm font-medium hover:bg-elevated">下载 JSON 全量备份</a>
-          <a href="/api/export/csv" download class="rounded-xl border border-default px-4 py-3 text-center text-sm font-medium hover:bg-elevated">导出 CSV 测量明细</a>
+          <button type="button" class="rounded-xl border border-default px-4 py-3 text-center text-sm font-medium hover:bg-elevated" @click="downloadJson">下载 JSON 全量备份</button>
+          <button type="button" class="rounded-xl border border-default px-4 py-3 text-center text-sm font-medium hover:bg-elevated" @click="downloadCsv">导出 CSV 测量明细</button>
           <button type="button" class="rounded-xl border border-error/30 px-4 py-3 text-sm font-medium text-error hover:bg-error/5" @click="restoreInput?.click()">从 JSON 恢复数据</button>
           <input ref="restoreInput" type="file" accept="application/json,.json" class="hidden" @change="restore">
         </div>
-        <p class="mt-4 text-xs leading-5 text-muted">恢复操作会先完整校验文件，再在一个数据库事务中替换现有数据</p>
+        <p class="mt-4 text-xs leading-5 text-muted">恢复操作会先完整校验，再原子替换部署机器上的数据文件</p>
       </section>
 
       <section class="app-card rounded-3xl p-5 sm:p-6 xl:col-span-2">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><h2 class="font-bold">运行状态</h2><p class="mt-1 text-xs text-muted">应用通过 Nitro 服务端访问 MySQL，浏览器不会获得数据库凭据</p></div><button class="rounded-xl border border-default px-4 py-2 text-sm" @click="() => refreshHealth()">重新检测</button></div>
-        <div class="mt-5 grid gap-3 sm:grid-cols-3"><div class="rounded-2xl bg-elevated p-4"><p class="text-xs text-muted">数据库连接</p><strong class="mt-1 block" :class="health?.status === 'ok' ? 'text-primary' : 'text-error'">{{ health?.status === 'ok' ? '正常' : '异常' }}</strong></div><div class="rounded-2xl bg-elevated p-4"><p class="text-xs text-muted">MySQL 版本</p><strong class="mt-1 block">{{ health?.version ?? '—' }}</strong></div><div class="rounded-2xl bg-elevated p-4"><p class="text-xs text-muted">预期版本</p><strong class="mt-1 block" :class="health?.versionMatched ? 'text-primary' : 'text-warning'">8.0.32 {{ health?.versionMatched ? '已匹配' : '不匹配' }}</strong></div></div>
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><h2 class="font-bold">数据文件状态</h2><p class="mt-1 text-xs text-muted">业务计算由浏览器完成，服务端只负责原子读写 JSON 文件</p></div><button class="rounded-xl border border-default px-4 py-2 text-sm" @click="store.refresh(true)">重新检测</button></div>
+        <div class="mt-5 grid gap-3 sm:grid-cols-4">
+          <div class="rounded-2xl bg-elevated p-4"><p class="text-xs text-muted">文件读写</p><strong class="mt-1 block" :class="store.writable.value ? 'text-primary' : 'text-error'">{{ store.writable.value ? '正常' : '异常' }}</strong></div>
+          <div class="rounded-2xl bg-elevated p-4"><p class="text-xs text-muted">最后更新</p><strong class="mt-1 block text-sm">{{ store.data.value ? new Date(store.data.value.exportedAt).toLocaleString() : '—' }}</strong></div>
+          <div class="rounded-2xl bg-elevated p-4"><p class="text-xs text-muted">数据规模</p><strong class="mt-1 block text-sm">{{ counts.metrics }} 指标 / {{ counts.sessions }} 记录 / {{ counts.values }} 数值</strong></div>
+          <div class="rounded-2xl bg-elevated p-4"><p class="text-xs text-muted">同步冲突</p><strong class="mt-1 block text-sm" :class="store.conflictCount.value ? 'text-warning' : 'text-primary'">{{ store.conflictCount.value }} 次</strong></div>
+        </div>
       </section>
     </div>
     <p v-if="message" class="fixed bottom-20 left-1/2 z-40 -translate-x-1/2 rounded-xl bg-slate-900 px-5 py-3 text-sm text-white shadow-xl lg:bottom-6">{{ message }}</p>

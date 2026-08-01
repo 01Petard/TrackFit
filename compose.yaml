@@ -1,0 +1,22 @@
+name: trackfit
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    init: true
+    environment:
+      TRACKFIT_DATA_FILE: /app/data/trackfit-data.json
+      TZ: Asia/Shanghai
+    ports:
+      - "${TRACKFIT_BIND_ADDRESS:-127.0.0.1}:${TRACKFIT_PORT:-3000}:3000"
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/data').then(response => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s

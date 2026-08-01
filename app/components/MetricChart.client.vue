@@ -21,15 +21,20 @@ const props = withDefaults(defineProps<{
 
 const option = computed(() => ({
   animationDuration: 450,
-  grid: { left: 48, right: 22, top: 42, bottom: props.points.length > 20 ? 72 : 42 },
+  grid: { left: 48, right: 22, top: 58, bottom: props.points.length > 20 ? 72 : 44 },
   tooltip: {
     trigger: 'axis',
     valueFormatter: (value: unknown) => `${value} ${props.unit}`,
   },
-  legend: { data: props.showMovingAverage ? ['原始记录', '最近 7 条移动平均'] : ['原始记录'] },
+  legend: {
+    top: 0,
+    left: 'center',
+    itemGap: 20,
+    data: props.showMovingAverage ? ['原始记录', '最近 7 条移动平均'] : ['原始记录'],
+  },
   xAxis: {
     type: 'time',
-    axisLabel: { color: '#94a3b8' },
+    axisLabel: { color: '#94a3b8', hideOverlap: true, margin: 12 },
     axisLine: { lineStyle: { color: '#cbd5e1' } },
   },
   yAxis: {
@@ -75,4 +80,3 @@ const option = computed(() => ({
     暂无可分析的数据
   </div>
 </template>
-

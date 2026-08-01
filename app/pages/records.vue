@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { MeasurementDto, MeasurementPageDto, MetricDefinitionDto } from '../../shared/types/api'
+import type { MeasurementDto } from '../../shared/types/api'
 import dayjs from 'dayjs'
 
 const page = ref(1)
@@ -11,6 +11,8 @@ const dialogOpen = ref(false)
 const editing = ref<MeasurementDto | null>(null)
 const deletingId = ref<number | null>(null)
 
+const store = useTrackFitData()
+await store.ensureLoaded()
 const query = computed(() => ({
   page: page.value,
   pageSize,
@@ -18,8 +20,9 @@ const query = computed(() => ({
   end: end.value ? new Date(`${end.value}T23:59:59`).toISOString() : undefined,
   metricId: metricId.value,
 }))
-const { data, refresh, status } = await useFetch<MeasurementPageDto>('/api/measurements', { query })
-const { data: metrics } = await useFetch<MetricDefinitionDto[]>('/api/metrics', { default: () => [] })
+const data = computed(() => store.listMeasurements(query.value))
+const metrics = store.metrics
+const status = store.status
 const totalPages = computed(() => Math.max(1, Math.ceil((data.value?.total ?? 0) / pageSize)))
 
 watch([start, end, metricId], () => {
@@ -40,8 +43,7 @@ async function deleteRecord(id: number) {
   if (!window.confirm('确认删除这条测量记录？删除后无法恢复。')) return
   deletingId.value = id
   try {
-    await $fetch(`/api/measurements/${id}`, { method: 'DELETE' })
-    await refresh()
+    await store.deleteMeasurement(id)
   } finally {
     deletingId.value = null
   }
@@ -55,8 +57,8 @@ async function deleteRecord(id: number) {
     </PageHeader>
 
     <section class="app-card mb-5 grid gap-3 rounded-2xl p-4 sm:grid-cols-3">
-      <label class="text-xs text-muted">开始日期<input v-model="start" type="date" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted"></label>
-      <label class="text-xs text-muted">结束日期<input v-model="end" type="date" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted"></label>
+      <div class="text-xs text-muted"><span>开始日期</span><div class="mt-1.5"><AppDateField v-model="start" clearable placeholder="不限开始日期" /></div></div>
+      <div class="text-xs text-muted"><span>结束日期</span><div class="mt-1.5"><AppDateField v-model="end" clearable placeholder="不限结束日期" /></div></div>
       <label class="text-xs text-muted">包含指标<select v-model="metricId" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted"><option :value="undefined">全部指标</option><option v-for="metric in metrics" :key="metric.id" :value="metric.id">{{ metric.name }}</option></select></label>
     </section>
 
@@ -92,6 +94,6 @@ async function deleteRecord(id: number) {
       </footer>
     </section>
 
-    <MeasurementDialog v-model:open="dialogOpen" :measurement="editing" @saved="refresh" />
+    <MeasurementDialog v-model:open="dialogOpen" :measurement="editing" />
   </div>
 </template>

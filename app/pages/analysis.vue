@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { AnalyticsDto, AppSettingsDto, MetricDefinitionDto } from '../../shared/types/api'
 import dayjs from 'dayjs'
 
 const ranges = [
@@ -13,22 +12,18 @@ const range = ref('30d')
 const metricCode = ref('weight')
 const compareCode = ref('')
 const showMovingAverage = ref(true)
-const { data: metrics } = await useFetch<MetricDefinitionDto[]>('/api/metrics', { default: () => [] })
-const { data: settings } = await useFetch<AppSettingsDto>('/api/settings')
-if (settings.value?.defaultDateRange) range.value = settings.value.defaultDateRange
+const store = useTrackFitData()
+await store.ensureLoaded()
+const metrics = store.metrics
+range.value = store.settings.value.defaultDateRange
 
 const start = computed(() => {
   const amount = { '24h': [24, 'hour'], '7d': [7, 'day'], '30d': [30, 'day'], '90d': [90, 'day'] }[range.value] as [number, dayjs.ManipulateType] | undefined
   return amount ? dayjs().subtract(amount[0], amount[1]).toISOString() : undefined
 })
-const primaryQuery = computed(() => ({ metric: metricCode.value, start: start.value }))
-const { data: primary, status } = await useFetch<AnalyticsDto>('/api/analytics', { query: primaryQuery })
-const secondary = ref<AnalyticsDto | null>(null)
-
-watch([compareCode, start], async ([value]) => {
-  if (value) secondary.value = await $fetch<AnalyticsDto>('/api/analytics', { query: { metric: value, start: start.value } })
-  else secondary.value = null
-}, { immediate: true })
+const primary = computed(() => store.getAnalytics(metricCode.value, start.value))
+const secondary = computed(() => compareCode.value ? store.getAnalytics(compareCode.value, start.value) : null)
+const status = store.status
 
 const summaryCards = computed(() => {
   const summary = primary.value?.summary

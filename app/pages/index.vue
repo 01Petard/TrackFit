@@ -1,19 +1,14 @@
 <script setup lang="ts">
-import type { AnalyticsDto, AppSettingsDto, MeasurementPageDto } from '../../shared/types/api'
 import dayjs from 'dayjs'
 
 const dialogOpen = ref(false)
 const start = dayjs().subtract(7, 'day').toISOString()
-const { data: records, refresh: refreshRecords } = await useFetch<MeasurementPageDto>('/api/measurements', {
-  query: { page: 1, pageSize: 8 },
-})
-const { data: analytics, refresh: refreshAnalytics } = await useFetch<AnalyticsDto>('/api/analytics', {
-  query: { metric: 'weight', start },
-})
-const { data: todayRecords, refresh: refreshToday } = await useFetch<MeasurementPageDto>('/api/measurements', {
-  query: { page: 1, pageSize: 1, start: dayjs().startOf('day').toISOString() },
-})
-const { data: settings } = await useFetch<AppSettingsDto>('/api/settings')
+const store = useTrackFitData()
+await store.ensureLoaded()
+const records = computed(() => store.listMeasurements({ page: 1, pageSize: 8 }))
+const analytics = computed(() => store.getAnalytics('weight', start))
+const todayRecords = computed(() => store.listMeasurements({ page: 1, pageSize: 1, start: dayjs().startOf('day').toISOString() }))
+const settings = store.settings
 
 const latest = computed(() => records.value?.items[0])
 const latestValues = computed(() => new Map(latest.value?.values.map(value => [value.code, value]) ?? []))
@@ -24,10 +19,6 @@ const cards = computed(() => [
   { label: '腰围', value: latestValues.value.get('waist')?.value, unit: 'cm', change: null },
   { label: '体脂率', value: latestValues.value.get('body_fat')?.value, unit: '%', change: null },
 ])
-
-async function refreshAll() {
-  await Promise.all([refreshRecords(), refreshAnalytics(), refreshToday()])
-}
 </script>
 
 <template>
@@ -94,6 +85,6 @@ async function refreshAll() {
       </article>
     </section>
 
-    <MeasurementDialog v-model:open="dialogOpen" @saved="refreshAll" />
+    <MeasurementDialog v-model:open="dialogOpen" />
   </div>
 </template>

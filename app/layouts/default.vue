@@ -1,11 +1,11 @@
 <script setup lang="ts">
 const route = useRoute()
 const navigation = [
-  { to: '/', label: '概览', symbol: '◫' },
-  { to: '/records', label: '记录', symbol: '≡' },
-  { to: '/analysis', label: '分析', symbol: '⌁' },
-  { to: '/metrics', label: '指标', symbol: '◇' },
-  { to: '/settings', label: '设置', symbol: '⚙' },
+  { to: '/', label: '概览', icon: 'home' as const },
+  { to: '/records', label: '记录', icon: 'records' as const },
+  { to: '/analysis', label: '分析', icon: 'analysis' as const },
+  { to: '/metrics', label: '指标', icon: 'metrics' as const },
+  { to: '/settings', label: '设置', icon: 'settings' as const },
 ]
 
 function active(to: string) {
@@ -31,13 +31,13 @@ function active(to: string) {
           class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition"
           :class="active(item.to) ? 'bg-primary text-white shadow-lg shadow-primary/15' : 'text-muted hover:bg-elevated hover:text-highlighted'"
         >
-          <span class="w-5 text-center text-lg">{{ item.symbol }}</span>
+          <AppIcon :name="item.icon" class="size-5 shrink-0" />
           {{ item.label }}
         </NuxtLink>
       </nav>
       <div class="absolute inset-x-5 bottom-7 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-xs leading-5 text-muted">
         家庭局域网模式<br>
-        数据仅保存在本地 MySQL
+        数据保存在部署机器的 JSON 文件
       </div>
     </aside>
 
@@ -64,10 +64,9 @@ function active(to: string) {
         class="flex min-h-16 flex-col items-center justify-center gap-0.5 text-[11px]"
         :class="active(item.to) ? 'text-primary' : 'text-muted'"
       >
-        <span class="text-xl leading-none">{{ item.symbol }}</span>
+        <AppIcon :name="item.icon" class="size-[22px]" />
         {{ item.label }}
       </NuxtLink>
     </nav>
   </div>
 </template>
-

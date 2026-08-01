@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildAnalytics, calculateBmi, calculateWaistHipRatio } from '../../server/utils/analytics'
+import { buildAnalytics, calculateBmi, calculateWaistHipRatio } from '../../shared/utils/analytics'
 
 describe('身体指标计算', () => {
   it('计算 BMI 并保留两位小数', () => {
@@ -47,4 +47,3 @@ describe('原始时间序列分析', () => {
     })
   })
 })
-

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { MeasurementDto, MetricDefinitionDto } from '../../shared/types/api'
+import type { MeasurementDto } from '../../shared/types/api'
 import dayjs from 'dayjs'
 
 const props = defineProps<{
@@ -12,7 +12,9 @@ const emit = defineEmits<{
   'saved': []
 }>()
 
-const { data: metrics } = await useFetch<MetricDefinitionDto[]>('/api/metrics', { default: () => [] })
+const store = useTrackFitData()
+await store.ensureLoaded()
+const metrics = store.metrics
 const measuredAt = ref('')
 const note = ref('')
 const values = reactive<Record<number, string>>({})
@@ -44,14 +46,11 @@ async function save() {
   saving.value = true
   errorMessage.value = ''
   try {
-    await $fetch(props.measurement ? `/api/measurements/${props.measurement.id}` : '/api/measurements', {
-      method: props.measurement ? 'PUT' : 'POST',
-      body: {
-        measuredAt: new Date(measuredAt.value).toISOString(),
-        note: note.value || null,
-        values: payloadValues,
-      },
-    })
+    await store.saveMeasurement({
+      measuredAt: new Date(measuredAt.value).toISOString(),
+      note: note.value || null,
+      values: payloadValues,
+    }, props.measurement?.id)
     emit('update:open', false)
     emit('saved')
   } catch (error) {
@@ -61,13 +60,7 @@ async function save() {
   }
 }
 
-function getErrorMessage(error: unknown): string {
-  if (typeof error === 'object' && error !== null && 'data' in error) {
-    const data = error.data as { statusMessage?: string, message?: string }
-    return data.statusMessage ?? data.message ?? '保存失败'
-  }
-  return '保存失败'
-}
+const getErrorMessage = getTrackFitErrorMessage
 </script>
 
 <template>
@@ -84,10 +77,10 @@ function getErrorMessage(error: unknown): string {
           </header>
 
           <form class="space-y-5" @submit.prevent="save">
-            <label class="block">
-              <span class="mb-2 block text-sm font-medium">测量时间</span>
-              <input v-model="measuredAt" required type="datetime-local" step="1" class="w-full rounded-xl border border-default bg-default px-4 py-3 outline-none focus:border-primary">
-            </label>
+            <div class="block">
+              <span class="mb-2 flex items-center justify-between text-sm font-medium">测量时间 <span class="text-xs font-normal text-muted">默认为当前时间，可点击修改</span></span>
+              <AppDateField v-model="measuredAt" mode="datetime" placeholder="选择测量时间" />
+            </div>
 
             <label v-if="weightMetric" class="block rounded-2xl border border-primary/25 bg-primary/5 p-4">
               <span class="mb-2 flex items-center justify-between text-sm font-semibold">
@@ -106,9 +99,9 @@ function getErrorMessage(error: unknown): string {
               >
             </label>
 
-            <details v-if="otherMetrics.length" class="group rounded-2xl border border-default p-4">
-              <summary class="cursor-pointer list-none font-medium">其他身体指标 <span class="float-right text-muted group-open:rotate-180">⌄</span></summary>
-              <div class="mt-5 grid gap-4 sm:grid-cols-2">
+            <section v-if="otherMetrics.length" class="rounded-2xl border border-default p-4">
+              <div class="mb-4"><h3 class="font-medium">其他身体指标</h3><p class="mt-1 text-xs text-muted">所有已启用指标均可直接填写</p></div>
+              <div class="grid gap-4 sm:grid-cols-2">
                 <label v-for="metric in otherMetrics" :key="metric.id" class="block">
                   <span class="mb-1.5 flex justify-between text-sm">
                     {{ metric.name }}
@@ -125,7 +118,7 @@ function getErrorMessage(error: unknown): string {
                   >
                 </label>
               </div>
-            </details>
+            </section>
 
             <label class="block">
               <span class="mb-2 block text-sm font-medium">备注 <span class="font-normal text-muted">可选</span></span>

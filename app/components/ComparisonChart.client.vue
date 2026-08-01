@@ -48,10 +48,10 @@ const option = computed(() => {
 
   return {
     animationDuration: 450,
-    grid: { left: 52, right: secondary ? 55 : 24, top: 50, bottom: 70 },
+    grid: { left: 52, right: secondary ? 55 : 24, top: 64, bottom: 76 },
     tooltip: { trigger: 'axis' },
-    legend: { type: 'scroll' },
-    xAxis: { type: 'time', axisLabel: { color: '#94a3b8' } },
+    legend: { type: 'scroll', top: 0, left: 'center' },
+    xAxis: { type: 'time', axisLabel: { color: '#94a3b8', hideOverlap: true, margin: 12 } },
     yAxis: [
       { type: 'value', scale: true, name: props.primary.metric.unit, splitLine: { lineStyle: { color: 'rgba(148,163,184,.16)' } } },
       ...(secondary ? [{ type: 'value', scale: true, name: secondary.metric.unit, splitLine: { show: false } }] : []),
@@ -66,4 +66,3 @@ const option = computed(() => {
   <div v-if="primary.points.length" class="h-[420px] w-full"><VChart autoresize :option="option" /></div>
   <div v-else class="grid h-[420px] place-items-center text-sm text-muted">当前条件下没有数据</div>
 </template>
-

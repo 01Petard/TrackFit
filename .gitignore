@@ -2,7 +2,8 @@ node_modules/
 .pnpm-store/
 .nuxt/
 .output/
-.data/
+data/*
+!data/.gitkeep
 dist/
 coverage/
 playwright-report/
