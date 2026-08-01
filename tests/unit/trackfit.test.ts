@@ -30,6 +30,27 @@ describe('前端数据业务', () => {
     expect(data.values).toEqual([])
   })
 
+  it('按指标返回最近一次有效值，不受最新记录缺少该指标影响', () => {
+    const data = fixture()
+    data.metrics.push({
+      id: 2,
+      code: 'body_fat',
+      name: '体脂率',
+      unit: '%',
+      decimalPlaces: 1,
+      minimumValue: 1,
+      maximumValue: 75,
+      metricType: 'core',
+      enabled: true,
+      sortOrder: 20,
+    })
+    saveMeasurement(data, { measuredAt: '2026-07-01T08:00:00.000Z', values: [{ metricId: 2, value: 26 }] })
+    saveMeasurement(data, { measuredAt: '2026-08-01T08:00:00.000Z', values: [{ metricId: 1, value: 70 }] })
+
+    expect(listMeasurements(data, { page: 1, pageSize: 1 }).items[0]?.values).toHaveLength(1)
+    expect(getAnalytics(data, 'body_fat')?.summary?.latest).toBe(26)
+  })
+
   it('拒绝重复指标编码和越界测量值', () => {
     const data = fixture()
     expect(() => createMetric(data, { code: 'weight', name: '重复体重', unit: 'kg', decimalPlaces: 1, sortOrder: 100 })).toThrow('指标编码已存在')

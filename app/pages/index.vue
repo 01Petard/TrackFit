@@ -7,17 +7,22 @@ const store = useTrackFitData()
 await store.ensureLoaded()
 const records = computed(() => store.listMeasurements({ page: 1, pageSize: 8 }))
 const analytics = computed(() => store.getAnalytics('weight', start))
+const latestAnalytics = computed(() => new Map(
+  ['weight', 'waist', 'body_fat'].map(code => [code, store.getAnalytics(code)?.summary]),
+))
+const weightMetricId = computed(() => store.metrics.value.find(metric => metric.code === 'weight')?.id)
+const latestWeightRecord = computed(() => weightMetricId.value == null
+  ? undefined
+  : store.listMeasurements({ page: 1, pageSize: 1, metricId: weightMetricId.value }).items[0])
 const todayRecords = computed(() => store.listMeasurements({ page: 1, pageSize: 1, start: dayjs().startOf('day').toISOString() }))
 const settings = store.settings
 
-const latest = computed(() => records.value?.items[0])
-const latestValues = computed(() => new Map(latest.value?.values.map(value => [value.code, value]) ?? []))
 const todayCount = computed(() => todayRecords.value?.total ?? 0)
 const cards = computed(() => [
-  { label: '体重', value: latestValues.value.get('weight')?.value, unit: 'kg', change: analytics.value?.summary?.previousChange },
-  { label: 'BMI', value: latest.value?.bmi, unit: '', change: null },
-  { label: '腰围', value: latestValues.value.get('waist')?.value, unit: 'cm', change: null },
-  { label: '体脂率', value: latestValues.value.get('body_fat')?.value, unit: '%', change: null },
+  { label: '体重', value: latestAnalytics.value.get('weight')?.latest, unit: 'kg', change: latestAnalytics.value.get('weight')?.previousChange },
+  { label: 'BMI', value: latestWeightRecord.value?.bmi, unit: '', change: null },
+  { label: '腰围', value: latestAnalytics.value.get('waist')?.latest, unit: 'cm', change: null },
+  { label: '体脂率', value: latestAnalytics.value.get('body_fat')?.latest, unit: '%', change: null },
 ])
 </script>
 
