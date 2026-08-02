@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildAnalytics, calculateBmi, calculateWaistHipRatio, resolveYAxisBounds } from '../../shared/utils/analytics'
+import { buildAnalytics, buildMetricTrendInsight, calculateBmi, calculateWaistHipRatio, resolveYAxisBounds } from '../../shared/utils/analytics'
 
 describe('身体指标计算', () => {
   it('计算 BMI 并保留两位小数', () => {
@@ -17,6 +17,31 @@ describe('身体指标计算', () => {
     expect(resolveYAxisBounds('weight', points, 60, 75)).toEqual({ min: 60, max: 75 })
     expect(resolveYAxisBounds('weight', points)).toEqual({ min: 68.5, max: 72.3 })
     expect(resolveYAxisBounds('waist', points, 60, 75)).toEqual({})
+  })
+
+  it('结合七天变化和目标体重生成友好评价', () => {
+    const analytics = buildAnalytics([
+      { id: 1, measuredAt: '2026-07-01T08:00:00.000Z', value: 80 },
+      { id: 2, measuredAt: '2026-07-07T08:00:00.000Z', value: 76 },
+    ])
+    const insight = buildMetricTrendInsight({
+      metric: {
+        id: 1,
+        code: 'weight',
+        name: '体重',
+        unit: 'kg',
+        decimalPlaces: 1,
+        minimumValue: 20,
+        maximumValue: 400,
+        metricType: 'core',
+        enabled: true,
+        sortOrder: 10,
+      },
+      ...analytics,
+    }, 60, 75)
+
+    expect(insight).toMatchObject({ direction: 'down', trendLabel: '向目标靠近', tone: 'positive' })
+    expect(insight?.evaluation).toContain('正在向目标区间靠近')
   })
 })
 
