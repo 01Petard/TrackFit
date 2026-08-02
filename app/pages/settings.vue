@@ -6,6 +6,8 @@ const store = useTrackFitData()
 await store.ensureLoaded()
 const colorMode = useColorMode()
 const heightCm = ref<number | null>(store.settings.value.heightCm)
+const desiredWeightMinimum = ref<number | ''>(store.settings.value.desiredWeightMinimum ?? '')
+const desiredWeightMaximum = ref<number | ''>(store.settings.value.desiredWeightMaximum ?? '')
 const defaultDateRange = ref<AppSettingsDto['defaultDateRange']>(store.settings.value.defaultDateRange)
 const theme = ref<AppSettingsDto['theme']>(store.settings.value.theme)
 const saving = ref(false)
@@ -22,9 +24,25 @@ async function save() {
     message.value = '请填写身高'
     return
   }
+  const hasMinimum = desiredWeightMinimum.value !== ''
+  const hasMaximum = desiredWeightMaximum.value !== ''
+  if (hasMinimum !== hasMaximum) {
+    message.value = '目标体重上下限必须同时填写'
+    return
+  }
+  if (hasMinimum && hasMaximum && desiredWeightMinimum.value >= desiredWeightMaximum.value) {
+    message.value = '目标体重下限必须小于上限'
+    return
+  }
   saving.value = true
   try {
-    await store.saveSettings({ heightCm: heightCm.value, defaultDateRange: defaultDateRange.value, theme: theme.value })
+    await store.saveSettings({
+      heightCm: heightCm.value,
+      desiredWeightMinimum: desiredWeightMinimum.value === '' ? null : desiredWeightMinimum.value,
+      desiredWeightMaximum: desiredWeightMaximum.value === '' ? null : desiredWeightMaximum.value,
+      defaultDateRange: defaultDateRange.value,
+      theme: theme.value,
+    })
     colorMode.preference = theme.value
     message.value = '设置已保存'
   } catch (error) {
@@ -76,6 +94,14 @@ function downloadFile(content: string, filename: string, type: string) {
         <h2 class="font-bold">个人与显示</h2><p class="mt-1 text-xs text-muted">身高用于计算 BMI，并在每次测量时保存快照</p>
         <div class="mt-6 space-y-5">
           <label class="block text-sm">身高（cm）<input v-model.number="heightCm" required type="number" min="80" max="250" step="0.1" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3"></label>
+          <fieldset class="rounded-2xl border border-default p-4">
+            <legend class="px-2 text-sm font-medium">个人目标体重（kg）</legend>
+            <p class="mb-3 text-xs text-muted">两个值需同时填写；保存后会在体重图表中显示目标区间</p>
+            <div class="grid grid-cols-2 gap-3">
+              <label class="text-xs text-muted">合适下限<input v-model.number="desiredWeightMinimum" type="number" min="20" max="400" step="0.1" placeholder="例如 60" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted"></label>
+              <label class="text-xs text-muted">最胖上限<input v-model.number="desiredWeightMaximum" type="number" min="20" max="400" step="0.1" placeholder="例如 75" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted"></label>
+            </div>
+          </fieldset>
           <label class="block text-sm">默认分析范围<select v-model="defaultDateRange" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3"><option value="24h">24 小时</option><option value="7d">7 天</option><option value="30d">30 天</option><option value="90d">90 天</option><option value="all">全部</option></select></label>
           <label class="block text-sm">界面主题<select v-model="theme" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3"><option value="system">跟随系统</option><option value="light">浅色</option><option value="dark">深色</option></select></label>
         </div>

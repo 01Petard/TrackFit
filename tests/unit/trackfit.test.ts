@@ -1,7 +1,7 @@
 import type { TrackFitData } from '../../shared/schemas/trackfit'
 import { describe, expect, it } from 'vitest'
 import { backupSchema } from '../../shared/schemas/trackfit'
-import { createMetric, deleteMeasurement, getAnalytics, listMeasurements, saveMeasurement } from '../../shared/utils/trackfit'
+import { createMetric, deleteMeasurement, getAnalytics, listMeasurements, saveMeasurement, saveSettings } from '../../shared/utils/trackfit'
 
 describe('前端数据业务', () => {
   it('新增测量记录并完成分页、筛选和分析', () => {
@@ -62,13 +62,45 @@ describe('前端数据业务', () => {
     data.values.push({ id: 1, sessionId: 99, metricId: 1, value: 70 })
     expect(backupSchema.safeParse(data).success).toBe(false)
   })
+
+  it('保存个人目标体重上下限并校验顺序', () => {
+    const data = fixture()
+    saveSettings(data, {
+      heightCm: 175,
+      desiredWeightMinimum: 60,
+      desiredWeightMaximum: 75,
+      defaultDateRange: '30d',
+      theme: 'system',
+    })
+    expect(data.settings[0]).toMatchObject({ desiredWeightMinimum: 60, desiredWeightMaximum: 75 })
+    expect(() => saveSettings(data, {
+      heightCm: 175,
+      desiredWeightMinimum: 80,
+      desiredWeightMaximum: 75,
+      defaultDateRange: '30d',
+      theme: 'system',
+    })).toThrow('目标体重下限必须小于上限')
+  })
+
+  it('区间分析沿用区间之前的日均值计算均线', () => {
+    const data = fixture()
+    for (let index = 0; index < 4; index++) {
+      saveMeasurement(data, {
+        measuredAt: new Date(Date.UTC(2026, 6, index + 1, 8)).toISOString(),
+        values: [{ metricId: 1, value: 80 - index }],
+      })
+    }
+    const analytics = getAnalytics(data, 'weight', '2026-07-04T00:00:00.000Z')
+    expect(analytics?.points).toHaveLength(1)
+    expect(analytics?.movingAverages[3]).toEqual([{ measuredAt: '2026-07-04T08:00:00.000Z', value: 78 }])
+  })
 })
 
 function fixture(): TrackFitData {
   return {
     version: 1,
     exportedAt: '2026-08-01T00:00:00.000Z',
-    settings: [{ id: 1, heightCm: 175, defaultDateRange: '30d', theme: 'system', dataVersion: 1 }],
+    settings: [{ id: 1, heightCm: 175, desiredWeightMinimum: null, desiredWeightMaximum: null, defaultDateRange: '30d', theme: 'system', dataVersion: 1 }],
     metrics: [{
       id: 1,
       code: 'weight',

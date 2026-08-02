@@ -40,7 +40,15 @@ export interface AnalyticsPointDto {
   id: number
   measuredAt: string
   value: number
-  movingAverage: number | null
+}
+
+export const movingAveragePeriods = [3, 7, 30, 90] as const
+
+export type MovingAveragePeriod = typeof movingAveragePeriods[number]
+
+export interface MovingAveragePointDto {
+  measuredAt: string
+  value: number
 }
 
 export interface AnalyticsSummaryDto {
@@ -57,13 +65,15 @@ export interface AnalyticsSummaryDto {
 export interface AnalyticsDto {
   metric: MetricDefinitionDto
   points: AnalyticsPointDto[]
+  movingAverages: Record<MovingAveragePeriod, MovingAveragePointDto[]>
   summary: AnalyticsSummaryDto | null
 }
 
 export interface AppSettingsDto {
   heightCm: number | null
+  desiredWeightMinimum: number | null
+  desiredWeightMaximum: number | null
   defaultDateRange: '24h' | '7d' | '30d' | '90d' | 'all'
   theme: 'system' | 'light' | 'dark'
   dataVersion: number
 }
-

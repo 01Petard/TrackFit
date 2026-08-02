@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildAnalytics, calculateBmi, calculateWaistHipRatio } from '../../shared/utils/analytics'
+import { buildAnalytics, calculateBmi, calculateWaistHipRatio, resolveYAxisBounds } from '../../shared/utils/analytics'
 
 describe('身体指标计算', () => {
   it('计算 BMI 并保留两位小数', () => {
@@ -10,6 +10,13 @@ describe('身体指标计算', () => {
   it('只在腰围和臀围都有效时计算腰臀比', () => {
     expect(calculateWaistHipRatio(80, 100)).toBe(0.8)
     expect(calculateWaistHipRatio(80, undefined)).toBeNull()
+  })
+
+  it('体重图表优先使用用户上下限，否则使用数据极值', () => {
+    const points = [{ value: 68.5 }, { value: 72.3 }, { value: 70 }]
+    expect(resolveYAxisBounds('weight', points, 60, 75)).toEqual({ min: 60, max: 75 })
+    expect(resolveYAxisBounds('weight', points)).toEqual({ min: 68.5, max: 72.3 })
+    expect(resolveYAxisBounds('waist', points, 60, 75)).toEqual({})
   })
 })
 
@@ -27,11 +34,23 @@ describe('原始时间序列分析', () => {
     expect(result.points.at(-1)?.id).toBe(8)
   })
 
-  it('从第七条记录开始计算七条移动平均', () => {
-    const result = buildAnalytics(points)
-    expect(result.points[5]?.movingAverage).toBeNull()
-    expect(result.points[6]?.movingAverage).toBe(77)
-    expect(result.points[7]?.movingAverage).toBe(76)
+  it('先计算每日均值，再计算各周期日均线', () => {
+    const dailyPoints = [
+      { id: 1, measuredAt: '2026-07-01T08:00:00.000Z', value: 80 },
+      { id: 2, measuredAt: '2026-07-01T12:00:00.000Z', value: 82 },
+      { id: 3, measuredAt: '2026-07-02T08:00:00.000Z', value: 78 },
+      { id: 4, measuredAt: '2026-07-03T08:00:00.000Z', value: 75 },
+      { id: 5, measuredAt: '2026-07-04T08:00:00.000Z', value: 72 },
+    ]
+    const result = buildAnalytics(dailyPoints)
+
+    expect(result.movingAverages[3]).toEqual([
+      { measuredAt: '2026-07-03T08:00:00.000Z', value: 78 },
+      { measuredAt: '2026-07-04T08:00:00.000Z', value: 75 },
+    ])
+    expect(result.movingAverages[7]).toEqual([])
+    expect(result.movingAverages[30]).toEqual([])
+    expect(result.movingAverages[90]).toEqual([])
   })
 
   it('统计首次、最新、变化和记录次数', () => {

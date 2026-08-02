@@ -42,19 +42,32 @@ export const metricUpdateSchema = metricBaseSchema.partial().extend({
   { message: '最小值必须小于最大值', path: ['minimumValue'] },
 )
 
-export const settingsUpdateSchema = z.object({
+const settingsBaseSchema = z.object({
   heightCm: z.number().min(80).max(250),
+  desiredWeightMinimum: z.number().min(20).max(400).nullable().default(null),
+  desiredWeightMaximum: z.number().min(20).max(400).nullable().default(null),
   defaultDateRange: z.enum(['24h', '7d', '30d', '90d', 'all']).default('30d'),
   theme: z.enum(['system', 'light', 'dark']).default('system'),
 })
 
-export const backupSettingsSchema = z.object({
+function validateDesiredWeightRange(
+  value: { desiredWeightMinimum: number | null, desiredWeightMaximum: number | null },
+  context: z.RefinementCtx,
+) {
+  if ((value.desiredWeightMinimum == null) !== (value.desiredWeightMaximum == null)) {
+    context.addIssue({ code: 'custom', path: ['desiredWeightMinimum'], message: '目标体重上下限必须同时填写' })
+  } else if (value.desiredWeightMinimum != null && value.desiredWeightMaximum != null && value.desiredWeightMinimum >= value.desiredWeightMaximum) {
+    context.addIssue({ code: 'custom', path: ['desiredWeightMinimum'], message: '目标体重下限必须小于上限' })
+  }
+}
+
+export const settingsUpdateSchema = settingsBaseSchema.superRefine(validateDesiredWeightRange)
+
+export const backupSettingsSchema = settingsBaseSchema.extend({
   id: z.number().int().positive(),
   heightCm: z.number().min(80).max(250).nullable(),
-  defaultDateRange: z.enum(['24h', '7d', '30d', '90d', 'all']),
-  theme: z.enum(['system', 'light', 'dark']),
   dataVersion: z.number().int().positive(),
-})
+}).superRefine(validateDesiredWeightRange)
 
 export const backupMetricSchema = z.object({
   id: z.number().int().positive(),

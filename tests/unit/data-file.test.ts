@@ -38,4 +38,17 @@ describe('JSON 数据文件仓储', () => {
     await expect(readDataSnapshot()).rejects.toThrow()
     expect(await readFile(process.env.TRACKFIT_DATA_FILE!, 'utf8')).toBe('{broken')
   })
+
+  it('读取旧数据时自动补齐目标体重字段', async () => {
+    await writeFile(process.env.TRACKFIT_DATA_FILE!, JSON.stringify({
+      version: 1,
+      exportedAt: '2026-08-01T00:00:00.000Z',
+      settings: [{ id: 1, heightCm: 175, defaultDateRange: '30d', theme: 'system', dataVersion: 1 }],
+      metrics: [],
+      sessions: [],
+      values: [],
+    }), 'utf8')
+    const snapshot = await readDataSnapshot()
+    expect(snapshot.data.settings[0]).toMatchObject({ desiredWeightMinimum: null, desiredWeightMaximum: null })
+  })
 })

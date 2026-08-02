@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { MovingAveragePeriod } from '../../shared/types/api'
 import dayjs from 'dayjs'
 
 const ranges = [
@@ -11,7 +12,7 @@ const ranges = [
 const range = ref('30d')
 const metricCode = ref('weight')
 const compareCode = ref('')
-const showMovingAverage = ref(true)
+const visibleMovingAverages = ref<MovingAveragePeriod[]>([3, 7, 30, 90])
 const store = useTrackFitData()
 await store.ensureLoaded()
 const metrics = store.metrics
@@ -24,6 +25,7 @@ const start = computed(() => {
 const primary = computed(() => store.getAnalytics(metricCode.value, start.value))
 const secondary = computed(() => compareCode.value ? store.getAnalytics(compareCode.value, start.value) : null)
 const status = store.status
+const settings = store.settings
 
 const summaryCards = computed(() => {
   const summary = primary.value?.summary
@@ -41,19 +43,31 @@ const summaryCards = computed(() => {
 
 <template>
   <div>
-    <PageHeader title="趋势分析" description="不按自然日聚合，直接分析每一次真实测量记录" />
+    <PageHeader title="趋势分析" description="原始数据保留每次测量，均线基于每日测量均值计算" />
 
-    <section class="app-card mb-5 grid gap-4 rounded-2xl p-4 sm:grid-cols-2 xl:grid-cols-4">
+    <section class="app-card mb-5 grid gap-4 rounded-2xl p-4 sm:grid-cols-2 xl:grid-cols-3">
       <label class="text-xs text-muted">时间范围<select v-model="range" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted"><option v-for="item in ranges" :key="item.value" :value="item.value">{{ item.label }}</option></select></label>
       <label class="text-xs text-muted">主指标<select v-model="metricCode" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted"><option v-for="metric in metrics.filter(item => item.enabled)" :key="metric.id" :value="metric.code">{{ metric.name }}</option></select></label>
       <label class="text-xs text-muted">对比指标<select v-model="compareCode" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted"><option value="">不对比</option><option v-for="metric in metrics.filter(item => item.enabled && item.code !== metricCode)" :key="metric.id" :value="metric.code">{{ metric.name }}</option></select></label>
-      <label class="flex items-center gap-3 self-end rounded-xl border border-default px-3 py-2.5 text-sm"><input v-model="showMovingAverage" type="checkbox" class="size-4 accent-emerald-500">显示最近 7 条移动平均</label>
+      <div class="sm:col-span-2 xl:col-span-3">
+        <p class="mb-2 text-xs text-muted">均线显示</p>
+        <div class="flex flex-wrap gap-2">
+          <label v-for="period in ([3, 7, 30, 90] as const)" :key="period" class="flex items-center gap-2 rounded-xl border border-default px-3 py-2 text-sm"><input v-model="visibleMovingAverages" type="checkbox" :value="period" class="size-4 accent-emerald-500">{{ period }} 日均线</label>
+        </div>
+      </div>
     </section>
 
     <section class="app-card mb-5 rounded-3xl p-3 sm:p-6">
       <div v-if="status === 'pending'" class="grid h-[420px] place-items-center text-sm text-muted">正在计算…</div>
       <ClientOnly v-else-if="primary">
-        <ComparisonChart :primary="primary" :secondary="compareCode ? secondary : null" :show-moving-average="showMovingAverage" />
+        <p class="mb-2 px-2 text-xs text-muted">拖动底部滑块选择 X 轴时间范围，拖动右侧滑块选择 Y 轴数值范围</p>
+        <ComparisonChart
+          :primary="primary"
+          :secondary="compareCode ? secondary : null"
+          :visible-moving-averages="visibleMovingAverages"
+          :target-minimum="settings.desiredWeightMinimum"
+          :target-maximum="settings.desiredWeightMaximum"
+        />
         <template #fallback><div class="grid h-[420px] place-items-center text-sm text-muted">正在加载图表…</div></template>
       </ClientOnly>
     </section>

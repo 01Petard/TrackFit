@@ -104,7 +104,7 @@ function createDefaultData(): TrackFitData {
   return {
     version: 1,
     exportedAt: new Date().toISOString(),
-    settings: [{ id: 1, heightCm: null, defaultDateRange: '30d', theme: 'system', dataVersion: 1 }],
+    settings: [{ id: 1, heightCm: null, desiredWeightMinimum: null, desiredWeightMaximum: null, defaultDateRange: '30d', theme: 'system', dataVersion: 1 }],
     metrics: metrics.map(([code, name, unit, decimalPlaces, minimumValue, maximumValue], index) => ({
       id: index + 1,
       code,

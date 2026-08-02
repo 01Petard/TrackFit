@@ -16,7 +16,7 @@ export function getMetrics(data: TrackFitData): MetricDefinitionDto[] {
 }
 
 export function getSettings(data: TrackFitData): AppSettingsDto {
-  return data.settings[0] ?? { heightCm: null, defaultDateRange: '30d', theme: 'system', dataVersion: 1 }
+  return data.settings[0] ?? { heightCm: null, desiredWeightMinimum: null, desiredWeightMaximum: null, defaultDateRange: '30d', theme: 'system', dataVersion: 1 }
 }
 
 export function listMeasurements(data: TrackFitData, query: MeasurementQuery): MeasurementPageDto {
@@ -45,16 +45,26 @@ export function getAnalytics(data: TrackFitData, metricCode: string, start?: str
   const sessions = new Map(data.sessions.map(session => [session.id, session]))
   const startTime = start ? new Date(start).getTime() : undefined
   const endTime = end ? new Date(end).getTime() : undefined
-  const points = data.values.flatMap((value) => {
+  const allPoints = data.values.flatMap((value) => {
     if (value.metricId !== metric.id) return []
     const session = sessions.get(value.sessionId)
     if (!session) return []
-    const time = new Date(session.measuredAt).getTime()
-    if (startTime != null && time < startTime) return []
-    if (endTime != null && time > endTime) return []
     return [{ id: session.id, measuredAt: session.measuredAt, value: value.value }]
   })
-  return { metric, ...buildAnalytics(points) }
+  const points = allPoints.filter((point) => {
+    const time = new Date(point.measuredAt).getTime()
+    return (startTime == null || time >= startTime) && (endTime == null || time <= endTime)
+  })
+  const analytics = buildAnalytics(points)
+  const fullMovingAverages = buildAnalytics(allPoints).movingAverages
+  analytics.movingAverages = Object.fromEntries(Object.entries(fullMovingAverages).map(([period, values]) => [
+    period,
+    values.filter((point) => {
+      const time = new Date(point.measuredAt).getTime()
+      return (startTime == null || time >= startTime) && (endTime == null || time <= endTime)
+    }),
+  ])) as typeof analytics.movingAverages
+  return { metric, ...analytics }
 }
 
 export function createMetric(data: TrackFitData, input: MetricCreate): void {
