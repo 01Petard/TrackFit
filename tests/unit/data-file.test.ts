@@ -50,5 +50,24 @@ describe('JSON 数据文件仓储', () => {
     }), 'utf8')
     const snapshot = await readDataSnapshot()
     expect(snapshot.data.settings[0]).toMatchObject({ desiredWeightMinimum: null, desiredWeightMaximum: null })
+    expect(snapshot.data).toMatchObject({ version: 3, trainingSessions: [], sleepRecords: [] })
+    expect(snapshot.data.settings[0]).toMatchObject({ sleepGoalHours: 8, weeklyTrainingGoalMinutes: 150 })
+  })
+
+  it('读取 v2 数据时按比例迁移睡眠评分和训练强度', async () => {
+    await writeFile(process.env.TRACKFIT_DATA_FILE!, JSON.stringify({
+      version: 2,
+      exportedAt: '2026-08-01T00:00:00.000Z',
+      settings: [{ id: 1, heightCm: 175, defaultDateRange: '30d', theme: 'system', dataVersion: 1 }],
+      metrics: [],
+      sessions: [],
+      values: [],
+      trainingSessions: [{ id: 1, startedAt: '2026-08-01T10:00:00.000Z', type: 'strength', durationMinutes: 45, intensity: 4, note: null }],
+      sleepRecords: [{ id: 1, fellAsleepAt: '2026-07-31T15:00:00.000Z', wokeUpAt: '2026-07-31T23:00:00.000Z', quality: 4, note: null }],
+    }), 'utf8')
+    const snapshot = await readDataSnapshot()
+    expect(snapshot.data.version).toBe(3)
+    expect(snapshot.data.trainingSessions[0]?.intensity).toBe(8)
+    expect(snapshot.data.sleepRecords[0]?.quality).toBe(80)
   })
 })

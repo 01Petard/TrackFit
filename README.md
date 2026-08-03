@@ -2,6 +2,14 @@
 
 TrackFit 是一个使用 Nuxt 4、Vue 3 和 TypeScript 构建的个人身体指标记录工具。业务数据由浏览器管理，Nitro 服务端只负责原子读写一个 JSON 文件，不依赖数据库。
 
+当前支持身体测量、训练与睡眠记录、趋势和均线、行为相关性、周/月报告、记录热力图以及 JSON/CSV 备份导出。相关性分析至少需要 14 个有效重叠日，仅用于观察趋势，不作为医疗诊断。
+
+## 准备工作
+
+复制`.env.example`，并修改为`.env`。
+
+复制`data/trackfit-data.json.example`，并修改为`data/trackfit-data.json`。
+
 ## 本地运行
 
 要求：Node.js 22+、pnpm 11。
@@ -11,7 +19,7 @@ pnpm install
 pnpm dev
 ```
 
-浏览器访问 `http://127.0.0.1:3000`。开发服务默认只监听 `127.0.0.1`；确实需要从局域网设备访问开发环境时，使用 `pnpm dev --host 0.0.0.0`。
+本机浏览器访问 `http://127.0.0.1:3000`。开发服务监听所有网卡，局域网设备可通过 `http://<部署机器的局域网 IP>:3000` 访问。
 
 默认数据文件为 `data/trackfit-data.json`，首次访问时自动创建。可通过环境变量指定其他位置：
 
@@ -25,12 +33,14 @@ TRACKFIT_DATA_FILE=/absolute/path/trackfit-data.json
 docker compose up -d --build
 ```
 
-Compose 只启动 TrackFit 应用，宿主机 `./data` 挂载为容器 `/app/data`。默认只监听本机，需要允许家庭局域网访问时配置：
+Compose 只启动 TrackFit 应用，宿主机 `./data` 挂载为容器 `/app/data`。默认监听所有网卡，局域网设备可通过 `http://<部署机器的局域网 IP>:3000` 访问：
 
 ```dotenv
 TRACKFIT_BIND_ADDRESS=0.0.0.0
 TRACKFIT_PORT=3000
 ```
+
+如需恢复为仅本机访问，将 `TRACKFIT_BIND_ADDRESS` 改为 `127.0.0.1`。请勿将该端口映射到公网；TrackFit 是单人免登录应用，只适合可信家庭局域网。
 
 常用命令：
 
@@ -58,6 +68,8 @@ sudo chown -R 1000:1000 data
 4. 启动新版，核对指标数、记录数和最新记录
 
 设置页仍支持下载 JSON、导出 CSV 和从 JSON 恢复。恢复文件会先完整校验，再原子替换正式文件。
+
+数据格式当前为 v3。v1/v2 数据文件和备份会在读取时自动补齐新增字段；v2 睡眠评分按百分比换算、训练强度按十分制换算，并在下次保存时写回 v3，不需要手工迁移。
 
 ## 并发与安全边界
 

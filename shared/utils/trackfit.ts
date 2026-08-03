@@ -16,7 +16,16 @@ export function getMetrics(data: TrackFitData): MetricDefinitionDto[] {
 }
 
 export function getSettings(data: TrackFitData): AppSettingsDto {
-  return data.settings[0] ?? { heightCm: null, desiredWeightMinimum: null, desiredWeightMaximum: null, defaultDateRange: '30d', theme: 'system', dataVersion: 1 }
+  return data.settings[0] ?? {
+    heightCm: null,
+    desiredWeightMinimum: null,
+    desiredWeightMaximum: null,
+    defaultDateRange: '30d',
+    sleepGoalHours: 8,
+    weeklyTrainingGoalMinutes: 150,
+    theme: 'system',
+    dataVersion: 1,
+  }
 }
 
 export function listMeasurements(data: TrackFitData, query: MeasurementQuery): MeasurementPageDto {

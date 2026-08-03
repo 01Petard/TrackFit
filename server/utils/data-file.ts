@@ -102,9 +102,19 @@ function createDefaultData(): TrackFitData {
     ['calf', '小腿围', 'cm', 1, 10, 150],
   ] as const
   return {
-    version: 1,
+    version: 3,
     exportedAt: new Date().toISOString(),
-    settings: [{ id: 1, heightCm: null, desiredWeightMinimum: null, desiredWeightMaximum: null, defaultDateRange: '30d', theme: 'system', dataVersion: 1 }],
+    settings: [{
+      id: 1,
+      heightCm: null,
+      desiredWeightMinimum: null,
+      desiredWeightMaximum: null,
+      defaultDateRange: '30d',
+      sleepGoalHours: 8,
+      weeklyTrainingGoalMinutes: 150,
+      theme: 'system',
+      dataVersion: 1,
+    }],
     metrics: metrics.map(([code, name, unit, decimalPlaces, minimumValue, maximumValue], index) => ({
       id: index + 1,
       code,
@@ -119,6 +129,8 @@ function createDefaultData(): TrackFitData {
     })),
     sessions: [],
     values: [],
+    trainingSessions: [],
+    sleepRecords: [],
   }
 }
 

@@ -20,6 +20,30 @@ export const measurementWriteSchema = z.object({
   }
 })
 
+export const trainingTypes = ['strength', 'cardio', 'mobility', 'other'] as const
+
+export const trainingWriteSchema = z.object({
+  startedAt: z.coerce.date(),
+  type: z.enum(trainingTypes),
+  durationMinutes: z.number().int().min(1).max(1440),
+  intensity: z.number().int().min(1).max(10),
+  note: z.string().trim().max(500).nullable().optional(),
+})
+
+export const sleepWriteSchema = z.object({
+  fellAsleepAt: z.coerce.date(),
+  wokeUpAt: z.coerce.date(),
+  quality: z.number().int().min(1).max(100),
+  note: z.string().trim().max(500).nullable().optional(),
+}).superRefine(({ fellAsleepAt, wokeUpAt }, context) => {
+  const duration = wokeUpAt.getTime() - fellAsleepAt.getTime()
+  if (duration <= 0) {
+    context.addIssue({ code: 'custom', path: ['wokeUpAt'], message: '醒来时间必须晚于入睡时间' })
+  } else if (duration > 24 * 60 * 60 * 1000) {
+    context.addIssue({ code: 'custom', path: ['wokeUpAt'], message: '单次睡眠不能超过 24 小时' })
+  }
+})
+
 const metricBaseSchema = z.object({
   name: z.string().trim().min(1).max(40),
   code: z.string().trim().toLowerCase().regex(/^[a-z][a-z0-9_]{1,39}$/),
@@ -47,6 +71,8 @@ const settingsBaseSchema = z.object({
   desiredWeightMinimum: z.number().min(20).max(400).nullable().default(null),
   desiredWeightMaximum: z.number().min(20).max(400).nullable().default(null),
   defaultDateRange: z.enum(['24h', '7d', '30d', '90d', 'all']).default('30d'),
+  sleepGoalHours: z.number().min(1).max(16).default(8),
+  weeklyTrainingGoalMinutes: z.number().int().min(0).max(10080).default(150),
   theme: z.enum(['system', 'light', 'dark']).default('system'),
 })
 
@@ -99,13 +125,37 @@ export const backupValueSchema = z.object({
   value: z.number(),
 })
 
-export const backupSchema = z.object({
-  version: z.literal(1),
+export const backupTrainingSchema = z.object({
+  id: z.number().int().positive(),
+  startedAt: z.string().datetime(),
+  type: z.enum(trainingTypes),
+  durationMinutes: z.number().int().min(1).max(1440),
+  intensity: z.number().int().min(1).max(10),
+  note: z.string().max(500).nullable(),
+})
+
+export const backupSleepSchema = z.object({
+  id: z.number().int().positive(),
+  fellAsleepAt: z.string().datetime(),
+  wokeUpAt: z.string().datetime(),
+  quality: z.number().int().min(1).max(100),
+  note: z.string().max(500).nullable(),
+}).superRefine(({ fellAsleepAt, wokeUpAt }, context) => {
+  const duration = new Date(wokeUpAt).getTime() - new Date(fellAsleepAt).getTime()
+  if (duration <= 0 || duration > 24 * 60 * 60 * 1000) {
+    context.addIssue({ code: 'custom', path: ['wokeUpAt'], message: '睡眠时间范围无效' })
+  }
+})
+
+const currentBackupSchema = z.object({
+  version: z.literal(3),
   exportedAt: z.string().datetime(),
   settings: z.array(backupSettingsSchema).max(1),
   metrics: z.array(backupMetricSchema),
   sessions: z.array(backupSessionSchema),
   values: z.array(backupValueSchema),
+  trainingSessions: z.array(backupTrainingSchema).default([]),
+  sleepRecords: z.array(backupSleepSchema).default([]),
 }).superRefine((data, context) => {
   if (data.settings[0] && data.settings[0].id !== 1) {
     context.addIssue({ code: 'custom', path: ['settings', 0, 'id'], message: '设置 ID 必须为 1' })
@@ -114,6 +164,8 @@ export const backupSchema = z.object({
   validateUnique(data.metrics.map(item => item.code), ['metrics'], '指标编码重复', context)
   validateUnique(data.sessions.map(item => item.id), ['sessions'], '测量记录 ID 重复', context)
   validateUnique(data.values.map(item => item.id), ['values'], '测量值 ID 重复', context)
+  validateUnique(data.trainingSessions.map(item => item.id), ['trainingSessions'], '训练记录 ID 重复', context)
+  validateUnique(data.sleepRecords.map(item => item.id), ['sleepRecords'], '睡眠记录 ID 重复', context)
 
   const metricIds = new Set(data.metrics.map(item => item.id))
   const sessionIds = new Set(data.sessions.map(item => item.id))
@@ -133,6 +185,25 @@ export const backupSchema = z.object({
   }
 })
 
+export const backupSchema = z.preprocess(migrateLegacyBackup, currentBackupSchema)
+
+function migrateLegacyBackup(input: unknown): unknown {
+  if (!input || typeof input !== 'object') return input
+  const data = input as Record<string, unknown>
+  if (data.version !== 1 && data.version !== 2) return input
+  const trainingSessions = Array.isArray(data.trainingSessions)
+    ? data.trainingSessions.map(item => item && typeof item === 'object'
+        ? { ...item, intensity: Number((item as Record<string, unknown>).intensity) * 2 }
+        : item)
+    : []
+  const sleepRecords = Array.isArray(data.sleepRecords)
+    ? data.sleepRecords.map(item => item && typeof item === 'object'
+        ? { ...item, quality: Number((item as Record<string, unknown>).quality) * 20 }
+        : item)
+    : []
+  return { ...data, version: 3, trainingSessions, sleepRecords }
+}
+
 function validateUnique(
   values: Array<number | string>,
   path: Array<string | number>,
@@ -147,4 +218,6 @@ function validateUnique(
 export type MeasurementWrite = z.infer<typeof measurementWriteSchema>
 export type MetricCreate = z.infer<typeof metricCreateSchema>
 export type SettingsUpdate = z.infer<typeof settingsUpdateSchema>
+export type TrainingWrite = z.infer<typeof trainingWriteSchema>
+export type SleepWrite = z.infer<typeof sleepWriteSchema>
 export type TrackFitData = z.infer<typeof backupSchema>

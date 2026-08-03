@@ -11,7 +11,7 @@ services:
       TRACKFIT_DATA_FILE: /app/data/trackfit-data.json
       TZ: Asia/Shanghai
     ports:
-      - "${TRACKFIT_BIND_ADDRESS:-127.0.0.1}:${TRACKFIT_PORT:-3000}:3000"
+      - "${TRACKFIT_BIND_ADDRESS:-0.0.0.0}:${TRACKFIT_PORT:-3000}:3000"
     volumes:
       - ./data:/app/data
     healthcheck:

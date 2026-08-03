@@ -9,6 +9,8 @@ const heightCm = ref<number | null>(store.settings.value.heightCm)
 const desiredWeightMinimum = ref<number | ''>(store.settings.value.desiredWeightMinimum ?? '')
 const desiredWeightMaximum = ref<number | ''>(store.settings.value.desiredWeightMaximum ?? '')
 const defaultDateRange = ref<AppSettingsDto['defaultDateRange']>(store.settings.value.defaultDateRange)
+const sleepGoalHours = ref(store.settings.value.sleepGoalHours)
+const weeklyTrainingGoalMinutes = ref(store.settings.value.weeklyTrainingGoalMinutes)
 const theme = ref<AppSettingsDto['theme']>(store.settings.value.theme)
 const saving = ref(false)
 const message = ref('')
@@ -41,6 +43,8 @@ async function save() {
       desiredWeightMinimum: desiredWeightMinimum.value === '' ? null : desiredWeightMinimum.value,
       desiredWeightMaximum: desiredWeightMaximum.value === '' ? null : desiredWeightMaximum.value,
       defaultDateRange: defaultDateRange.value,
+      sleepGoalHours: sleepGoalHours.value,
+      weeklyTrainingGoalMinutes: weeklyTrainingGoalMinutes.value,
       theme: theme.value,
     })
     colorMode.preference = theme.value
@@ -102,6 +106,14 @@ function downloadFile(content: string, filename: string, type: string) {
               <label class="text-xs text-muted">最胖上限<input v-model.number="desiredWeightMaximum" type="number" min="20" max="400" step="0.1" placeholder="例如 75" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted"></label>
             </div>
           </fieldset>
+          <fieldset class="rounded-2xl border border-default p-4">
+            <legend class="px-2 text-sm font-medium">行为目标</legend>
+            <p class="mb-3 text-xs text-muted">用于首页进度和周期报告，不作为医疗建议</p>
+            <div class="grid grid-cols-2 gap-3">
+              <label class="text-xs text-muted">每日睡眠（小时）<input v-model.number="sleepGoalHours" required type="number" min="1" max="16" step="0.5" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted"></label>
+              <label class="text-xs text-muted">每周训练（分钟）<input v-model.number="weeklyTrainingGoalMinutes" required type="number" min="0" max="10080" step="5" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted"></label>
+            </div>
+          </fieldset>
           <label class="block text-sm">默认分析范围<select v-model="defaultDateRange" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3"><option value="24h">24 小时</option><option value="7d">7 天</option><option value="30d">30 天</option><option value="90d">90 天</option><option value="all">全部</option></select></label>
           <label class="block text-sm">界面主题<select v-model="theme" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3"><option value="system">跟随系统</option><option value="light">浅色</option><option value="dark">深色</option></select></label>
         </div>
@@ -113,6 +125,8 @@ function downloadFile(content: string, filename: string, type: string) {
         <div class="mt-6 grid gap-3">
           <button type="button" class="rounded-xl border border-default px-4 py-3 text-center text-sm font-medium hover:bg-elevated" @click="downloadJson">下载 JSON 全量备份</button>
           <button type="button" class="rounded-xl border border-default px-4 py-3 text-center text-sm font-medium hover:bg-elevated" @click="downloadCsv">导出 CSV 测量明细</button>
+          <button type="button" class="rounded-xl border border-default px-4 py-3 text-center text-sm font-medium hover:bg-elevated" @click="downloadFile(store.exportTrainingCsv(), 'trackfit-training.csv', 'text/csv;charset=utf-8')">导出 CSV 训练记录</button>
+          <button type="button" class="rounded-xl border border-default px-4 py-3 text-center text-sm font-medium hover:bg-elevated" @click="downloadFile(store.exportSleepCsv(), 'trackfit-sleep.csv', 'text/csv;charset=utf-8')">导出 CSV 睡眠记录</button>
           <button type="button" class="rounded-xl border border-error/30 px-4 py-3 text-sm font-medium text-error hover:bg-error/5" @click="restoreInput?.click()">从 JSON 恢复数据</button>
           <input ref="restoreInput" type="file" accept="application/json,.json" class="hidden" @change="restore">
         </div>

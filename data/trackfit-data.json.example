@@ -1,0 +1,119 @@
+{
+  "version": 2,
+  "exportedAt": "2026-08-03T01:13:00.508Z",
+  "settings": [
+    {
+      "heightCm": 170,
+      "desiredWeightMinimum": 70,
+      "desiredWeightMaximum": 87,
+      "defaultDateRange": "all",
+      "sleepGoalHours": 8,
+      "weeklyTrainingGoalMinutes": 150,
+      "theme": "system",
+      "id": 1,
+      "dataVersion": 1
+    }
+  ],
+  "metrics": [
+    {
+      "id": 1,
+      "code": "weight",
+      "name": "体重",
+      "unit": "kg",
+      "decimalPlaces": 2,
+      "minimumValue": 20,
+      "maximumValue": 400,
+      "metricType": "core",
+      "enabled": true,
+      "sortOrder": 10
+    },
+    {
+      "id": 2,
+      "code": "body_fat",
+      "name": "体脂率",
+      "unit": "%",
+      "decimalPlaces": 1,
+      "minimumValue": 1,
+      "maximumValue": 75,
+      "metricType": "core",
+      "enabled": true,
+      "sortOrder": 100
+    },
+    {
+      "id": 3,
+      "code": "waist",
+      "name": "腰围",
+      "unit": "cm",
+      "decimalPlaces": 1,
+      "minimumValue": 30,
+      "maximumValue": 300,
+      "metricType": "core",
+      "enabled": true,
+      "sortOrder": 100
+    },
+    {
+      "id": 4,
+      "code": "hip",
+      "name": "臀围",
+      "unit": "cm",
+      "decimalPlaces": 1,
+      "minimumValue": 30,
+      "maximumValue": 300,
+      "metricType": "core",
+      "enabled": false,
+      "sortOrder": 100
+    },
+    {
+      "id": 5,
+      "code": "chest",
+      "name": "胸围",
+      "unit": "cm",
+      "decimalPlaces": 1,
+      "minimumValue": 30,
+      "maximumValue": 300,
+      "metricType": "core",
+      "enabled": false,
+      "sortOrder": 100
+    },
+    {
+      "id": 6,
+      "code": "upper_arm",
+      "name": "上臂围",
+      "unit": "cm",
+      "decimalPlaces": 1,
+      "minimumValue": 10,
+      "maximumValue": 150,
+      "metricType": "core",
+      "enabled": false,
+      "sortOrder": 100
+    },
+    {
+      "id": 7,
+      "code": "thigh",
+      "name": "大腿围",
+      "unit": "cm",
+      "decimalPlaces": 1,
+      "minimumValue": 10,
+      "maximumValue": 200,
+      "metricType": "core",
+      "enabled": false,
+      "sortOrder": 100
+    },
+    {
+      "id": 8,
+      "code": "calf",
+      "name": "小腿围",
+      "unit": "cm",
+      "decimalPlaces": 1,
+      "minimumValue": 10,
+      "maximumValue": 150,
+      "metricType": "core",
+      "enabled": false,
+      "sortOrder": 100
+    }
+  ],
+  "sessions": [],
+  "values": [],
+  "trainingSessions": [],
+  "sleepRecords": []
+}

@@ -27,13 +27,26 @@ const linePoints = computed(() => coordinates.value.map(point => `${point.x},${p
 const areaPoints = computed(() => coordinates.value.length
   ? `${padding},${height - padding} ${linePoints.value} ${width - padding},${height - padding}`
   : '')
+const endpointStyle = computed(() => {
+  const endpoint = coordinates.value.at(-1)
+  return endpoint
+    ? { left: `${endpoint.x / width * 100}%`, top: `${endpoint.y / height * 100}%` }
+    : undefined
+})
 </script>
 
 <template>
-  <svg :aria-label="label" class="h-16 w-full" :viewBox="`0 0 ${width} ${height}`" role="img" preserveAspectRatio="none">
-    <line x1="0" :y1="height / 2" :x2="width" :y2="height / 2" stroke="currentColor" stroke-opacity=".08" stroke-dasharray="4 4" />
-    <polygon v-if="coordinates.length > 1" :points="areaPoints" :fill="color" fill-opacity=".1" />
-    <polyline v-if="coordinates.length > 1" :points="linePoints" fill="none" :stroke="color" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
-    <circle v-if="coordinates.length" :cx="coordinates.at(-1)?.x" :cy="coordinates.at(-1)?.y" r="3.5" :fill="color" />
-  </svg>
+  <div class="relative h-16 w-full">
+    <svg :aria-label="label" class="block size-full" :viewBox="`0 0 ${width} ${height}`" role="img" preserveAspectRatio="none">
+      <line x1="0" :y1="height / 2" :x2="width" :y2="height / 2" stroke="currentColor" stroke-opacity=".08" stroke-dasharray="4 4" />
+      <polygon v-if="coordinates.length > 1" :points="areaPoints" :fill="color" fill-opacity=".1" />
+      <polyline v-if="coordinates.length > 1" :points="linePoints" fill="none" :stroke="color" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
+    </svg>
+    <span
+      v-if="endpointStyle"
+      aria-hidden="true"
+      class="pointer-events-none absolute size-[7px] -translate-x-1/2 -translate-y-1/2 rounded-full"
+      :style="{ ...endpointStyle, backgroundColor: color }"
+    />
+  </div>
 </template>

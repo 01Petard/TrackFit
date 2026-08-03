@@ -74,6 +74,78 @@ export interface AppSettingsDto {
   desiredWeightMinimum: number | null
   desiredWeightMaximum: number | null
   defaultDateRange: '24h' | '7d' | '30d' | '90d' | 'all'
+  sleepGoalHours: number
+  weeklyTrainingGoalMinutes: number
   theme: 'system' | 'light' | 'dark'
   dataVersion: number
+}
+
+export type TrainingType = 'strength' | 'cardio' | 'mobility' | 'other'
+
+export interface TrainingSessionDto {
+  id: number
+  startedAt: string
+  type: TrainingType
+  durationMinutes: number
+  intensity: number
+  note: string | null
+}
+
+export interface SleepRecordDto {
+  id: number
+  fellAsleepAt: string
+  wokeUpAt: string
+  durationMinutes: number
+  quality: number
+  note: string | null
+}
+
+export interface BehaviorQuery {
+  start?: string
+  end?: string
+}
+
+export interface BehaviorTimelineItemDto {
+  id: number
+  kind: 'training' | 'sleep'
+  occurredAt: string
+  training?: TrainingSessionDto
+  sleep?: SleepRecordDto
+}
+
+export interface CorrelationDto {
+  metricCode: string
+  metricName: string
+  factor: 'trainingDuration' | 'trainingIntensity' | 'sleepDuration' | 'sleepQuality'
+  lagDays: 0 | 1 | 3 | 7
+  coefficient: number
+  sampleSize: number
+}
+
+export interface PeriodReportDto {
+  period: 'week' | 'month'
+  start: string
+  end: string
+  bodyMetrics: Array<{
+    code: string
+    name: string
+    unit: string
+    average: number | null
+    change: number | null
+    volatility: number | null
+    previousAverage: number | null
+  }>
+  training: {
+    count: number
+    totalMinutes: number
+    averageIntensity: number | null
+    previousTotalMinutes: number
+  }
+  sleep: {
+    averageMinutes: number | null
+    averageQuality: number | null
+    goalDays: number
+    previousAverageMinutes: number | null
+  }
+  strongestCorrelations: CorrelationDto[]
 }

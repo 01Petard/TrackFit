@@ -5,7 +5,7 @@ export default defineNuxtConfig({
   app: {
     head: {
       htmlAttrs: { lang: 'zh-CN' },
-      title: 'TrackFit',
+      title: 'TrackFit 形轨｜记录身体变化，看见习惯的影响',
       meta: [
         { name: 'description', content: '个人身体指标记录与趋势分析' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },

@@ -1,6 +1,18 @@
-import type { MeasurementWrite, MetricCreate, SettingsUpdate, TrackFitData } from '../../shared/schemas/trackfit'
+import type { MeasurementWrite, MetricCreate, SettingsUpdate, SleepWrite, TrackFitData, TrainingWrite } from '../../shared/schemas/trackfit'
+import type { BehaviorQuery } from '../../shared/types/api'
 import type { MeasurementQuery } from '../../shared/utils/trackfit'
 import { backupSchema } from '../../shared/schemas/trackfit'
+import {
+  buildBehaviorCorrelations,
+  buildPeriodReport,
+  createSleepCsv,
+  createTrainingCsv,
+  deleteSleep as deleteSleepInData,
+  deleteTraining as deleteTrainingInData,
+  listBehaviorTimeline,
+  saveSleep as saveSleepInData,
+  saveTraining as saveTrainingInData,
+} from '../../shared/utils/behavior'
 import {
   createCsv,
   createMetric as createMetricInData,
@@ -134,6 +146,13 @@ export function useTrackFitData() {
     saveSettings: (input: SettingsUpdate) => mutate(draft => saveSettingsInData(draft, input)),
     saveMeasurement: (input: MeasurementWrite | unknown, id?: number) => mutate(draft => saveMeasurementInData(draft, input, id)),
     deleteMeasurement: (id: number) => mutate(draft => deleteMeasurementInData(draft, id)),
+    listBehaviors: (query?: BehaviorQuery) => data.value ? listBehaviorTimeline(data.value, query) : [],
+    saveTraining: (input: TrainingWrite | unknown, id?: number) => mutate(draft => saveTrainingInData(draft, input, id)),
+    deleteTraining: (id: number) => mutate(draft => deleteTrainingInData(draft, id)),
+    saveSleep: (input: SleepWrite | unknown, id?: number) => mutate(draft => saveSleepInData(draft, input, id)),
+    deleteSleep: (id: number) => mutate(draft => deleteSleepInData(draft, id)),
+    getBehaviorCorrelations: () => data.value ? buildBehaviorCorrelations(data.value) : [],
+    getPeriodReport: (period: 'week' | 'month', now?: Date) => data.value ? buildPeriodReport(data.value, period, now) : null,
     restore: (input: unknown) => {
       const restored = backupSchema.parse(input)
       return mutate((draft) => {
@@ -142,6 +161,8 @@ export function useTrackFitData() {
     },
     exportJson: () => JSON.stringify({ ...data.value!, exportedAt: new Date().toISOString() }, null, 2),
     exportCsv: () => data.value ? createCsv(data.value) : '',
+    exportTrainingCsv: () => data.value ? createTrainingCsv(data.value) : '',
+    exportSleepCsv: () => data.value ? createSleepCsv(data.value) : '',
   }
 }
 
@@ -165,7 +186,7 @@ function getErrorMessage(cause: unknown): string {
 }
 
 function emptyData(): TrackFitData {
-  return { version: 1, exportedAt: new Date(0).toISOString(), settings: [], metrics: [], sessions: [], values: [] }
+  return { version: 3, exportedAt: new Date(0).toISOString(), settings: [], metrics: [], sessions: [], values: [], trainingSessions: [], sleepRecords: [] }
 }
 
 function emptyPage(query: MeasurementQuery) {

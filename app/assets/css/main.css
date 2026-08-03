@@ -31,3 +31,9 @@ body {
 .safe-bottom { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
 @media (min-width: 1024px) { .safe-bottom { padding-bottom: 2rem; } }
 
+.scrollbar-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-hidden::-webkit-scrollbar { display: none; }

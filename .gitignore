@@ -4,6 +4,7 @@ node_modules/
 .output/
 data/*
 !data/.gitkeep
+!data/trackfit-data.json.example
 dist/
 coverage/
 playwright-report/
@@ -15,3 +16,8 @@ test-results/
 .idea/
 .vscode/
 *.log
+.playwright*
+.codex*
+.openclaw
+.opencode
+.claude
