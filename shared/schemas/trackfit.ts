@@ -32,16 +32,8 @@ export const trainingWriteSchema = z.object({
 
 export const sleepWriteSchema = z.object({
   fellAsleepAt: z.coerce.date(),
-  wokeUpAt: z.coerce.date(),
+  durationMinutes: z.number().int().min(1).max(1440),
   quality: z.number().int().min(1).max(100),
-  note: z.string().trim().max(500).nullable().optional(),
-}).superRefine(({ fellAsleepAt, wokeUpAt }, context) => {
-  const duration = wokeUpAt.getTime() - fellAsleepAt.getTime()
-  if (duration <= 0) {
-    context.addIssue({ code: 'custom', path: ['wokeUpAt'], message: '醒来时间必须晚于入睡时间' })
-  } else if (duration > 24 * 60 * 60 * 1000) {
-    context.addIssue({ code: 'custom', path: ['wokeUpAt'], message: '单次睡眠不能超过 24 小时' })
-  }
 })
 
 const metricBaseSchema = z.object({

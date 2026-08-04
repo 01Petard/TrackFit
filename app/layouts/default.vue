@@ -58,6 +58,16 @@ onBeforeUnmount(() => window.removeEventListener('scroll', syncHeaderVisibility)
           </nav>
           <span class="rounded-full bg-elevated px-2.5 py-1 text-[11px] text-muted">{{ user?.role === 'admin' ? '管理员' : '只读访客' }}</span>
           <button class="rounded-lg border border-default px-2.5 py-1.5 text-xs text-muted hover:text-highlighted" @click="logout">退出</button>
+          <a
+            href="https://github.com/01Petard/TrackFit"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub 仓库：01Petard/TrackFit"
+            title="GitHub 仓库：01Petard/TrackFit"
+            class="grid size-8 place-items-center rounded-lg border border-default text-muted transition hover:border-primary/40 hover:bg-elevated hover:text-highlighted"
+          >
+            <AppIcon name="github" class="size-[18px]" />
+          </a>
         </div>
       </div>
     </header>

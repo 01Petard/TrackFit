@@ -17,7 +17,12 @@ const store = useTrackFitData()
 const saving = ref(false)
 const errorMessage = ref('')
 const training = reactive({ startedAt: '', type: 'strength' as TrainingType, durationMinutes: 45, intensity: 6, note: '' })
-const sleep = reactive({ fellAsleepAt: '', wokeUpAt: '', quality: 80, note: '' })
+const sleep = reactive({ fellAsleepAt: '', durationHours: 8, quality: 80 })
+const calculatedWakeUpAt = computed(() => {
+  const fellAsleepAt = dayjs(sleep.fellAsleepAt)
+  if (!fellAsleepAt.isValid() || sleep.durationHours <= 0) return '—'
+  return fellAsleepAt.add(sleep.durationHours, 'hour').format('YYYY-MM-DD HH:mm')
+})
 const trainingTemplates = [
   { label: '力量训练', type: 'strength' as const, durationMinutes: 45, intensity: 8 },
   { label: '有氧', type: 'cardio' as const, durationMinutes: 30, intensity: 6 },
@@ -39,9 +44,8 @@ watch(() => props.open, (open) => {
   const defaultWakeTime = dayjs().hour() >= 7 ? dayjs().hour(7).minute(0).second(0) : dayjs()
   Object.assign(sleep, {
     fellAsleepAt: dayjs(sourceSleep?.fellAsleepAt ?? defaultWakeTime.subtract(8, 'hour')).format('YYYY-MM-DDTHH:mm:ss'),
-    wokeUpAt: dayjs(sourceSleep?.wokeUpAt ?? defaultWakeTime).format('YYYY-MM-DDTHH:mm:ss'),
+    durationHours: sourceSleep ? Number((sourceSleep.durationMinutes / 60).toFixed(2)) : 8,
     quality: sourceSleep?.quality ?? 80,
-    note: sourceSleep?.note ?? '',
   })
 }, { immediate: true })
 
@@ -75,9 +79,8 @@ async function save() {
     } else {
       await store.saveSleep({
         fellAsleepAt: new Date(sleep.fellAsleepAt).toISOString(),
-        wokeUpAt: new Date(sleep.wokeUpAt).toISOString(),
+        durationMinutes: Math.round(sleep.durationHours * 60),
         quality: sleep.quality,
-        note: sleep.note || null,
       }, props.item?.sleep?.id)
     }
     emit('update:open', false)
@@ -115,10 +118,14 @@ async function save() {
           </template>
 
           <template v-else>
-            <label class="block text-sm">入睡时间<AppDateField v-model="sleep.fellAsleepAt" mode="datetime" class="mt-2" /></label>
-            <label class="block text-sm">醒来时间<AppDateField v-model="sleep.wokeUpAt" mode="datetime" class="mt-2" /></label>
-            <label class="block text-sm">睡眠质量（百分制）<input v-model.number="sleep.quality" required type="number" min="1" max="100" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3"></label>
-            <label class="block text-sm">备注<textarea v-model="sleep.note" maxlength="500" rows="3" class="mt-2 w-full resize-none rounded-xl border border-default bg-default px-4 py-3" /></label>
+            <label class="block text-sm">就寝时间<AppDateField v-model="sleep.fellAsleepAt" mode="datetime" class="mt-2" /></label>
+            <div class="grid grid-cols-2 gap-3">
+              <label class="text-sm">睡眠时间（小时）<input v-model.number="sleep.durationHours" required type="number" min="0.02" max="24" step="0.01" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3"></label>
+              <label class="text-sm">睡眠分数<input v-model.number="sleep.quality" required type="number" min="1" max="100" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3"></label>
+            </div>
+            <p class="rounded-xl bg-elevated px-4 py-3 text-sm text-muted">
+              起床时间：<span class="font-medium text-highlighted">{{ calculatedWakeUpAt }}</span>
+            </p>
           </template>
 
           <p v-if="errorMessage" class="rounded-xl bg-error/10 px-4 py-3 text-sm text-error">{{ errorMessage }}</p>

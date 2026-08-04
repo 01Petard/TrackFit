@@ -1,6 +1,6 @@
 <script setup lang="ts">
 defineProps<{
-  name: 'home' | 'records' | 'analysis' | 'metrics' | 'settings' | 'plus' | 'edit' | 'save' | 'close' | 'calendar' | 'clock'
+  name: 'home' | 'records' | 'analysis' | 'metrics' | 'settings' | 'plus' | 'edit' | 'save' | 'close' | 'calendar' | 'clock' | 'github'
 }>()
 </script>
 
@@ -42,6 +42,10 @@ defineProps<{
     <template v-else-if="name === 'clock'">
       <circle cx="12" cy="12" r="9" />
       <path d="M12 7v5l3 2" />
+    </template>
+    <template v-else-if="name === 'github'">
+      <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3.3-.4 6.8-1.6 6.8-7A5.4 5.4 0 0 0 19.3 4 5 5 0 0 0 19.1.5S18 0 15 1.8a13.4 13.4 0 0 0-7 0C5 0 3.9.5 3.9.5A5 5 0 0 0 3.7 4a5.4 5.4 0 0 0-1.5 3.7c0 5.4 3.5 6.6 6.8 7A4.8 4.8 0 0 0 8 18v4" />
+      <path d="M8 19c-3 .9-3-1.5-4-2" />
     </template>
   </svg>
 </template>

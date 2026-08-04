@@ -121,23 +121,30 @@ const behaviorInsights = computed(() => {
   }
 
   if (sleeps.length) {
-    const values = sleeps.slice().reverse().map(item => Number((item.durationMinutes / 60).toFixed(2)))
+    const dailyScores = new Map<string, number[]>()
+    for (const item of sleeps) {
+      const day = dayjs(item.wokeUpAt).format('YYYY-MM-DD')
+      dailyScores.set(day, [...(dailyScores.get(day) ?? []), item.quality])
+    }
+    const values = [...dailyScores.entries()]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([, scores]) => Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length))
     const average = values.reduce((sum, value) => sum + value, 0) / values.length
-    const goal = settings.value.sleepGoalHours
     const latest = values.at(-1) ?? 0
+    const change = values.length > 1 ? latest - values[0]! : 0
     insights.push({
-      code: 'sleep_duration',
+      code: 'sleep_score',
       color: '#6366f1',
-      name: '睡眠时长',
-      unit: '小时',
+      name: '睡眠分数',
+      unit: '分',
       latest,
-      count: sleeps.length,
+      count: values.length,
       values,
-      direction: latest >= goal ? 'stable' as const : 'down' as const,
-      trendLabel: latest >= goal ? '达到睡眠目标' : '低于睡眠目标',
-      changeLabel: `7 天平均 ${average.toFixed(1)} 小时`,
-      evaluation: `每日睡眠目标 ${goal} 小时，最近一次记录为 ${latest} 小时`,
-      tone: average >= goal ? 'positive' as const : 'warning' as const,
+      direction: change > 0 ? 'up' as const : change < 0 ? 'down' as const : 'stable' as const,
+      trendLabel: change > 0 ? '分数上升' : change < 0 ? '分数下降' : '分数平稳',
+      changeLabel: values.length > 1 ? `较首日 ${change > 0 ? '+' : ''}${change} 分` : '暂无可比变化',
+      evaluation: `过去 7 天每日睡眠分数平均为 ${average.toFixed(1)} 分，最近一天为 ${latest} 分`,
+      tone: change >= 0 ? 'positive' as const : 'warning' as const,
     })
   }
   return insights

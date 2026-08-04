@@ -16,7 +16,7 @@ describe('训练与睡眠业务', () => {
   it('保存、编辑和删除行为记录', () => {
     const data = fixture()
     const trainingId = saveTraining(data, { startedAt: '2026-08-03T10:00:00+08:00', type: 'strength', durationMinutes: 45, intensity: 8 })
-    const sleepId = saveSleep(data, { fellAsleepAt: '2026-08-02T23:00:00+08:00', wokeUpAt: '2026-08-03T07:30:00+08:00', quality: 80 })
+    const sleepId = saveSleep(data, { fellAsleepAt: '2026-08-02T23:00:00+08:00', durationMinutes: 510, quality: 80 })
 
     expect(listBehaviorTimeline(data)).toMatchObject([
       { kind: 'training', training: { durationMinutes: 45 } },
@@ -31,10 +31,11 @@ describe('训练与睡眠业务', () => {
     expect(data.sleepRecords).toEqual([])
   })
 
-  it('拒绝倒序、超长睡眠和越界训练强度', () => {
+  it('自动计算起床时间并拒绝超长睡眠和越界训练强度', () => {
     const data = fixture()
-    expect(() => saveSleep(data, { fellAsleepAt: '2026-08-03T08:00:00+08:00', wokeUpAt: '2026-08-03T07:00:00+08:00', quality: 80 })).toThrow('醒来时间必须晚于入睡时间')
-    expect(() => saveSleep(data, { fellAsleepAt: '2026-08-01T07:00:00+08:00', wokeUpAt: '2026-08-03T07:00:01+08:00', quality: 80 })).toThrow('单次睡眠不能超过 24 小时')
+    saveSleep(data, { fellAsleepAt: '2026-08-03T23:00:00+08:00', durationMinutes: 480, quality: 80 })
+    expect(data.sleepRecords[0]?.wokeUpAt).toBe('2026-08-03T23:00:00.000Z')
+    expect(() => saveSleep(data, { fellAsleepAt: '2026-08-01T07:00:00+08:00', durationMinutes: 1441, quality: 80 })).toThrow()
     expect(() => saveTraining(data, { startedAt: '2026-08-03T10:00:00+08:00', type: 'strength', durationMinutes: 45, intensity: 11 })).toThrow()
   })
 
@@ -58,7 +59,7 @@ describe('训练与睡眠业务', () => {
     const data = fixture()
     saveTraining(data, { startedAt: '2026-08-03T10:00:00+08:00', type: 'strength', durationMinutes: 60, intensity: 8 })
     saveTraining(data, { startedAt: '2026-07-30T14:00:00+08:00', type: 'cardio', durationMinutes: 30, intensity: 6 })
-    saveSleep(data, { fellAsleepAt: '2026-08-02T23:00:00+08:00', wokeUpAt: '2026-08-03T07:00:00+08:00', quality: 80 })
+    saveSleep(data, { fellAsleepAt: '2026-08-02T23:00:00+08:00', durationMinutes: 480, quality: 80 })
     const report = buildPeriodReport(data, 'week', new Date('2026-08-06T12:00:00+08:00'))
     expect(report.training).toMatchObject({ count: 1, totalMinutes: 60, previousTotalMinutes: 30 })
     expect(report.sleep).toMatchObject({ averageMinutes: 480, goalDays: 1 })

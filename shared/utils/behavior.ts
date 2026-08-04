@@ -49,12 +49,13 @@ export function saveSleep(data: TrackFitData, input: SleepWrite | unknown, id?: 
   const payload = sleepWriteSchema.parse(input)
   const existing = id == null ? undefined : data.sleepRecords.find(item => item.id === id)
   if (id != null && !existing) throw new Error('睡眠记录不存在')
+  const wokeUpAt = new Date(payload.fellAsleepAt.getTime() + payload.durationMinutes * 60_000)
   const item = {
     id: existing?.id ?? nextId(data.sleepRecords),
     fellAsleepAt: payload.fellAsleepAt.toISOString(),
-    wokeUpAt: payload.wokeUpAt.toISOString(),
+    wokeUpAt: wokeUpAt.toISOString(),
     quality: payload.quality,
-    note: payload.note || null,
+    note: null,
   }
   if (existing) Object.assign(existing, item)
   else data.sleepRecords.push(item)
@@ -140,10 +141,10 @@ export function createTrainingCsv(data: TrackFitData): string {
 
 export function createSleepCsv(data: TrackFitData): string {
   return csv([
-    ['记录ID', '入睡时间', '醒来时间', '时长（分钟）', '睡眠质量（百分制）', '备注'],
+    ['记录ID', '就寝时间', '起床时间', '睡眠时间（分钟）', '睡眠分数'],
     ...[...data.sleepRecords]
       .sort((a, b) => new Date(a.wokeUpAt).getTime() - new Date(b.wokeUpAt).getTime())
-      .map(item => [item.id, item.fellAsleepAt, item.wokeUpAt, hydrateSleep(item).durationMinutes, item.quality, item.note ?? '']),
+      .map(item => [item.id, item.fellAsleepAt, item.wokeUpAt, hydrateSleep(item).durationMinutes, item.quality]),
   ])
 }
 

@@ -29,7 +29,7 @@ describe('Vercel Blob JSON 仓储', () => {
     blob.put.mockResolvedValueOnce({ etag: '"etag-2"' })
     const store = new BlobDataStore('trackfit/data.json', () => '{}\n')
 
-    await expect(store.readIfChanged('"etag-1"')).resolves.toBeNull()
+    await expect(store.readIfChanged('W/"etag-1"')).resolves.toBeNull()
     await expect(store.replace('"etag-1"', '{"version":3}\n')).resolves.toEqual({ content: '{"version":3}\n', etag: '"etag-2"', writable: true })
     expect(blob.get).toHaveBeenCalledWith('trackfit/data.json', expect.objectContaining({ ifNoneMatch: '"etag-1"' }))
     expect(blob.put).toHaveBeenCalledWith('trackfit/data.json', '{"version":3}\n', expect.objectContaining({ ifMatch: '"etag-1"', allowOverwrite: true }))
@@ -46,5 +46,20 @@ describe('Vercel Blob JSON 仓储', () => {
     blob.get.mockResolvedValueOnce({ statusCode: 200, stream, blob: { etag: 'etag-1' } })
     const store = new BlobDataStore('trackfit/data.json', () => '{}\n')
     await expect(store.read()).resolves.toEqual({ content: '{"version":3}\n', etag: 'etag-1', writable: true })
+  })
+
+  it('将 Blob 弱 ETag 转为可用于条件写入的强 ETag', async () => {
+    const stream = new Response('{"version":3}\n').body
+    blob.get.mockResolvedValueOnce({ statusCode: 200, stream, blob: { etag: 'W/"etag-1"' } })
+    blob.put.mockResolvedValueOnce({ etag: 'W/"etag-2"' })
+    const store = new BlobDataStore('trackfit/data.json', () => '{}\n')
+
+    await expect(store.read()).resolves.toEqual({ content: '{"version":3}\n', etag: '"etag-1"', writable: true })
+    await expect(store.replace('W/"etag-1"', '{"version":3}\n')).resolves.toEqual({
+      content: '{"version":3}\n',
+      etag: '"etag-2"',
+      writable: true,
+    })
+    expect(blob.put).toHaveBeenCalledWith('trackfit/data.json', '{"version":3}\n', expect.objectContaining({ ifMatch: '"etag-1"' }))
   })
 })

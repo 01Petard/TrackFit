@@ -104,7 +104,7 @@ export class BlobDataStore implements DataStore {
     const result = await get(this.pathname, {
       access: 'private',
       useCache: false,
-      ifNoneMatch: etag,
+      ifNoneMatch: normalizeBlobEtag(etag),
     })
     if (!result) return await this.createInitialBlob()
     if (result.statusCode === 304) return null
@@ -118,9 +118,9 @@ export class BlobDataStore implements DataStore {
         allowOverwrite: true,
         contentType: 'application/json; charset=utf-8',
         cacheControlMaxAge: 60,
-        ...(expectedEtag === '*' ? {} : { ifMatch: expectedEtag }),
+        ...(expectedEtag === '*' ? {} : { ifMatch: normalizeBlobEtag(expectedEtag) }),
       })
-      return { content, etag: result.etag, writable: true }
+      return { content, etag: normalizeBlobEtag(result.etag), writable: true }
     } catch (error) {
       if (error instanceof BlobPreconditionFailedError) throw new StoreConflictError()
       throw error
@@ -135,7 +135,7 @@ export class BlobDataStore implements DataStore {
         contentType: 'application/json; charset=utf-8',
         cacheControlMaxAge: 60,
       })
-      return { content, etag: result.etag, writable: true }
+      return { content, etag: normalizeBlobEtag(result.etag), writable: true }
     } catch (error) {
       const existing = await get(this.pathname, { access: 'private', useCache: false }).catch(() => null)
       if (existing) return await blobResultToStoredData(existing)
@@ -148,9 +148,13 @@ async function blobResultToStoredData(result: NonNullable<Awaited<ReturnType<typ
   if (result.statusCode === 304 || !result.stream) throw new Error('条件读取未返回数据内容')
   return {
     content: await new Response(result.stream).text(),
-    etag: result.blob.etag,
+    etag: normalizeBlobEtag(result.blob.etag),
     writable: true,
   }
+}
+
+function normalizeBlobEtag(etag: string): string {
+  return etag.startsWith('W/') ? etag.slice(2) : etag
 }
 
 function createEtag(content: string): string {
