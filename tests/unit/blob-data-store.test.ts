@@ -25,13 +25,14 @@ describe('Vercel Blob JSON 仓储', () => {
   })
 
   it('支持条件读取和条件更新', async () => {
-    blob.get.mockResolvedValueOnce({ statusCode: 304, stream: null, blob: { etag: 'etag-1' } })
-    blob.put.mockResolvedValueOnce({ etag: 'etag-2' })
+    blob.get.mockResolvedValueOnce({ statusCode: 304, stream: null, blob: { etag: '"etag-1"' } })
+    blob.put.mockResolvedValueOnce({ etag: '"etag-2"' })
     const store = new BlobDataStore('trackfit/data.json', () => '{}\n')
 
-    await expect(store.readIfChanged('etag-1')).resolves.toBeNull()
-    await expect(store.replace('etag-1', '{"version":3}\n')).resolves.toEqual({ content: '{"version":3}\n', etag: 'etag-2', writable: true })
-    expect(blob.put).toHaveBeenCalledWith('trackfit/data.json', '{"version":3}\n', expect.objectContaining({ ifMatch: 'etag-1', allowOverwrite: true }))
+    await expect(store.readIfChanged('"etag-1"')).resolves.toBeNull()
+    await expect(store.replace('"etag-1"', '{"version":3}\n')).resolves.toEqual({ content: '{"version":3}\n', etag: '"etag-2"', writable: true })
+    expect(blob.get).toHaveBeenCalledWith('trackfit/data.json', expect.objectContaining({ ifNoneMatch: '"etag-1"' }))
+    expect(blob.put).toHaveBeenCalledWith('trackfit/data.json', '{"version":3}\n', expect.objectContaining({ ifMatch: '"etag-1"', allowOverwrite: true }))
   })
 
   it('将 Blob 前置条件失败转换为存储冲突', async () => {

@@ -2,6 +2,7 @@ import type { MeasurementWrite, MetricCreate, SettingsUpdate, SleepWrite, TrackF
 import type { BehaviorQuery } from '../../shared/types/api'
 import type { MeasurementQuery } from '../../shared/utils/trackfit'
 import { backupSchema } from '../../shared/schemas/trackfit'
+import { dataIfMatchHeader, dataIfNoneMatchHeader, readDataEtag } from '../../shared/utils/data-version'
 import {
   buildBehaviorCorrelations,
   buildPeriodReport,
@@ -61,7 +62,7 @@ export function useTrackFitData() {
     try {
       const response = await fetch('/api/data', {
         cache: 'no-store',
-        headers: !force && etag.value ? { 'If-None-Match': etag.value } : undefined,
+        headers: !force && etag.value ? { [dataIfNoneMatchHeader]: etag.value } : undefined,
       })
       if (response.status === 304) {
         status.value = 'success'
@@ -69,7 +70,7 @@ export function useTrackFitData() {
       }
       if (!response.ok) throw new Error(await responseMessage(response, '读取数据文件失败'))
       data.value = backupSchema.parse(await response.json())
-      etag.value = response.headers.get('etag') ?? ''
+      etag.value = readDataEtag(response.headers)
       writable.value = response.headers.get('x-trackfit-writable') === 'true'
       status.value = 'success'
       error.value = ''
@@ -117,13 +118,13 @@ export function useTrackFitData() {
     try {
       const response = await fetch('/api/data', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'If-Match': etag.value },
+        headers: { 'Content-Type': 'application/json', [dataIfMatchHeader]: etag.value },
         body: JSON.stringify(candidate),
       })
       if (response.status === 409) throw new DataConflictError()
       if (!response.ok) throw new Error(await responseMessage(response, '保存数据文件失败'))
       data.value = backupSchema.parse(await response.json())
-      etag.value = response.headers.get('etag') ?? ''
+      etag.value = readDataEtag(response.headers)
       writable.value = response.headers.get('x-trackfit-writable') === 'true'
       status.value = 'success'
       error.value = ''

@@ -1,14 +1,16 @@
 import { createError, getHeader, readBody, setResponseHeader } from 'h3'
+import { dataEtagHeader, readDataIfMatch } from '../../../shared/utils/data-version'
 import { DataConflictError, InvalidDataError, replaceData } from '../../utils/data-file'
 import { requireTrackFitAdmin } from '../../utils/auth'
 
 export default defineEventHandler(async (event) => {
   await requireTrackFitAdmin(event)
-  const expectedEtag = getHeader(event, 'if-match')
+  const expectedEtag = readDataIfMatch({ get: name => getHeader(event, name) ?? null })
   if (!expectedEtag) throw createError({ statusCode: 428, statusMessage: '缺少数据版本，请刷新后重试' })
   try {
     const snapshot = await replaceData(expectedEtag, await readBody(event))
     setResponseHeader(event, 'ETag', snapshot.etag)
+    setResponseHeader(event, dataEtagHeader, snapshot.etag)
     setResponseHeader(event, 'Cache-Control', 'private, no-store')
     setResponseHeader(event, 'X-TrackFit-Writable', String(snapshot.writable))
     return snapshot.data
