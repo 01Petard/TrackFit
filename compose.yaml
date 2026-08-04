@@ -8,14 +8,22 @@ services:
     restart: unless-stopped
     init: true
     environment:
+      TRACKFIT_STORAGE: file
       TRACKFIT_DATA_FILE: /app/data/trackfit-data.json
+      NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD:?NUXT_SESSION_PASSWORD is required}
+      TRACKFIT_ADMIN_USERNAME: ${TRACKFIT_ADMIN_USERNAME:?TRACKFIT_ADMIN_USERNAME is required}
+      TRACKFIT_ADMIN_PASSWORD_HASH: ${TRACKFIT_ADMIN_PASSWORD_HASH:?TRACKFIT_ADMIN_PASSWORD_HASH is required}
+      TRACKFIT_VIEWER_USERNAME: ${TRACKFIT_VIEWER_USERNAME:?TRACKFIT_VIEWER_USERNAME is required}
+      TRACKFIT_VIEWER_PASSWORD_HASH: ${TRACKFIT_VIEWER_PASSWORD_HASH:?TRACKFIT_VIEWER_PASSWORD_HASH is required}
+      TRACKFIT_VIEWER_DISPLAY_USERNAME: ${TRACKFIT_VIEWER_DISPLAY_USERNAME:-}
+      TRACKFIT_VIEWER_DISPLAY_PASSWORD: ${TRACKFIT_VIEWER_DISPLAY_PASSWORD:-}
       TZ: Asia/Shanghai
     ports:
       - "${TRACKFIT_BIND_ADDRESS:-0.0.0.0}:${TRACKFIT_PORT:-3000}:3000"
     volumes:
       - ./data:/app/data
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/data').then(response => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(response => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 10s
       timeout: 5s
       retries: 5

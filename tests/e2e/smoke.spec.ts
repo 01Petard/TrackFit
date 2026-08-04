@@ -1,6 +1,53 @@
 import { expect, test } from '@playwright/test'
 
-test('桌面端使用顶部导航并展示概览入口', async ({ page }) => {
+test.beforeEach(async ({ page }) => {
+  const response = await page.request.post('/api/auth/login', {
+    data: { username: 'admin', password: 'admin-pass' },
+  })
+  expect(response.ok()).toBe(true)
+})
+
+test('未登录用户会跳转登录页', async ({ page }) => {
+  await page.context().clearCookies()
+  expect((await page.request.get('/api/data')).status()).toBe(401)
+  await page.goto('/settings')
+  await expect(page).toHaveURL(/\/login$/)
+  await expect(page.getByRole('button', { name: '登录' })).toBeVisible()
+  await expect(page.getByText('用户名：readonly-demo')).toBeVisible()
+  await expect(page.getByText('密码：readonly-demo-pass')).toBeVisible()
+})
+
+test('只读访客不显示写入和导出入口', async ({ page }) => {
+  await page.context().clearCookies()
+  const login = await page.request.post('/api/auth/login', {
+    data: { username: 'viewer', password: 'viewer-pass' },
+  })
+  expect(login.ok()).toBe(true)
+  await page.goto('/')
+  await expect(page.getByText('只读访客').first()).toBeVisible()
+  await expect(page.getByRole('button', { name: /快速记录/ })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: '＋ 睡眠' })).toHaveCount(0)
+  await page.goto('/settings')
+  await expect(page.getByText('当前账号为只读访客')).toBeVisible()
+  await expect(page.getByRole('button', { name: /下载 JSON|导出 CSV|恢复数据/ })).toHaveCount(0)
+
+  const initial = await page.request.get('/api/data')
+  const data = await initial.json()
+  const denied = await page.request.put('/api/data', {
+    headers: { 'If-Match': initial.headers().etag },
+    data,
+  })
+  expect(denied.status()).toBe(403)
+})
+
+test('退出后需要重新登录', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: '退出' }).click()
+  await expect(page).toHaveURL(/\/login$/)
+})
+
+test('桌面端使用顶部导航并展示概览入口', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop')
   await page.goto('/')
   await expect(page.locator('a:visible').filter({ hasText: 'TrackFit' }).first()).toBeVisible()
   await expect(page.locator('aside')).toHaveCount(0)
@@ -125,6 +172,8 @@ test('桌面端和手机端均可维护训练与睡眠记录', async ({ page }, 
 })
 
 test('数据接口使用 ETag 阻止过期覆盖', async ({ request }) => {
+  const login = await request.post('/api/auth/login', { data: { username: 'admin', password: 'admin-pass' } })
+  expect(login.ok()).toBe(true)
   const initial = await request.get('/api/data')
   expect(initial.ok()).toBe(true)
   const etag = initial.headers().etag

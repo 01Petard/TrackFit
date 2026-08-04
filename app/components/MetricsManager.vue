@@ -81,7 +81,7 @@ const getMessage = getTrackFitErrorMessage
 <template>
   <div>
     <PageHeader title="指标管理" description="核心指标保持统一口径，也可以增加自己的数值指标">
-      <button class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/15 transition hover:bg-primary/90 sm:w-auto" @click="showCreate = !showCreate">
+      <button v-if="store.canWrite.value" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/15 transition hover:bg-primary/90 sm:w-auto" @click="showCreate = !showCreate">
         <AppIcon :name="showCreate ? 'close' : 'plus'" class="size-[18px]" />
         {{ showCreate ? '收起表单' : '新增指标' }}
       </button>
@@ -116,17 +116,18 @@ const getMessage = getTrackFitErrorMessage
           </div>
           <div v-else class="text-xs text-muted">{{ metric.metricType === 'core' ? '核心指标名称与单位固定' : '点击编辑后修改名称和单位' }}</div>
           <div class="flex flex-wrap items-center justify-between gap-3 lg:justify-end">
-            <div v-if="metric.metricType === 'custom'" class="flex gap-2">
+            <div v-if="store.canWrite.value && metric.metricType === 'custom'" class="flex gap-2">
               <template v-if="editingId === metric.id">
                 <button class="rounded-lg border border-default px-3 py-2 text-xs font-medium transition hover:bg-elevated" @click="cancelEdit(metric)">取消</button>
                 <button :disabled="!isDirty(metric) || savingMetricId === metric.id" class="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white disabled:opacity-40" @click="saveCustom(metric)"><AppIcon name="save" class="size-3.5" />保存</button>
               </template>
               <button v-else class="inline-flex items-center gap-1.5 rounded-lg border border-default px-3 py-2 text-xs font-medium transition hover:border-primary/40 hover:bg-primary/5 hover:text-primary" @click="beginEdit(metric)"><AppIcon name="edit" class="size-3.5" />编辑</button>
             </div>
-            <button type="button" role="switch" :aria-checked="metric.enabled" :disabled="savingMetricId === metric.id" class="inline-flex items-center gap-2.5 rounded-lg px-1 py-1 text-sm disabled:opacity-50" @click="updateMetric(metric, { enabled: !metric.enabled })">
+            <button v-if="store.canWrite.value" type="button" role="switch" :aria-checked="metric.enabled" :disabled="savingMetricId === metric.id" class="inline-flex items-center gap-2.5 rounded-lg px-1 py-1 text-sm disabled:opacity-50" @click="updateMetric(metric, { enabled: !metric.enabled })">
               <span class="relative h-6 w-11 rounded-full transition" :class="metric.enabled ? 'bg-primary' : 'bg-muted/25'"><span class="absolute top-1 size-4 rounded-full bg-white shadow-sm transition-all" :class="metric.enabled ? 'left-6' : 'left-1'" /></span>
               <span :class="metric.enabled ? 'text-highlighted' : 'text-muted'">{{ metric.enabled ? '已启用' : '已停用' }}</span>
             </button>
+            <span v-else class="rounded-lg bg-elevated px-3 py-2 text-xs text-muted">{{ metric.enabled ? '已启用' : '已停用' }}</span>
           </div>
         </article>
       </div>

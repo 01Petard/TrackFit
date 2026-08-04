@@ -33,6 +33,13 @@ describe('JSON 数据文件仓储', () => {
     await expect(replaceData(initial.etag, initial.data)).rejects.toBeInstanceOf(DataConflictError)
   })
 
+  it('无效输入不会覆盖现有数据', async () => {
+    const initial = await readDataSnapshot()
+    const content = await readFile(process.env.TRACKFIT_DATA_FILE!, 'utf8')
+    await expect(replaceData(initial.etag, { version: 3 })).rejects.toThrow()
+    expect(await readFile(process.env.TRACKFIT_DATA_FILE!, 'utf8')).toBe(content)
+  })
+
   it('损坏文件不会被空数据覆盖', async () => {
     await writeFile(process.env.TRACKFIT_DATA_FILE!, '{broken', 'utf8')
     await expect(readDataSnapshot()).rejects.toThrow()

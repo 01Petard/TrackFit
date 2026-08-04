@@ -1,5 +1,5 @@
 export default defineNuxtConfig({
-  modules: ['@nuxt/ui', '@nuxt/eslint'],
+  modules: ['@nuxt/ui', '@nuxt/eslint', 'nuxt-auth-utils'],
   ssr: false,
   devtools: { enabled: true },
   app: {
@@ -22,6 +22,23 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     dataFile: process.env.TRACKFIT_DATA_FILE ?? '',
+    storage: process.env.TRACKFIT_STORAGE ?? 'file',
+    blobPath: process.env.TRACKFIT_BLOB_PATH ?? 'trackfit/trackfit-data.json',
+    session: {
+      password: process.env.NUXT_SESSION_PASSWORD ?? '',
+      maxAge: 60 * 60 * 24 * 7,
+      cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+      },
+    },
+    public: {
+      viewerCredentials: {
+        username: process.env.TRACKFIT_VIEWER_DISPLAY_USERNAME ?? '',
+        password: process.env.TRACKFIT_VIEWER_DISPLAY_PASSWORD ?? '',
+      },
+    },
   },
   compatibilityDate: '2026-07-31',
   typescript: {

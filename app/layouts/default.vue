@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const route = useRoute()
+const { user, clear } = useUserSession()
 const navigation = [
   { to: '/', label: '主页', icon: 'home' as const },
   { to: '/settings', label: '设置', icon: 'settings' as const },
@@ -17,6 +18,11 @@ function syncHeaderVisibility() {
   if (currentScrollY < 24) headerVisible.value = true
   else if (Math.abs(distance) >= 8) headerVisible.value = distance < 0
   previousScrollY = currentScrollY
+}
+
+async function logout() {
+  await clear()
+  await navigateTo('/login')
 }
 
 onMounted(() => {
@@ -38,18 +44,21 @@ onBeforeUnmount(() => window.removeEventListener('scroll', syncHeaderVisibility)
             <span class="hidden text-[11px] font-normal text-muted sm:block">把变化交给数据</span>
           </span>
         </NuxtLink>
-        <span class="text-xs text-muted lg:hidden">本地数据</span>
-        <nav class="hidden items-center gap-2 lg:flex" aria-label="主导航">
-          <NuxtLink
-            v-for="item in navigation"
-            :key="item.to"
-            :to="item.to"
-            class="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-muted transition hover:bg-elevated hover:text-highlighted"
-          >
-            <AppIcon :name="item.icon" class="size-4 shrink-0" />
-            {{ item.label }}
-          </NuxtLink>
-        </nav>
+        <div class="flex items-center gap-2">
+          <nav class="hidden items-center gap-2 lg:flex" aria-label="主导航">
+            <NuxtLink
+              v-for="item in navigation"
+              :key="item.to"
+              :to="item.to"
+              class="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-muted transition hover:bg-elevated hover:text-highlighted"
+            >
+              <AppIcon :name="item.icon" class="size-4 shrink-0" />
+              {{ item.label }}
+            </NuxtLink>
+          </nav>
+          <span class="rounded-full bg-elevated px-2.5 py-1 text-[11px] text-muted">{{ user?.role === 'admin' ? '管理员' : '只读访客' }}</span>
+          <button class="rounded-lg border border-default px-2.5 py-1.5 text-xs text-muted hover:text-highlighted" @click="logout">退出</button>
+        </div>
       </div>
     </header>
 

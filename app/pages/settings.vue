@@ -92,35 +92,36 @@ function downloadFile(content: string, filename: string, type: string) {
 <template>
   <div>
     <PageHeader title="系统设置" description="配置身体基础信息，管理本地数据备份与运行状态" />
+    <p v-if="!store.canWrite.value" class="mb-5 rounded-2xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">当前账号为只读访客，可查看设置，不能修改或导出数据</p>
 
     <div class="grid gap-6 xl:grid-cols-2">
       <form class="app-card rounded-3xl p-5 sm:p-6" @submit.prevent="save">
         <h2 class="font-bold">个人与显示</h2><p class="mt-1 text-xs text-muted">身高用于计算 BMI，并在每次测量时保存快照</p>
         <div class="mt-6 space-y-5">
-          <label class="block text-sm">身高（cm）<input v-model.number="heightCm" required type="number" min="80" max="250" step="0.1" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3"></label>
+          <label class="block text-sm">身高（cm）<input v-model.number="heightCm" :disabled="!store.canWrite.value" required type="number" min="80" max="250" step="0.1" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3 disabled:opacity-60"></label>
           <fieldset class="rounded-2xl border border-default p-4">
             <legend class="px-2 text-sm font-medium">个人目标体重（kg）</legend>
             <p class="mb-3 text-xs text-muted">两个值需同时填写；保存后会在体重图表中显示目标区间</p>
             <div class="grid grid-cols-2 gap-3">
-              <label class="text-xs text-muted">合适下限<input v-model.number="desiredWeightMinimum" type="number" min="20" max="400" step="0.1" placeholder="例如 60" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted"></label>
-              <label class="text-xs text-muted">最胖上限<input v-model.number="desiredWeightMaximum" type="number" min="20" max="400" step="0.1" placeholder="例如 75" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted"></label>
+              <label class="text-xs text-muted">合适下限<input v-model.number="desiredWeightMinimum" :disabled="!store.canWrite.value" type="number" min="20" max="400" step="0.1" placeholder="例如 60" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted disabled:opacity-60"></label>
+              <label class="text-xs text-muted">最胖上限<input v-model.number="desiredWeightMaximum" :disabled="!store.canWrite.value" type="number" min="20" max="400" step="0.1" placeholder="例如 75" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted disabled:opacity-60"></label>
             </div>
           </fieldset>
           <fieldset class="rounded-2xl border border-default p-4">
             <legend class="px-2 text-sm font-medium">行为目标</legend>
             <p class="mb-3 text-xs text-muted">用于首页进度和周期报告，不作为医疗建议</p>
             <div class="grid grid-cols-2 gap-3">
-              <label class="text-xs text-muted">每日睡眠（小时）<input v-model.number="sleepGoalHours" required type="number" min="1" max="16" step="0.5" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted"></label>
-              <label class="text-xs text-muted">每周训练（分钟）<input v-model.number="weeklyTrainingGoalMinutes" required type="number" min="0" max="10080" step="5" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted"></label>
+              <label class="text-xs text-muted">每日睡眠（小时）<input v-model.number="sleepGoalHours" :disabled="!store.canWrite.value" required type="number" min="1" max="16" step="0.5" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted disabled:opacity-60"></label>
+              <label class="text-xs text-muted">每周训练（分钟）<input v-model.number="weeklyTrainingGoalMinutes" :disabled="!store.canWrite.value" required type="number" min="0" max="10080" step="5" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted disabled:opacity-60"></label>
             </div>
           </fieldset>
-          <label class="block text-sm">默认分析范围<select v-model="defaultDateRange" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3"><option value="24h">24 小时</option><option value="7d">7 天</option><option value="30d">30 天</option><option value="90d">90 天</option><option value="all">全部</option></select></label>
-          <label class="block text-sm">界面主题<select v-model="theme" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3"><option value="system">跟随系统</option><option value="light">浅色</option><option value="dark">深色</option></select></label>
+          <label class="block text-sm">默认分析范围<select v-model="defaultDateRange" :disabled="!store.canWrite.value" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3 disabled:opacity-60"><option value="24h">24 小时</option><option value="7d">7 天</option><option value="30d">30 天</option><option value="90d">90 天</option><option value="all">全部</option></select></label>
+          <label class="block text-sm">界面主题<select v-model="theme" :disabled="!store.canWrite.value" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3 disabled:opacity-60"><option value="system">跟随系统</option><option value="light">浅色</option><option value="dark">深色</option></select></label>
         </div>
-        <button :disabled="saving" class="mt-6 w-full rounded-xl bg-primary px-5 py-3 font-semibold text-white">{{ saving ? '保存中…' : '保存设置' }}</button>
+        <button v-if="store.canWrite.value" :disabled="saving" class="mt-6 w-full rounded-xl bg-primary px-5 py-3 font-semibold text-white">{{ saving ? '保存中…' : '保存设置' }}</button>
       </form>
 
-      <section class="app-card rounded-3xl p-5 sm:p-6">
+      <section v-if="store.canWrite.value" class="app-card rounded-3xl p-5 sm:p-6">
         <h2 class="font-bold">数据备份</h2><p class="mt-1 text-xs text-muted">JSON 可完整恢复，CSV 适合在表格软件中查看</p>
         <div class="mt-6 grid gap-3">
           <button type="button" class="rounded-xl border border-default px-4 py-3 text-center text-sm font-medium hover:bg-elevated" @click="downloadJson">下载 JSON 全量备份</button>
@@ -136,7 +137,7 @@ function downloadFile(content: string, filename: string, type: string) {
       <section class="app-card rounded-3xl p-5 sm:p-6 xl:col-span-2">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><h2 class="font-bold">数据文件状态</h2><p class="mt-1 text-xs text-muted">业务计算由浏览器完成，服务端只负责原子读写 JSON 文件</p></div><button class="rounded-xl border border-default px-4 py-2 text-sm" @click="store.refresh(true)">重新检测</button></div>
         <div class="mt-5 grid gap-3 sm:grid-cols-4">
-          <div class="rounded-2xl bg-elevated p-4"><p class="text-xs text-muted">文件读写</p><strong class="mt-1 block" :class="store.writable.value ? 'text-primary' : 'text-error'">{{ store.writable.value ? '正常' : '异常' }}</strong></div>
+          <div class="rounded-2xl bg-elevated p-4"><p class="text-xs text-muted">存储权限</p><strong class="mt-1 block" :class="store.writable.value ? 'text-primary' : 'text-warning'">{{ store.writable.value ? '可写' : '只读' }}</strong></div>
           <div class="rounded-2xl bg-elevated p-4"><p class="text-xs text-muted">最后更新</p><strong class="mt-1 block text-sm">{{ store.data.value ? new Date(store.data.value.exportedAt).toLocaleString() : '—' }}</strong></div>
           <div class="rounded-2xl bg-elevated p-4"><p class="text-xs text-muted">数据规模</p><strong class="mt-1 block text-sm">{{ counts.metrics }} 指标 / {{ counts.sessions }} 记录 / {{ counts.values }} 数值</strong></div>
           <div class="rounded-2xl bg-elevated p-4"><p class="text-xs text-muted">同步冲突</p><strong class="mt-1 block text-sm" :class="store.conflictCount.value ? 'text-warning' : 'text-primary'">{{ store.conflictCount.value }} 次</strong></div>

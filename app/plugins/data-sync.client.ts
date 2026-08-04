@@ -1,9 +1,10 @@
 export default defineNuxtPlugin(async () => {
   const store = useTrackFitData()
-  await store.ensureLoaded().catch(() => undefined)
+  const { loggedIn } = useUserSession()
+  if (loggedIn.value) await store.ensureLoaded().catch(() => undefined)
 
   const refresh = () => {
-    if (document.visibilityState === 'visible') store.refresh().catch(() => undefined)
+    if (loggedIn.value && document.visibilityState === 'visible') store.refresh().catch(() => undefined)
   }
   const interval = window.setInterval(refresh, 10_000)
   document.addEventListener('visibilitychange', refresh)

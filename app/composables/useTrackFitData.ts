@@ -33,12 +33,14 @@ let operationQueue = Promise.resolve()
 let saving = false
 
 export function useTrackFitData() {
+  const { user } = useUserSession()
   const data = useState<TrackFitData | null>('trackfit-data', () => null)
   const etag = useState('trackfit-etag', () => '')
   const status = useState<LoadStatus>('trackfit-status', () => 'idle')
   const error = useState('trackfit-error', () => '')
   const writable = useState<boolean | null>('trackfit-writable', () => null)
   const conflictCount = useState('trackfit-conflicts', () => 0)
+  const canWrite = computed(() => user.value?.role === 'admin')
 
   const metrics = computed(() => data.value ? getMetrics(data.value) : [])
   const settings = computed(() => data.value ? getSettings(data.value) : getSettings(emptyData()))
@@ -79,6 +81,7 @@ export function useTrackFitData() {
   }
 
   function mutate<T>(operation: (draft: TrackFitData) => T): Promise<T> {
+    if (!canWrite.value) return Promise.reject(new Error('当前账号无写入权限'))
     let resolveResult: (result: T) => void
     let rejectResult: (reason: unknown) => void
     const result = new Promise<T>((resolve, reject) => {
@@ -134,6 +137,7 @@ export function useTrackFitData() {
     status: readonly(status),
     error: readonly(error),
     writable: readonly(writable),
+    canWrite: readonly(canWrite),
     conflictCount: readonly(conflictCount),
     metrics,
     settings,

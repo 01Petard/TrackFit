@@ -1,93 +1,80 @@
 import type { TrackFitData } from '../../shared/schemas/trackfit'
-import { createHash } from 'node:crypto'
-import { access, mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises'
-import { constants } from 'node:fs'
-import { basename, dirname, resolve } from 'node:path'
+import type { DataStore } from './data-store'
+import { resolve } from 'node:path'
 import { backupSchema } from '../../shared/schemas/trackfit'
+import { BlobDataStore, FileDataStore, StoreConflictError } from './data-store'
 
-interface DataSnapshot {
+export interface DataSnapshot {
   data: TrackFitData
   etag: string
   writable: boolean
 }
 
-let writeQueue = Promise.resolve()
+const stores = new Map<string, DataStore>()
 
 export async function readDataSnapshot(): Promise<DataSnapshot> {
-  const filePath = getDataFilePath()
-  await ensureDataFile(filePath)
-  const content = await readFile(filePath, 'utf8')
-  const parsed = backupSchema.safeParse(JSON.parse(content))
-  if (!parsed.success) throw new Error(`数据文件格式无效: ${parsed.error.issues[0]?.message ?? '未知错误'}`)
-  return {
-    data: parsed.data,
-    etag: createEtag(content),
-    writable: await isWritable(filePath),
-  }
+  return parseStoredData(await getDataStore().read())
 }
 
-export function replaceData(expectedEtag: string, input: unknown): Promise<DataSnapshot> {
-  const task = writeQueue.then(async () => {
-    const current = await readDataSnapshot()
-    if (expectedEtag !== '*' && expectedEtag !== current.etag) {
-      return Promise.reject(new DataConflictError())
-    }
-    const parsed = backupSchema.safeParse(input)
-    if (!parsed.success) throw new InvalidDataError(parsed.error.issues[0]?.message ?? '数据格式无效')
-    const data = { ...parsed.data, exportedAt: new Date().toISOString() }
-    const content = `${JSON.stringify(data, null, 2)}\n`
-    await atomicWrite(getDataFilePath(), content)
-    return { data, etag: createEtag(content), writable: true }
-  })
-  writeQueue = task.then(() => undefined, () => undefined)
-  return task
+export async function readDataSnapshotIfChanged(etag: string): Promise<DataSnapshot | null> {
+  const stored = await getDataStore().readIfChanged(etag)
+  return stored ? parseStoredData(stored) : null
+}
+
+export async function replaceData(expectedEtag: string, input: unknown): Promise<DataSnapshot> {
+  const parsed = backupSchema.safeParse(input)
+  if (!parsed.success) throw new InvalidDataError(parsed.error.issues[0]?.message ?? '数据格式无效')
+  const data = { ...parsed.data, exportedAt: new Date().toISOString() }
+  const content = `${JSON.stringify(data, null, 2)}\n`
+  try {
+    const stored = await getDataStore().replace(expectedEtag, content)
+    return { data, etag: stored.etag, writable: stored.writable }
+  } catch (error) {
+    if (error instanceof StoreConflictError) throw new DataConflictError()
+    throw error
+  }
 }
 
 export class DataConflictError extends Error {}
 export class InvalidDataError extends Error {}
 
-function getDataFilePath(): string {
-  const configured = process.env.TRACKFIT_DATA_FILE || useRuntimeConfig().dataFile
-  return resolve(configured || resolve(process.cwd(), 'data/trackfit-data.json'))
-}
-
-async function ensureDataFile(filePath: string): Promise<void> {
-  try {
-    await access(filePath, constants.F_OK)
-  } catch (error) {
-    if (!isMissingFile(error)) throw error
-    await mkdir(dirname(filePath), { recursive: true })
-    try {
-      await writeFile(filePath, `${JSON.stringify(createDefaultData(), null, 2)}\n`, { encoding: 'utf8', flag: 'wx', flush: true })
-    } catch (writeError) {
-      if (!isExistingFile(writeError)) throw writeError
+function getDataStore(): DataStore {
+  const mode = process.env.TRACKFIT_STORAGE ?? 'file'
+  if (mode === 'blob') {
+    const pathname = process.env.TRACKFIT_BLOB_PATH ?? 'trackfit/trackfit-data.json'
+    if (!process.env.BLOB_READ_WRITE_TOKEN && !process.env.BLOB_STORE_ID) {
+      throw new Error('Blob 存储未配置 BLOB_READ_WRITE_TOKEN 或 BLOB_STORE_ID')
     }
+    return cachedStore(`blob:${pathname}`, () => new BlobDataStore(pathname, createDefaultContent))
   }
+  if (mode !== 'file') throw new Error(`不支持的 TRACKFIT_STORAGE: ${mode}`)
+  const configured = process.env.TRACKFIT_DATA_FILE
+  const filePath = resolve(configured || resolve(process.cwd(), 'data/trackfit-data.json'))
+  return cachedStore(`file:${filePath}`, () => new FileDataStore(filePath, createDefaultContent))
 }
 
-async function atomicWrite(filePath: string, content: string): Promise<void> {
-  await mkdir(dirname(filePath), { recursive: true })
-  const temporaryPath = resolve(dirname(filePath), `.${basename(filePath)}.${process.pid}.${Date.now()}.tmp`)
-  try {
-    await writeFile(temporaryPath, content, { encoding: 'utf8', flag: 'wx', flush: true })
-    await rename(temporaryPath, filePath)
-  } catch (error) {
-    await unlink(temporaryPath).catch(() => undefined)
-    throw error
-  }
+function cachedStore(key: string, factory: () => DataStore): DataStore {
+  const existing = stores.get(key)
+  if (existing) return existing
+  const store = factory()
+  stores.set(key, store)
+  return store
 }
 
-async function isWritable(filePath: string): Promise<boolean> {
+function parseStoredData(stored: Awaited<ReturnType<DataStore['read']>>): DataSnapshot {
+  let input: unknown
   try {
-    await access(filePath, constants.R_OK | constants.W_OK)
-    return true
+    input = JSON.parse(stored.content)
   } catch {
-    return false
+    throw new Error('数据文件格式无效: JSON 解析失败')
   }
+  const parsed = backupSchema.safeParse(input)
+  if (!parsed.success) throw new Error(`数据文件格式无效: ${parsed.error.issues[0]?.message ?? '未知错误'}`)
+  return { data: parsed.data, etag: stored.etag, writable: stored.writable }
 }
 
-function createEtag(content: string): string {
-  return `"${createHash('sha256').update(content).digest('base64url')}"`
+function createDefaultContent(): string {
+  return `${JSON.stringify(createDefaultData(), null, 2)}\n`
 }
 
 function createDefaultData(): TrackFitData {
@@ -132,12 +119,4 @@ function createDefaultData(): TrackFitData {
     trainingSessions: [],
     sleepRecords: [],
   }
-}
-
-function isMissingFile(error: unknown): boolean {
-  return error instanceof Error && 'code' in error && error.code === 'ENOENT'
-}
-
-function isExistingFile(error: unknown): boolean {
-  return error instanceof Error && 'code' in error && error.code === 'EEXIST'
 }

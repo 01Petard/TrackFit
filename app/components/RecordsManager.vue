@@ -53,7 +53,7 @@ async function deleteRecord(id: number) {
 <template>
   <div>
     <PageHeader title="测量记录" description="每条记录精确到秒，同一天可以保存任意多次">
-      <button class="w-full rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white sm:w-auto" @click="createRecord">＋ 新增记录</button>
+      <button v-if="store.canWrite.value" class="w-full rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white sm:w-auto" @click="createRecord">＋ 新增记录</button>
     </PageHeader>
 
     <section class="app-card mb-5 grid gap-3 rounded-2xl p-4 sm:grid-cols-3">
@@ -68,14 +68,14 @@ async function deleteRecord(id: number) {
 
       <div v-else class="hidden overflow-x-auto md:block">
         <table class="w-full text-left text-sm">
-          <thead class="border-b border-default bg-elevated/60 text-xs text-muted"><tr><th class="px-5 py-4 font-medium">测量时间</th><th class="px-5 py-4 font-medium">身体指标</th><th class="px-5 py-4 font-medium">衍生值</th><th class="px-5 py-4 font-medium">备注</th><th class="px-5 py-4 text-right font-medium">操作</th></tr></thead>
+          <thead class="border-b border-default bg-elevated/60 text-xs text-muted"><tr><th class="px-5 py-4 font-medium">测量时间</th><th class="px-5 py-4 font-medium">身体指标</th><th class="px-5 py-4 font-medium">衍生值</th><th class="px-5 py-4 font-medium">备注</th><th v-if="store.canWrite.value" class="px-5 py-4 text-right font-medium">操作</th></tr></thead>
           <tbody>
             <tr v-for="record in data.items" :key="record.id" class="border-b border-default last:border-0 hover:bg-elevated/30">
               <td class="whitespace-nowrap px-5 py-4"><strong>{{ dayjs(record.measuredAt).format('YYYY-MM-DD') }}</strong><br><span class="text-xs text-muted">{{ dayjs(record.measuredAt).format('HH:mm:ss') }}</span></td>
               <td class="px-5 py-4"><div class="flex max-w-xl flex-wrap gap-1.5"><span v-for="value in record.values" :key="value.metricId" class="rounded-lg bg-elevated px-2.5 py-1 text-xs">{{ value.name }} {{ value.value }} {{ value.unit }}</span></div></td>
               <td class="whitespace-nowrap px-5 py-4 text-xs text-muted"><span v-if="record.bmi">BMI {{ record.bmi }}</span><span v-if="record.waistHipRatio" class="ml-2">腰臀比 {{ record.waistHipRatio }}</span><span v-if="!record.bmi && !record.waistHipRatio">—</span></td>
               <td class="max-w-48 truncate px-5 py-4 text-muted">{{ record.note || '—' }}</td>
-              <td class="whitespace-nowrap px-5 py-4 text-right"><button class="mr-3 text-primary" @click="editRecord(record)">编辑</button><button class="text-error disabled:opacity-40" :disabled="deletingId === record.id" @click="deleteRecord(record.id)">删除</button></td>
+              <td v-if="store.canWrite.value" class="whitespace-nowrap px-5 py-4 text-right"><button class="mr-3 text-primary" @click="editRecord(record)">编辑</button><button class="text-error disabled:opacity-40" :disabled="deletingId === record.id" @click="deleteRecord(record.id)">删除</button></td>
             </tr>
           </tbody>
         </table>
@@ -83,7 +83,7 @@ async function deleteRecord(id: number) {
 
       <div v-if="data?.items.length" class="divide-y divide-default md:hidden">
         <article v-for="record in data.items" :key="record.id" class="p-4">
-          <div class="mb-3 flex items-start justify-between"><div><strong>{{ dayjs(record.measuredAt).format('MM月DD日') }}</strong><p class="text-xs text-muted">{{ dayjs(record.measuredAt).format('HH:mm:ss') }}</p></div><div class="flex gap-3 text-sm"><button class="text-primary" @click="editRecord(record)">编辑</button><button class="text-error" @click="deleteRecord(record.id)">删除</button></div></div>
+          <div class="mb-3 flex items-start justify-between"><div><strong>{{ dayjs(record.measuredAt).format('MM月DD日') }}</strong><p class="text-xs text-muted">{{ dayjs(record.measuredAt).format('HH:mm:ss') }}</p></div><div v-if="store.canWrite.value" class="flex gap-3 text-sm"><button class="text-primary" @click="editRecord(record)">编辑</button><button class="text-error" @click="deleteRecord(record.id)">删除</button></div></div>
           <div class="flex flex-wrap gap-2"><span v-for="value in record.values" :key="value.metricId" class="rounded-lg bg-elevated px-2.5 py-1.5 text-xs">{{ value.name }} <b>{{ value.value }}</b> {{ value.unit }}</span></div>
           <p v-if="record.note" class="mt-3 text-xs leading-5 text-muted">{{ record.note }}</p>
         </article>
@@ -94,6 +94,6 @@ async function deleteRecord(id: number) {
       </footer>
     </section>
 
-    <MeasurementDialog v-model:open="dialogOpen" :measurement="editing" />
+    <MeasurementDialog v-if="store.canWrite.value" v-model:open="dialogOpen" :measurement="editing" />
   </div>
 </template>

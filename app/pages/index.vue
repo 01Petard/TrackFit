@@ -177,17 +177,17 @@ function trendSymbol(direction: 'up' | 'down' | 'stable' | 'insufficient'): stri
   <div>
     <PageHeader title="身体概览" description="每次测量都是一个独立数据点，忠实保留一天中的真实波动">
       <div class="grid w-full grid-cols-3 gap-2 sm:flex sm:w-auto">
-        <button class="rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/20" @click="dialogOpen = true">＋ 快速记录</button>
+        <button v-if="store.canWrite.value" class="rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/20" @click="dialogOpen = true">＋ 快速记录</button>
         <button class="rounded-xl border border-default px-4 py-3 text-center text-sm font-medium hover:border-primary/40 hover:text-primary" @click="openManager('records')">测量记录</button>
         <button class="rounded-xl border border-default px-5 py-3 text-center text-sm font-medium hover:border-primary/40 hover:text-primary" @click="openManager('metrics')">指标管理</button>
       </div>
     </PageHeader>
 
-    <NuxtLink v-if="settings?.heightCm == null" to="/settings" class="mb-6 flex items-center justify-between rounded-2xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">
+    <NuxtLink v-if="store.canWrite.value && settings?.heightCm == null" to="/settings" class="mb-6 flex items-center justify-between rounded-2xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">
       <span>请先设置身高，系统才能计算 BMI</span><span>去设置 →</span>
     </NuxtLink>
 
-    <NuxtLink v-if="settings.desiredWeightMinimum == null || settings.desiredWeightMaximum == null" to="/settings" class="mb-6 flex items-center justify-between rounded-2xl border border-default bg-elevated px-4 py-3 text-sm text-muted">
+    <NuxtLink v-if="store.canWrite.value && (settings.desiredWeightMinimum == null || settings.desiredWeightMaximum == null)" to="/settings" class="mb-6 flex items-center justify-between rounded-2xl border border-default bg-elevated px-4 py-3 text-sm text-muted">
       <span>设置个人体重上下限，可在图表中实时判断目标区间</span><span>去设置 →</span>
     </NuxtLink>
 
@@ -210,8 +210,8 @@ function trendSymbol(direction: 'up' | 'down' | 'stable' | 'insufficient'): stri
       <div class="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div><h2 class="font-bold">训练与睡眠</h2><p class="mt-1 text-xs text-muted">记录日常行为，辅助解释身体变化</p></div>
         <div class="flex flex-wrap items-center gap-2">
-          <button class="rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white" @click="openBehaviorDialog('sleep')">＋ 睡眠</button>
-          <button class="rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white" @click="openBehaviorDialog('training')">＋ 训练</button>
+          <button v-if="store.canWrite.value" class="rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white" @click="openBehaviorDialog('sleep')">＋ 睡眠</button>
+          <button v-if="store.canWrite.value" class="rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white" @click="openBehaviorDialog('training')">＋ 训练</button>
           <NuxtLink to="/behavior" class="rounded-xl border border-primary px-4 py-3 text-sm font-medium text-primary">进入行为记录 →</NuxtLink>
         </div>
       </div>
@@ -255,7 +255,7 @@ function trendSymbol(direction: 'up' | 'down' | 'stable' | 'insufficient'): stri
         </article>
       </div>
       <div v-else class="grid min-h-48 place-items-center p-6 text-center">
-        <div><p class="text-3xl text-primary">⌁</p><p class="mt-2 text-sm text-muted">记录身体指标或日常行为后，这里会自动生成图文趋势分析</p><button class="mt-4 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white" @click="dialogOpen = true">开始记录</button></div>
+        <div><p class="text-3xl text-primary">⌁</p><p class="mt-2 text-sm text-muted">记录身体指标或日常行为后，这里会自动生成图文趋势分析</p><button v-if="store.canWrite.value" class="mt-4 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white" @click="dialogOpen = true">开始记录</button></div>
       </div>
     </section>
 
@@ -312,8 +312,8 @@ function trendSymbol(direction: 'up' | 'down' | 'stable' | 'insufficient'): stri
       </article>
     </section>
 
-    <MeasurementDialog v-model:open="dialogOpen" />
-    <BehaviorDialog v-model:open="behaviorDialogOpen" :kind="behaviorDialogKind" />
+    <MeasurementDialog v-if="store.canWrite.value" v-model:open="dialogOpen" />
+    <BehaviorDialog v-if="store.canWrite.value" v-model:open="behaviorDialogOpen" :kind="behaviorDialogKind" />
     <ManagerDialog v-model:open="managerDialogOpen" :kind="managerDialogKind" />
   </div>
 </template>
