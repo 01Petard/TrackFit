@@ -17,7 +17,8 @@ test-results/
 .vscode/
 *.log
 .playwright*
-.codex*
+.codex_tmp_weight_tracker
+.codex
 .openclaw
 .opencode
 .claude
