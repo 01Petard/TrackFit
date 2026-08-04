@@ -63,9 +63,13 @@ TRACKFIT_PORT=3000
 3. 配置以下环境变量：
 
 ```dotenv
+# 存储
+BLOB_STORE_ID=<created-by-vercel>
+BLOB_READ_WRITE_TOKEN=<created-by-vercel>
 TRACKFIT_STORAGE=blob
 TRACKFIT_BLOB_PATH=trackfit/trackfit-data.json
-BLOB_READ_WRITE_TOKEN=<created-by-vercel>
+
+# 认证
 NUXT_SESSION_PASSWORD=<at-least-32-random-characters>
 TRACKFIT_ADMIN_USERNAME=<admin-username>
 TRACKFIT_ADMIN_PASSWORD_HASH=<scrypt-hash>
@@ -79,6 +83,15 @@ TRACKFIT_VIEWER_DISPLAY_PASSWORD=<display-only-password>
 5. 在 Vercel Firewall 为 `/api/auth/login` 添加固定窗口限流：每 IP 每 60 秒最多 10 次，超限返回 `429`
 
 Vercel 部署包内的文件不可作为运行时持久化介质。Blob 中只保存一份私有 JSON，写入时使用 ETag 条件更新，过期修改会返回 `409`。
+
+如需绕过页面直接用本地数据覆盖 Blob，先在本地 `.env` 配置 `BLOB_READ_WRITE_TOKEN`，再执行：
+
+```bash
+pnpm blob:restore
+pnpm blob:restore --confirm
+```
+
+第一条命令只校验数据并显示记录数量，第二条命令才会覆盖 `TRACKFIT_BLOB_PATH` 指向的 Blob。
 
 常用命令：
 
