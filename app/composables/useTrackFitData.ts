@@ -1,8 +1,11 @@
 import type { MeasurementWrite, MetricCreate, SettingsUpdate, SleepWrite, TrackFitData, TrainingWrite } from '../../shared/schemas/trackfit'
 import type { BehaviorQuery } from '../../shared/types/api'
+import type { HistoryRecordQuery } from '../../shared/utils/history'
 import type { MeasurementQuery } from '../../shared/utils/trackfit'
 import { backupSchema } from '../../shared/schemas/trackfit'
+import { TrackFitDomainError } from '../../shared/utils/domain-error'
 import { dataIfMatchHeader, dataIfNoneMatchHeader, readDataEtag } from '../../shared/utils/data-version'
+import { listHistoryRecords as listHistoryRecordsFromData } from '../../shared/utils/history'
 import {
   buildBehaviorCorrelations,
   buildPeriodReport,
@@ -68,7 +71,7 @@ export function useTrackFitData() {
         status.value = 'success'
         return
       }
-      if (!response.ok) throw new Error(await responseMessage(response, '读取数据文件失败'))
+      if (!response.ok) throw await responseError(response, 'data.readFailed')
       data.value = backupSchema.parse(await response.json())
       etag.value = readDataEtag(response.headers)
       writable.value = response.headers.get('x-trackfit-writable') === 'true'
@@ -82,7 +85,7 @@ export function useTrackFitData() {
   }
 
   function mutate<T>(operation: (draft: TrackFitData) => T): Promise<T> {
-    if (!canWrite.value) return Promise.reject(new Error('当前账号无写入权限'))
+    if (!canWrite.value) return Promise.reject(new TrackFitDomainError('auth.readOnly'))
     let resolveResult: (result: T) => void
     let rejectResult: (reason: unknown) => void
     const result = new Promise<T>((resolve, reject) => {
@@ -122,7 +125,7 @@ export function useTrackFitData() {
         body: JSON.stringify(candidate),
       })
       if (response.status === 409) throw new DataConflictError()
-      if (!response.ok) throw new Error(await responseMessage(response, '保存数据文件失败'))
+      if (!response.ok) throw await responseError(response, 'data.writeFailed')
       data.value = backupSchema.parse(await response.json())
       etag.value = readDataEtag(response.headers)
       writable.value = response.headers.get('x-trackfit-writable') === 'true'
@@ -152,6 +155,7 @@ export function useTrackFitData() {
     saveMeasurement: (input: MeasurementWrite | unknown, id?: number) => mutate(draft => saveMeasurementInData(draft, input, id)),
     deleteMeasurement: (id: number) => mutate(draft => deleteMeasurementInData(draft, id)),
     listBehaviors: (query?: BehaviorQuery) => data.value ? listBehaviorTimeline(data.value, query) : [],
+    listHistoryRecords: (query?: HistoryRecordQuery) => data.value ? listHistoryRecordsFromData(data.value, query) : [],
     saveTraining: (input: TrainingWrite | unknown, id?: number) => mutate(draft => saveTrainingInData(draft, input, id)),
     deleteTraining: (id: number) => mutate(draft => deleteTrainingInData(draft, id)),
     saveSleep: (input: SleepWrite | unknown, id?: number) => mutate(draft => saveSleepInData(draft, input, id)),
@@ -165,29 +169,25 @@ export function useTrackFitData() {
       })
     },
     exportJson: () => JSON.stringify({ ...data.value!, exportedAt: new Date().toISOString() }, null, 2),
-    exportCsv: () => data.value ? createCsv(data.value) : '',
-    exportTrainingCsv: () => data.value ? createTrainingCsv(data.value) : '',
-    exportSleepCsv: () => data.value ? createSleepCsv(data.value) : '',
+    exportCsv: (locale: 'zh' | 'en' = 'zh') => data.value ? createCsv(data.value, locale) : '',
+    exportTrainingCsv: (locale: 'zh' | 'en' = 'zh') => data.value ? createTrainingCsv(data.value, locale) : '',
+    exportSleepCsv: (locale: 'zh' | 'en' = 'zh') => data.value ? createSleepCsv(data.value, locale) : '',
   }
 }
 
-class DataConflictError extends Error {
+class DataConflictError extends TrackFitDomainError {
   constructor() {
-    super('数据被其他设备连续更新，请刷新后重试')
+    super('data.conflict')
   }
 }
 
-export function getTrackFitErrorMessage(cause: unknown): string {
-  return cause instanceof Error ? cause.message : '操作失败'
-}
-
-async function responseMessage(response: Response, fallback: string): Promise<string> {
-  const payload = await response.json().catch(() => null) as { statusMessage?: string, message?: string } | null
-  return payload?.statusMessage ?? payload?.message ?? fallback
+async function responseError(response: Response, fallback: ConstructorParameters<typeof TrackFitDomainError>[0]): Promise<TrackFitDomainError> {
+  const payload = await response.json().catch(() => null) as { data?: { code?: ConstructorParameters<typeof TrackFitDomainError>[0] } } | null
+  return new TrackFitDomainError(payload?.data?.code ?? fallback)
 }
 
 function getErrorMessage(cause: unknown): string {
-  return cause instanceof Error ? cause.message : '未知错误'
+  return cause instanceof Error ? cause.message : 'unknown'
 }
 
 function emptyData(): TrackFitData {

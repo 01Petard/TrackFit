@@ -1,6 +1,7 @@
 import type { SleepWrite, TrackFitData, TrainingWrite } from '../schemas/trackfit'
 import type { BehaviorQuery, BehaviorTimelineItemDto, CorrelationDto, PeriodReportDto, SleepRecordDto } from '../types/api'
 import { sleepWriteSchema, trainingWriteSchema } from '../schemas/trackfit'
+import { TrackFitDomainError } from './domain-error'
 
 const correlationLags = [0, 1, 3, 7] as const
 
@@ -26,7 +27,7 @@ export function listBehaviorTimeline(data: TrackFitData, query: BehaviorQuery = 
 export function saveTraining(data: TrackFitData, input: TrainingWrite | unknown, id?: number, now = new Date()): number {
   const payload = trainingWriteSchema.parse(input)
   const existing = id == null ? undefined : data.trainingRecords.find(item => item.id === id)
-  if (id != null && !existing) throw new Error('训练记录不存在')
+  if (id != null && !existing) throw new TrackFitDomainError('training.notFound')
   const item = {
     id: existing?.id ?? nextId(data.trainingRecords),
     recordedAt: existing?.recordedAt ?? now.toISOString(),
@@ -40,14 +41,14 @@ export function saveTraining(data: TrackFitData, input: TrainingWrite | unknown,
 }
 
 export function deleteTraining(data: TrackFitData, id: number): void {
-  if (!data.trainingRecords.some(item => item.id === id)) throw new Error('训练记录不存在')
+  if (!data.trainingRecords.some(item => item.id === id)) throw new TrackFitDomainError('training.notFound')
   data.trainingRecords = data.trainingRecords.filter(item => item.id !== id)
 }
 
 export function saveSleep(data: TrackFitData, input: SleepWrite | unknown, id?: number): number {
   const payload = sleepWriteSchema.parse(input)
   const existing = id == null ? undefined : data.sleepRecords.find(item => item.id === id)
-  if (id != null && !existing) throw new Error('睡眠记录不存在')
+  if (id != null && !existing) throw new TrackFitDomainError('sleep.notFound')
   const wokeUpAt = new Date(payload.fellAsleepAt.getTime() + payload.durationMinutes * 60_000)
   const item = {
     id: existing?.id ?? nextId(data.sleepRecords),
@@ -62,7 +63,7 @@ export function saveSleep(data: TrackFitData, input: SleepWrite | unknown, id?: 
 }
 
 export function deleteSleep(data: TrackFitData, id: number): void {
-  if (!data.sleepRecords.some(item => item.id === id)) throw new Error('睡眠记录不存在')
+  if (!data.sleepRecords.some(item => item.id === id)) throw new TrackFitDomainError('sleep.notFound')
   data.sleepRecords = data.sleepRecords.filter(item => item.id !== id)
 }
 
@@ -127,18 +128,22 @@ export function buildPeriodReport(data: TrackFitData, period: 'week' | 'month', 
   }
 }
 
-export function createTrainingCsv(data: TrackFitData): string {
+export function createTrainingCsv(data: TrackFitData, locale: 'zh' | 'en' = 'zh'): string {
   return csv([
-    ['记录ID', '记录时间', '训练类型', '时长（分钟）', '备注'],
+    locale === 'zh'
+      ? ['记录ID', '记录时间', '训练类型', '时长（分钟）', '备注']
+      : ['Record ID', 'Recorded at', 'Training type', 'Duration (minutes)', 'Note'],
     ...[...data.trainingRecords]
       .sort((a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime())
       .map(item => [item.id, item.recordedAt, item.type, item.durationMinutes, item.note ?? '']),
   ])
 }
 
-export function createSleepCsv(data: TrackFitData): string {
+export function createSleepCsv(data: TrackFitData, locale: 'zh' | 'en' = 'zh'): string {
   return csv([
-    ['记录ID', '就寝时间', '起床时间', '睡眠时间（分钟）', '睡眠分数'],
+    locale === 'zh'
+      ? ['记录ID', '就寝时间', '起床时间', '睡眠时间（分钟）', '睡眠分数']
+      : ['Record ID', 'Fell asleep at', 'Woke up at', 'Sleep duration (minutes)', 'Sleep score'],
     ...[...data.sleepRecords]
       .sort((a, b) => new Date(a.wokeUpAt).getTime() - new Date(b.wokeUpAt).getTime())
       .map(item => [item.id, item.fellAsleepAt, item.wokeUpAt, hydrateSleep(item).durationMinutes, item.quality]),

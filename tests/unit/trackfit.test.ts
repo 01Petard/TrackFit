@@ -62,8 +62,12 @@ describe('前端数据业务', () => {
 
   it('拒绝重复指标编码和越界测量值', () => {
     const data = fixture()
-    expect(() => createMetric(data, { code: 'weight', name: '重复体重', unit: 'kg', decimalPlaces: 1, sortOrder: 100 })).toThrow('指标编码已存在')
-    expect(() => saveMeasurement(data, { measuredAt: '2026-08-01T08:00:00.000Z', values: [{ metricId: 1, value: 500 }] })).toThrow('体重 超出合理范围')
+    expect(() => createMetric(data, { code: 'weight', name: '重复体重', unit: 'kg', decimalPlaces: 1, sortOrder: 100 })).toThrowError(
+      expect.objectContaining({ code: 'metric.codeExists' }),
+    )
+    expect(() => saveMeasurement(data, { measuredAt: '2026-08-01T08:00:00.000Z', values: [{ metricId: 1, value: 500 }] })).toThrowError(
+      expect.objectContaining({ code: 'metric.outOfRange', values: { metric: '体重' } }),
+    )
   })
 
   it('拒绝引用不存在指标的备份数据', () => {

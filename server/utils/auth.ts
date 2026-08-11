@@ -21,7 +21,7 @@ export async function requireTrackFitUser(event: H3Event) {
 export async function requireTrackFitAdmin(event: H3Event) {
   const session = await requireTrackFitUser(event)
   if (session.user.role !== 'admin') {
-    throw createError({ statusCode: 403, statusMessage: '当前账号无写入权限' })
+    throw createError({ statusCode: 403, statusMessage: 'This account is read-only', data: { code: 'auth.readOnly' } })
   }
   return session
 }

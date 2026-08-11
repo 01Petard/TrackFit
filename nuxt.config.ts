@@ -1,13 +1,10 @@
 export default defineNuxtConfig({
-  modules: ['@nuxt/ui', '@nuxt/eslint', 'nuxt-auth-utils'],
+  modules: ['@nuxt/ui', '@nuxt/eslint', 'nuxt-auth-utils', '@nuxtjs/i18n'],
   ssr: false,
   devtools: { enabled: true },
   app: {
     head: {
-      htmlAttrs: { lang: 'zh-CN' },
-      title: 'TrackFit 形轨｜记录身体变化，看见习惯的影响',
       meta: [
-        { name: 'description', content: '个人身体指标记录与趋势分析' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
         { name: 'theme-color', content: '#10b981' },
       ],
@@ -48,6 +45,21 @@ export default defineNuxtConfig({
   eslint: {
     config: {
       stylistic: true,
+    },
+  },
+  i18n: {
+    strategy: 'prefix',
+    defaultLocale: 'en',
+    langDir: 'locales',
+    locales: [
+      { code: 'zh', language: 'zh-CN', file: 'zh-CN.ts', name: '中文' },
+      { code: 'en', language: 'en-US', file: 'en-US.ts', name: 'English' },
+    ],
+    detectBrowserLanguage: {
+      useCookie: true,
+      cookieKey: 'trackfit_locale',
+      redirectOn: 'root',
+      fallbackLocale: 'en',
     },
   },
 })

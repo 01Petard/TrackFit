@@ -40,8 +40,13 @@ describe('身体指标计算', () => {
       ...analytics,
     }, 60, 75)
 
-    expect(insight).toMatchObject({ direction: 'down', trendLabel: '向目标靠近', tone: 'positive' })
-    expect(insight?.evaluation).toContain('正在向目标区间靠近')
+    expect(insight).toMatchObject({
+      direction: 'down',
+      trend: { key: 'insights.trend.approaching' },
+      change: { key: 'insights.change.down', values: { amount: 4, unit: 'kg' } },
+      evaluation: { key: 'insights.evaluation.weightAboveApproaching' },
+      tone: 'positive',
+    })
   })
 })
 

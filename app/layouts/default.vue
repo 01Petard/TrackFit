@@ -1,10 +1,12 @@
 <script setup lang="ts">
 const route = useRoute()
 const { user, clear } = useUserSession()
-const navigation = [
-  { to: '/', label: '主页', icon: 'home' as const },
-  { to: '/settings', label: '设置', icon: 'settings' as const },
-]
+const { t } = useI18n()
+const localePath = useLocalePath()
+const navigation = computed(() => [
+  { to: localePath('/'), label: t('nav.home'), icon: 'home' as const },
+  { to: localePath('/settings'), label: t('nav.settings'), icon: 'settings' as const },
+])
 const headerVisible = ref(true)
 let previousScrollY = 0
 
@@ -22,7 +24,7 @@ function syncHeaderVisibility() {
 
 async function logout() {
   await clear()
-  await navigateTo('/login')
+  await navigateTo(localePath('/login'))
 }
 
 onMounted(() => {
@@ -37,15 +39,15 @@ onBeforeUnmount(() => window.removeEventListener('scroll', syncHeaderVisibility)
   <div class="relative z-10 min-h-screen">
     <header class="sticky top-0 z-30 bg-transparent px-4 py-3 backdrop-blur-md transition-transform duration-300 ease-out will-change-transform sm:px-6 lg:px-10" :class="headerVisible ? 'translate-y-0' : '-translate-y-full'">
       <div class="mx-auto flex max-w-7xl items-center justify-between">
-        <NuxtLink to="/" class="flex items-center gap-2.5 font-bold">
+        <NuxtLink :to="localePath('/')" class="flex items-center gap-2.5 font-bold">
           <LiquidLogo :size="38" />
           <span>
             <strong class="block leading-tight">TrackFit</strong>
-            <span class="hidden text-[11px] font-normal text-muted sm:block">把变化交给数据</span>
+            <span class="hidden text-[11px] font-normal text-muted sm:block">{{ t('meta.tagline') }}</span>
           </span>
         </NuxtLink>
-        <div class="flex items-center gap-2">
-          <nav class="hidden items-center gap-2 lg:flex" aria-label="主导航">
+        <div class="header-actions flex items-center gap-2">
+          <nav class="hidden items-center gap-2 lg:flex" :aria-label="t('nav.main')">
             <NuxtLink
               v-for="item in navigation"
               :key="item.to"
@@ -56,14 +58,15 @@ onBeforeUnmount(() => window.removeEventListener('scroll', syncHeaderVisibility)
               {{ item.label }}
             </NuxtLink>
           </nav>
-          <span class="rounded-full bg-elevated px-2.5 py-1 text-[11px] text-muted">{{ user?.role === 'admin' ? '管理员' : '只读访客' }}</span>
-          <button class="rounded-lg border border-default px-2.5 py-1.5 text-xs text-muted hover:text-highlighted" @click="logout">退出</button>
+          <span class="rounded-full bg-elevated px-2.5 py-1 text-[11px] text-muted">{{ t(user?.role === 'admin' ? 'auth.admin' : 'auth.viewer') }}</span>
+          <button class="rounded-lg border border-default px-2.5 py-1.5 text-xs text-muted hover:text-highlighted" @click="logout">{{ t('auth.logout') }}</button>
+          <LanguageSwitch />
           <a
             href="https://github.com/01Petard/TrackFit"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="GitHub 仓库：01Petard/TrackFit"
-            title="GitHub 仓库：01Petard/TrackFit"
+            :aria-label="t('nav.github')"
+            :title="t('nav.github')"
             class="grid size-8 place-items-center rounded-lg border border-default text-muted transition hover:border-primary/40 hover:bg-elevated hover:text-highlighted"
           >
             <AppIcon name="github" class="size-[18px]" />
@@ -78,7 +81,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', syncHeaderVisibility)
       </div>
     </main>
 
-    <nav class="fixed inset-x-0 bottom-0 z-30 grid grid-cols-2 border-t border-default bg-default/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden" aria-label="移动端主导航">
+    <nav class="fixed inset-x-0 bottom-0 z-30 grid grid-cols-2 border-t border-default bg-default/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden" :aria-label="t('nav.mobile')">
       <NuxtLink
         v-for="item in navigation"
         :key="item.to"

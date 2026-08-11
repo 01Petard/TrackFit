@@ -17,6 +17,8 @@ const props = defineProps<{
   targetMinimum?: number | null
   targetMaximum?: number | null
 }>()
+const { t } = useI18n()
+const { metricName } = useTrackFitI18n()
 
 const colors: Record<MovingAveragePeriod, string> = {
   3: '#f59e0b',
@@ -29,7 +31,7 @@ const option = computed(() => {
   const secondary = props.secondary
   const series = [
     {
-      name: `${props.primary.metric.name} · 原始`,
+      name: `${metricName(props.primary.metric)} · ${t('chart.rawShort')}`,
       type: 'line',
       yAxisIndex: 0,
       symbolSize: 8,
@@ -38,7 +40,7 @@ const option = computed(() => {
       data: props.primary.points.map(point => [point.measuredAt, point.value]),
     },
     ...props.visibleMovingAverages.map(period => ({
-      name: `${props.primary.metric.name} · ${period} 日均线`,
+      name: `${metricName(props.primary.metric)} · ${t('common.dayAverage', { count: period })}`,
       type: 'line',
       yAxisIndex: 0,
       showSymbol: false,
@@ -48,7 +50,7 @@ const option = computed(() => {
       data: props.primary.movingAverages[period].map(point => [point.measuredAt, point.value]),
     })),
     ...(secondary ? [{
-      name: secondary.metric.name,
+      name: metricName(secondary.metric),
       type: 'line',
       yAxisIndex: 1,
       symbolSize: 7,
@@ -93,5 +95,5 @@ const option = computed(() => {
 
 <template>
   <div v-if="primary.points.length" class="h-[420px] w-full"><VChart autoresize :option="option" /></div>
-  <div v-else class="grid h-[420px] place-items-center text-sm text-muted">当前条件下没有数据</div>
+  <div v-else class="grid h-[420px] place-items-center text-sm text-muted">{{ t('chart.noMatchingData') }}</div>
 </template>

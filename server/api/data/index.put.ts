@@ -6,7 +6,7 @@ import { requireTrackFitAdmin } from '../../utils/auth'
 export default defineEventHandler(async (event) => {
   await requireTrackFitAdmin(event)
   const expectedEtag = readDataIfMatch({ get: name => getHeader(event, name) ?? null })
-  if (!expectedEtag) throw createError({ statusCode: 428, statusMessage: '缺少数据版本，请刷新后重试' })
+  if (!expectedEtag) throw createError({ statusCode: 428, statusMessage: 'Missing data version', data: { code: 'data.versionMissing' } })
   try {
     const snapshot = await replaceData(expectedEtag, await readBody(event))
     setResponseHeader(event, 'ETag', snapshot.etag)
@@ -15,8 +15,8 @@ export default defineEventHandler(async (event) => {
     setResponseHeader(event, 'X-TrackFit-Writable', String(snapshot.writable))
     return snapshot.data
   } catch (error) {
-    if (error instanceof DataConflictError) throw createError({ statusCode: 409, statusMessage: '数据已被其他设备更新' })
-    if (error instanceof InvalidDataError) throw createError({ statusCode: 422, statusMessage: error.message })
+    if (error instanceof DataConflictError) throw createError({ statusCode: 409, statusMessage: 'Data was updated elsewhere', data: { code: 'data.conflict' } })
+    if (error instanceof InvalidDataError) throw createError({ statusCode: 422, statusMessage: 'Invalid data', data: { code: 'data.invalid' } })
     throw error
   }
 })

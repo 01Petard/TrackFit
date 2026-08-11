@@ -10,11 +10,10 @@ test.beforeEach(async ({ page }) => {
 test('未登录用户会跳转登录页', async ({ page }) => {
   await page.context().clearCookies()
   expect((await page.request.get('/api/data')).status()).toBe(401)
-  await page.goto('/settings')
+  await page.goto('/zh/settings')
   await expect(page).toHaveURL(/\/login$/)
   await expect(page.getByRole('button', { name: '登录' })).toBeVisible()
-  await expect(page.getByText('用户名：readonly-demo')).toBeVisible()
-  await expect(page.getByText('密码：readonly-demo-pass')).toBeVisible()
+  await expect(page.getByText('访客账号：readonly-demo readonly-demo-pass')).toBeVisible()
 })
 
 test('只读访客不显示写入和导出入口', async ({ page }) => {
@@ -23,11 +22,11 @@ test('只读访客不显示写入和导出入口', async ({ page }) => {
     data: { username: 'viewer', password: 'viewer-pass' },
   })
   expect(login.ok()).toBe(true)
-  await page.goto('/')
+  await page.goto('/zh/')
   await expect(page.getByText('只读访客').first()).toBeVisible()
   await expect(page.getByRole('button', { name: /快速记录/ })).toHaveCount(0)
   await expect(page.getByRole('button', { name: '＋ 睡眠' })).toHaveCount(0)
-  await page.goto('/settings')
+  await page.goto('/zh/settings')
   await expect(page.getByText('当前账号为只读访客')).toBeVisible()
   await expect(page.getByRole('button', { name: /下载 JSON|导出 CSV|恢复数据/ })).toHaveCount(0)
 
@@ -41,14 +40,14 @@ test('只读访客不显示写入和导出入口', async ({ page }) => {
 })
 
 test('退出后需要重新登录', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/zh/')
   await page.getByRole('button', { name: '退出' }).click()
   await expect(page).toHaveURL(/\/login$/)
 })
 
 test('桌面端使用顶部导航并展示概览入口', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop')
-  await page.goto('/')
+  await page.goto('/zh/')
   await expect(page.locator('a:visible').filter({ hasText: 'TrackFit' }).first()).toBeVisible()
   await expect(page.locator('aside')).toHaveCount(0)
   await expect(page.getByRole('navigation', { name: '主导航' }).getByRole('link')).toHaveCount(2)
@@ -57,7 +56,7 @@ test('桌面端使用顶部导航并展示概览入口', async ({ page }, testIn
   await expect(repositoryLink).toHaveAttribute('href', 'https://github.com/01Petard/TrackFit')
   await expect(repositoryLink).toHaveAttribute('target', '_blank')
   await expect(page.getByRole('button', { name: /快速记录/ })).toBeVisible()
-  await expect(page.locator('a[href="/analysis"]:visible').first()).toBeVisible()
+  await expect(page.locator('a[href="/zh/analysis"]:visible').first()).toBeVisible()
   const mainNavigation = page.getByRole('navigation', { name: '主导航' })
   const homeNavigation = mainNavigation.getByRole('link', { name: '主页' })
   const settingsNavigation = mainNavigation.getByRole('link', { name: '设置' })
@@ -90,7 +89,7 @@ test('桌面端使用顶部导航并展示概览入口', async ({ page }, testIn
 
 test('手机端可以打开测量表单', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'mobile')
-  await page.goto('/')
+  await page.goto('/zh/')
   await page.getByRole('button', { name: /快速记录/ }).click()
   const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
@@ -98,14 +97,14 @@ test('手机端可以打开测量表单', async ({ page }, testInfo) => {
   await expect(page.getByText('所有已启用指标均可直接填写')).toBeVisible()
   await expect(page.getByText('腰围', { exact: true })).toBeVisible()
   await expect(page.locator('details')).toHaveCount(0)
-  await dialog.getByRole('button', { name: /年.*月.*日/ }).click()
+  await dialog.getByRole('button', { name: /\d{4}\/\d{1,2}\/\d{1,2}/ }).click()
   await page.getByLabel('具体时间').fill('08:30:15')
   await page.getByRole('button', { name: '完成', exact: true }).click()
-  await expect(dialog.getByRole('button', { name: /08:30:15/ })).toBeVisible()
+  await expect(dialog.getByRole('button', { name: /8:30:15/ })).toBeVisible()
 })
 
 test('首页可以快捷记录睡眠和训练', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/zh/')
 
   await page.getByRole('button', { name: '＋ 睡眠' }).click()
   await expect(page.getByRole('heading', { name: '新增睡眠记录' })).toBeVisible()
@@ -116,14 +115,14 @@ test('首页可以快捷记录睡眠和训练', async ({ page }) => {
 })
 
 test('记录页使用统一日期选择器', async ({ page }) => {
-  await page.goto('/records')
+  await page.goto('/zh/records')
   await page.getByRole('button', { name: '不限开始日期' }).click()
   await expect(page.getByRole('button', { name: '今天', exact: true })).toBeVisible()
 })
 
 test('指标管理使用明确的新增和编辑状态', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop')
-  await page.goto('/metrics')
+  await page.goto('/zh/metrics')
   await page.getByRole('button', { name: '新增指标' }).click()
   await page.getByLabel('指标名称').fill('睡眠质量')
   await page.getByLabel('指标编码').fill('sleep_quality')
@@ -138,7 +137,7 @@ test('指标管理使用明确的新增和编辑状态', async ({ page }, testIn
 })
 
 test('桌面端和手机端均可维护训练与睡眠记录', async ({ page }, testInfo) => {
-  await page.goto('/behavior')
+  await page.goto('/zh/behavior')
   const duration = testInfo.project.name === 'mobile' ? 47 : 46
   await page.getByRole('button', { name: '＋ 训练' }).click()
   const dialog = page.getByRole('dialog')

@@ -2,6 +2,7 @@ import type { MeasurementWrite, MetricCreate, SettingsUpdate, TrackFitData } fro
 import type { AnalyticsDto, AppSettingsDto, MeasurementDto, MeasurementPageDto, MeasurementValueDto, MetricDefinitionDto } from '../types/api'
 import { measurementWriteSchema, metricCreateSchema, metricUpdateSchema, settingsUpdateSchema } from '../schemas/trackfit'
 import { buildAnalytics, calculateBmi, calculateWaistHipRatio } from './analytics'
+import { TrackFitDomainError } from './domain-error'
 
 export interface MeasurementQuery {
   page: number
@@ -71,16 +72,16 @@ export function getAnalytics(data: TrackFitData, metricCode: string, start?: str
 
 export function createMetric(data: TrackFitData, input: MetricCreate): void {
   const metric = metricCreateSchema.parse(input)
-  if (data.metrics.some(item => item.code === metric.code)) throw new Error('指标编码已存在')
+  if (data.metrics.some(item => item.code === metric.code)) throw new TrackFitDomainError('metric.codeExists')
   data.metrics.push({ id: nextId(data.metrics), ...metric, minimumValue: metric.minimumValue ?? null, maximumValue: metric.maximumValue ?? null, metricType: 'custom', enabled: true })
 }
 
 export function updateMetric(data: TrackFitData, id: number, input: unknown): void {
   const patch = metricUpdateSchema.parse(input)
   const metric = data.metrics.find(item => item.id === id)
-  if (!metric) throw new Error('指标不存在')
-  if (metric.metricType === 'core' && (patch.code !== undefined || patch.unit !== undefined)) throw new Error('核心指标编码和单位不可修改')
-  if (patch.code && data.metrics.some(item => item.id !== id && item.code === patch.code)) throw new Error('指标编码已存在')
+  if (!metric) throw new TrackFitDomainError('metric.notFound')
+  if (metric.metricType === 'core' && (patch.code !== undefined || patch.unit !== undefined)) throw new TrackFitDomainError('metric.coreImmutable')
+  if (patch.code && data.metrics.some(item => item.id !== id && item.code === patch.code)) throw new TrackFitDomainError('metric.codeExists')
   Object.assign(metric, patch)
 }
 
@@ -93,7 +94,7 @@ export function saveMeasurement(data: TrackFitData, input: unknown, id?: number)
   const payload = measurementWriteSchema.parse(input)
   validateMeasurementValues(data, payload)
   const existing = id == null ? undefined : data.bodyRecords.find(record => record.id === id)
-  if (id != null && !existing) throw new Error('测量记录不存在')
+  if (id != null && !existing) throw new TrackFitDomainError('measurement.notFound')
   const recordId = existing?.id ?? nextId(data.bodyRecords)
   const measuredAt = payload.measuredAt.toISOString()
   const note = payload.note || null
@@ -106,18 +107,20 @@ export function saveMeasurement(data: TrackFitData, input: unknown, id?: number)
 }
 
 export function deleteMeasurement(data: TrackFitData, id: number): void {
-  if (!data.bodyRecords.some(record => record.id === id)) throw new Error('测量记录不存在')
+  if (!data.bodyRecords.some(record => record.id === id)) throw new TrackFitDomainError('measurement.notFound')
   data.bodyRecords = data.bodyRecords.filter(record => record.id !== id)
 }
 
-export function createCsv(data: TrackFitData): string {
+export function createCsv(data: TrackFitData, locale: 'zh' | 'en' = 'zh'): string {
   const metrics = new Map(data.metrics.map(metric => [metric.id, metric]))
   const rows = data.bodyRecords.flatMap(record => record.values.flatMap((value) => {
     const metric = metrics.get(value.metricId)
     return metric ? [{ value, metric, record }] : []
   })).sort((a, b) => new Date(a.record.measuredAt).getTime() - new Date(b.record.measuredAt).getTime() || a.record.id - b.record.id || a.metric.sortOrder - b.metric.sortOrder)
   const lines = [
-    ['记录ID', '测量时间', '指标编码', '指标名称', '数值', '单位', '备注'],
+    locale === 'zh'
+      ? ['记录ID', '测量时间', '指标编码', '指标名称', '数值', '单位', '备注']
+      : ['Record ID', 'Measured at', 'Metric code', 'Metric name', 'Value', 'Unit', 'Note'],
     ...rows.map(({ value, metric, record }) => [record.id, record.measuredAt, metric.code, metric.name, value.value, metric.unit, record.note ?? '']),
   ].map(columns => columns.map(csvCell).join(','))
   return `\uFEFF${lines.join('\r\n')}`
@@ -157,9 +160,9 @@ function validateMeasurementValues(data: TrackFitData, payload: MeasurementWrite
   const metrics = new Map(data.metrics.map(metric => [metric.id, metric]))
   for (const item of payload.values) {
     const metric = metrics.get(item.metricId)
-    if (!metric || !metric.enabled) throw new Error(`指标 ${item.metricId} 不存在或已停用`)
+    if (!metric || !metric.enabled) throw new TrackFitDomainError('metric.unavailable', { id: item.metricId })
     if ((metric.minimumValue != null && item.value < metric.minimumValue) || (metric.maximumValue != null && item.value > metric.maximumValue)) {
-      throw new Error(`${metric.name} 超出合理范围`)
+      throw new TrackFitDomainError('metric.outOfRange', { metric: metric.name })
     }
   }
 }

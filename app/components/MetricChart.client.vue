@@ -9,6 +9,7 @@ import { LineChart } from 'echarts/charts'
 import { DataZoomComponent, GridComponent, LegendComponent, TooltipComponent } from 'echarts/components'
 
 use([CanvasRenderer, LineChart, DataZoomComponent, GridComponent, LegendComponent, TooltipComponent])
+const { t } = useI18n()
 
 const props = withDefaults(defineProps<{
   points: Array<{ measuredAt: string, value: number }>
@@ -38,7 +39,7 @@ const colors: Record<MovingAveragePeriod, string> = {
 const option = computed(() => {
   const yAxisBounds = resolveYAxisBounds(props.metricCode, props.points, props.targetMinimum, props.targetMaximum)
   const averageSeries = props.visibleMovingAverages.map(period => ({
-    name: `${period} 日均线`,
+    name: t('common.dayAverage', { count: period }),
     type: 'line',
     showSymbol: false,
     connectNulls: false,
@@ -59,7 +60,7 @@ const option = computed(() => {
       top: 0,
       left: 'center',
       right: 42,
-      data: ['原始记录', ...props.visibleMovingAverages.map(period => `${period} 日均线`)],
+      data: [t('chart.raw'), ...props.visibleMovingAverages.map(period => t('common.dayAverage', { count: period }))],
     },
     xAxis: {
       type: 'time',
@@ -82,7 +83,7 @@ const option = computed(() => {
     ],
     series: [
       {
-        name: '原始记录',
+        name: t('chart.raw'),
         type: 'line',
         showSymbol: true,
         symbolSize: 8,
@@ -103,6 +104,6 @@ const option = computed(() => {
     <VChart autoresize :option="option" />
   </div>
   <div v-else class="grid h-72 place-items-center rounded-2xl border border-dashed border-default text-sm text-muted">
-    暂无可分析的数据
+    {{ t('chart.noData') }}
   </div>
 </template>

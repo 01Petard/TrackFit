@@ -4,6 +4,8 @@ import { backupSchema } from '../../shared/schemas/trackfit'
 
 const store = useTrackFitData()
 await store.ensureLoaded()
+const { t, locale } = useI18n()
+const { formatDateTime, formatError } = useTrackFitI18n()
 const colorMode = useColorMode()
 const heightCm = ref<number | null>(store.settings.value.heightCm)
 const desiredWeightMinimum = ref<number | ''>(store.settings.value.desiredWeightMinimum ?? '')
@@ -23,17 +25,17 @@ const counts = computed(() => ({
 
 async function save() {
   if (heightCm.value == null) {
-    message.value = '请填写身高'
+    message.value = t('settings.validation.height')
     return
   }
   const hasMinimum = desiredWeightMinimum.value !== ''
   const hasMaximum = desiredWeightMaximum.value !== ''
   if (hasMinimum !== hasMaximum) {
-    message.value = '目标体重上下限必须同时填写'
+    message.value = t('settings.validation.weightPair')
     return
   }
   if (hasMinimum && hasMaximum && desiredWeightMinimum.value >= desiredWeightMaximum.value) {
-    message.value = '目标体重下限必须小于上限'
+    message.value = t('settings.validation.weightOrder')
     return
   }
   saving.value = true
@@ -48,9 +50,9 @@ async function save() {
       theme: theme.value,
     })
     colorMode.preference = theme.value
-    message.value = '设置已保存'
+    message.value = t('settings.saved')
   } catch (error) {
-    message.value = getTrackFitErrorMessage(error)
+    message.value = formatError(error)
   } finally {
     saving.value = false
   }
@@ -59,13 +61,13 @@ async function save() {
 async function restore(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0]
   if (!file) return
-  if (!window.confirm('恢复备份会替换当前全部数据，确认继续？')) return
+  if (!window.confirm(t('settings.restoreConfirm'))) return
   try {
     const backup = backupSchema.parse(JSON.parse(await file.text()))
     await store.restore(backup)
-    message.value = '备份恢复完成'
+    message.value = t('settings.restoreComplete')
   } catch (error) {
-    message.value = `恢复失败：${getTrackFitErrorMessage(error)}`
+    message.value = t('settings.restoreFailed', { message: formatError(error) })
   } finally {
     if (restoreInput.value) restoreInput.value.value = ''
   }
@@ -76,7 +78,7 @@ function downloadJson() {
 }
 
 function downloadCsv() {
-  downloadFile(store.exportCsv(), 'trackfit-measurements.csv', 'text/csv;charset=utf-8')
+  downloadFile(store.exportCsv(locale.value as 'zh' | 'en'), 'trackfit-measurements.csv', 'text/csv;charset=utf-8')
 }
 
 function downloadFile(content: string, filename: string, type: string) {
@@ -91,56 +93,56 @@ function downloadFile(content: string, filename: string, type: string) {
 
 <template>
   <div>
-    <PageHeader title="系统设置" description="配置身体基础信息，管理本地数据备份与运行状态" />
-    <p v-if="!store.canWrite.value" class="mb-5 rounded-2xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">当前账号为只读访客，可查看设置，不能修改或导出数据</p>
+    <PageHeader :title="t('pages.settings.title')" :description="t('pages.settings.description')" />
+    <p v-if="!store.canWrite.value" class="mb-5 rounded-2xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">{{ t('settings.readOnlyNotice') }}</p>
 
     <div class="grid gap-6 xl:grid-cols-2">
       <form class="app-card rounded-3xl p-5 sm:p-6" @submit.prevent="save">
-        <h2 class="font-bold">个人与显示</h2><p class="mt-1 text-xs text-muted">身高用于统一计算全部 BMI 记录</p>
+        <h2 class="font-bold">{{ t('settings.personal') }}</h2><p class="mt-1 text-xs text-muted">{{ t('settings.personalHint') }}</p>
         <div class="mt-6 space-y-5">
-          <label class="block text-sm">身高（cm）<input v-model.number="heightCm" :disabled="!store.canWrite.value" required type="number" min="80" max="250" step="0.1" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3 disabled:opacity-60"></label>
+          <label class="block text-sm">{{ t('settings.height') }}<input v-model.number="heightCm" :disabled="!store.canWrite.value" required type="number" min="80" max="250" step="0.1" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3 disabled:opacity-60"></label>
           <fieldset class="rounded-2xl border border-default p-4">
-            <legend class="px-2 text-sm font-medium">个人目标体重（kg）</legend>
-            <p class="mb-3 text-xs text-muted">两个值需同时填写；保存后会在体重图表中显示目标区间</p>
+            <legend class="px-2 text-sm font-medium">{{ t('settings.weightTarget') }}</legend>
+            <p class="mb-3 text-xs text-muted">{{ t('settings.weightTargetHint') }}</p>
             <div class="grid grid-cols-2 gap-3">
-              <label class="text-xs text-muted">合适下限<input v-model.number="desiredWeightMinimum" :disabled="!store.canWrite.value" type="number" min="20" max="400" step="0.1" placeholder="例如 60" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted disabled:opacity-60"></label>
-              <label class="text-xs text-muted">最胖上限<input v-model.number="desiredWeightMaximum" :disabled="!store.canWrite.value" type="number" min="20" max="400" step="0.1" placeholder="例如 75" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted disabled:opacity-60"></label>
+              <label class="text-xs text-muted">{{ t('settings.minimum') }}<input v-model.number="desiredWeightMinimum" :disabled="!store.canWrite.value" type="number" min="20" max="400" step="0.1" :placeholder="t('settings.minimumExample')" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted disabled:opacity-60"></label>
+              <label class="text-xs text-muted">{{ t('settings.maximum') }}<input v-model.number="desiredWeightMaximum" :disabled="!store.canWrite.value" type="number" min="20" max="400" step="0.1" :placeholder="t('settings.maximumExample')" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted disabled:opacity-60"></label>
             </div>
           </fieldset>
           <fieldset class="rounded-2xl border border-default p-4">
-            <legend class="px-2 text-sm font-medium">行为目标</legend>
-            <p class="mb-3 text-xs text-muted">用于首页进度和周期报告，不作为医疗建议</p>
+            <legend class="px-2 text-sm font-medium">{{ t('settings.behaviorGoals') }}</legend>
+            <p class="mb-3 text-xs text-muted">{{ t('settings.behaviorGoalsHint') }}</p>
             <div class="grid grid-cols-2 gap-3">
-              <label class="text-xs text-muted">每日睡眠（小时）<input v-model.number="sleepGoalHours" :disabled="!store.canWrite.value" required type="number" min="1" max="16" step="0.5" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted disabled:opacity-60"></label>
-              <label class="text-xs text-muted">每周训练（分钟）<input v-model.number="weeklyTrainingGoalMinutes" :disabled="!store.canWrite.value" required type="number" min="0" max="10080" step="5" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted disabled:opacity-60"></label>
+              <label class="text-xs text-muted">{{ t('settings.dailySleep') }}<input v-model.number="sleepGoalHours" :disabled="!store.canWrite.value" required type="number" min="1" max="16" step="0.5" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted disabled:opacity-60"></label>
+              <label class="text-xs text-muted">{{ t('settings.weeklyTraining') }}<input v-model.number="weeklyTrainingGoalMinutes" :disabled="!store.canWrite.value" required type="number" min="0" max="10080" step="5" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted disabled:opacity-60"></label>
             </div>
           </fieldset>
-          <label class="block text-sm">默认分析范围<select v-model="defaultDateRange" :disabled="!store.canWrite.value" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3 disabled:opacity-60"><option value="24h">24 小时</option><option value="7d">7 天</option><option value="30d">30 天</option><option value="90d">90 天</option><option value="all">全部</option></select></label>
-          <label class="block text-sm">界面主题<select v-model="theme" :disabled="!store.canWrite.value" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3 disabled:opacity-60"><option value="system">跟随系统</option><option value="light">浅色</option><option value="dark">深色</option></select></label>
+          <label class="block text-sm">{{ t('settings.defaultRange') }}<select v-model="defaultDateRange" :disabled="!store.canWrite.value" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3 disabled:opacity-60"><option value="24h">{{ t('range.24h') }}</option><option value="7d">{{ t('range.7d') }}</option><option value="30d">{{ t('range.30d') }}</option><option value="90d">{{ t('range.90d') }}</option><option value="all">{{ t('range.all') }}</option></select></label>
+          <label class="block text-sm">{{ t('settings.theme') }}<select v-model="theme" :disabled="!store.canWrite.value" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3 disabled:opacity-60"><option value="system">{{ t('settings.themeSystem') }}</option><option value="light">{{ t('settings.themeLight') }}</option><option value="dark">{{ t('settings.themeDark') }}</option></select></label>
         </div>
-        <button v-if="store.canWrite.value" :disabled="saving" class="mt-6 w-full rounded-xl bg-primary px-5 py-3 font-semibold text-white">{{ saving ? '保存中…' : '保存设置' }}</button>
+        <button v-if="store.canWrite.value" :disabled="saving" class="mt-6 w-full rounded-xl bg-primary px-5 py-3 font-semibold text-white">{{ t(saving ? 'common.saving' : 'settings.save') }}</button>
       </form>
 
       <section v-if="store.canWrite.value" class="app-card rounded-3xl p-5 sm:p-6">
-        <h2 class="font-bold">数据备份</h2><p class="mt-1 text-xs text-muted">JSON 可完整恢复，CSV 适合在表格软件中查看</p>
+        <h2 class="font-bold">{{ t('settings.backup') }}</h2><p class="mt-1 text-xs text-muted">{{ t('settings.backupHint') }}</p>
         <div class="mt-6 grid gap-3">
-          <button type="button" class="rounded-xl border border-default px-4 py-3 text-center text-sm font-medium hover:bg-elevated" @click="downloadJson">下载 JSON 全量备份</button>
-          <button type="button" class="rounded-xl border border-default px-4 py-3 text-center text-sm font-medium hover:bg-elevated" @click="downloadCsv">导出 CSV 测量明细</button>
-          <button type="button" class="rounded-xl border border-default px-4 py-3 text-center text-sm font-medium hover:bg-elevated" @click="downloadFile(store.exportTrainingCsv(), 'trackfit-training.csv', 'text/csv;charset=utf-8')">导出 CSV 训练记录</button>
-          <button type="button" class="rounded-xl border border-default px-4 py-3 text-center text-sm font-medium hover:bg-elevated" @click="downloadFile(store.exportSleepCsv(), 'trackfit-sleep.csv', 'text/csv;charset=utf-8')">导出 CSV 睡眠记录</button>
-          <button type="button" class="rounded-xl border border-error/30 px-4 py-3 text-sm font-medium text-error hover:bg-error/5" @click="restoreInput?.click()">从 JSON 恢复数据</button>
+          <button type="button" class="rounded-xl border border-default px-4 py-3 text-center text-sm font-medium hover:bg-elevated" @click="downloadJson">{{ t('settings.downloadJson') }}</button>
+          <button type="button" class="rounded-xl border border-default px-4 py-3 text-center text-sm font-medium hover:bg-elevated" @click="downloadCsv">{{ t('settings.exportMeasurements') }}</button>
+          <button type="button" class="rounded-xl border border-default px-4 py-3 text-center text-sm font-medium hover:bg-elevated" @click="downloadFile(store.exportTrainingCsv(locale as 'zh' | 'en'), 'trackfit-training.csv', 'text/csv;charset=utf-8')">{{ t('settings.exportTraining') }}</button>
+          <button type="button" class="rounded-xl border border-default px-4 py-3 text-center text-sm font-medium hover:bg-elevated" @click="downloadFile(store.exportSleepCsv(locale as 'zh' | 'en'), 'trackfit-sleep.csv', 'text/csv;charset=utf-8')">{{ t('settings.exportSleep') }}</button>
+          <button type="button" class="rounded-xl border border-error/30 px-4 py-3 text-sm font-medium text-error hover:bg-error/5" @click="restoreInput?.click()">{{ t('settings.restoreJson') }}</button>
           <input ref="restoreInput" type="file" accept="application/json,.json" class="hidden" @change="restore">
         </div>
-        <p class="mt-4 text-xs leading-5 text-muted">恢复操作会先完整校验，再原子替换部署机器上的数据文件</p>
+        <p class="mt-4 text-xs leading-5 text-muted">{{ t('settings.restoreHint') }}</p>
       </section>
 
       <section class="app-card rounded-3xl p-5 sm:p-6 xl:col-span-2">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><h2 class="font-bold">数据文件状态</h2><p class="mt-1 text-xs text-muted">业务计算由浏览器完成，服务端只负责原子读写 JSON 文件</p></div><button class="rounded-xl border border-default px-4 py-2 text-sm" @click="store.refresh(true)">重新检测</button></div>
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><h2 class="font-bold">{{ t('settings.status') }}</h2><p class="mt-1 text-xs text-muted">{{ t('settings.statusHint') }}</p></div><button class="rounded-xl border border-default px-4 py-2 text-sm" @click="store.refresh(true)">{{ t('settings.recheck') }}</button></div>
         <div class="mt-5 grid gap-3 sm:grid-cols-4">
-          <div class="rounded-2xl bg-elevated p-4"><p class="text-xs text-muted">存储权限</p><strong class="mt-1 block" :class="store.writable.value ? 'text-primary' : 'text-warning'">{{ store.writable.value ? '可写' : '只读' }}</strong></div>
-          <div class="rounded-2xl bg-elevated p-4"><p class="text-xs text-muted">最后更新</p><strong class="mt-1 block text-sm">{{ store.data.value ? new Date(store.data.value.exportedAt).toLocaleString() : '—' }}</strong></div>
-          <div class="rounded-2xl bg-elevated p-4"><p class="text-xs text-muted">数据规模</p><strong class="mt-1 block text-sm">{{ counts.metrics }} 指标 / {{ counts.bodyRecords }} 记录 / {{ counts.values }} 数值</strong></div>
-          <div class="rounded-2xl bg-elevated p-4"><p class="text-xs text-muted">同步冲突</p><strong class="mt-1 block text-sm" :class="store.conflictCount.value ? 'text-warning' : 'text-primary'">{{ store.conflictCount.value }} 次</strong></div>
+          <div class="rounded-2xl bg-elevated p-4"><p class="text-xs text-muted">{{ t('settings.storagePermission') }}</p><strong class="mt-1 block" :class="store.writable.value ? 'text-primary' : 'text-warning'">{{ t(store.writable.value ? 'settings.writable' : 'settings.readOnly') }}</strong></div>
+          <div class="rounded-2xl bg-elevated p-4"><p class="text-xs text-muted">{{ t('settings.lastUpdated') }}</p><strong class="mt-1 block text-sm">{{ store.data.value ? formatDateTime(store.data.value.exportedAt) : '—' }}</strong></div>
+          <div class="rounded-2xl bg-elevated p-4"><p class="text-xs text-muted">{{ t('settings.dataSize') }}</p><strong class="mt-1 block text-sm">{{ t('settings.dataSizeValue', counts) }}</strong></div>
+          <div class="rounded-2xl bg-elevated p-4"><p class="text-xs text-muted">{{ t('settings.conflicts') }}</p><strong class="mt-1 block text-sm" :class="store.conflictCount.value ? 'text-warning' : 'text-primary'">{{ t('settings.conflictCount', { count: store.conflictCount.value }) }}</strong></div>
         </div>
       </section>
     </div>

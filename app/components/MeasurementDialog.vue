@@ -13,6 +13,8 @@ const emit = defineEmits<{
 }>()
 
 const store = useTrackFitData()
+const { t } = useI18n()
+const { metricName, formatError } = useTrackFitI18n()
 await store.ensureLoaded()
 const metrics = store.metrics
 const measuredAt = ref('')
@@ -39,7 +41,7 @@ async function save() {
     .filter(([, value]) => value !== '')
     .map(([metricId, value]) => ({ metricId: Number(metricId), value: Number(value) }))
   if (!payloadValues.length) {
-    errorMessage.value = '至少填写一个身体指标'
+    errorMessage.value = t('measurement.validation.oneMetric')
     return
   }
 
@@ -54,13 +56,11 @@ async function save() {
     emit('update:open', false)
     emit('saved')
   } catch (error) {
-    errorMessage.value = getErrorMessage(error)
+    errorMessage.value = formatError(error)
   } finally {
     saving.value = false
   }
 }
-
-const getErrorMessage = getTrackFitErrorMessage
 </script>
 
 <template>
@@ -70,21 +70,21 @@ const getErrorMessage = getTrackFitErrorMessage
         <section role="dialog" aria-modal="true" class="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-default p-5 shadow-2xl sm:max-w-xl sm:rounded-3xl sm:p-7">
           <header class="mb-6 flex items-start justify-between gap-4">
             <div>
-              <h2 class="text-xl font-bold">{{ measurement ? '编辑测量记录' : '记录身体数据' }}</h2>
-              <p class="mt-1 text-sm text-muted">同一天可以记录任意多次，每次数据都会独立保存</p>
+              <h2 class="text-xl font-bold">{{ t(measurement ? 'measurement.editTitle' : 'measurement.createTitle') }}</h2>
+              <p class="mt-1 text-sm text-muted">{{ t('measurement.description') }}</p>
             </div>
             <button class="grid size-9 place-items-center rounded-full bg-elevated text-muted hover:text-highlighted" @click="emit('update:open', false)">×</button>
           </header>
 
           <form class="space-y-5" @submit.prevent="save">
             <div class="block">
-              <span class="mb-2 flex items-center justify-between text-sm font-medium">测量时间 <span class="text-xs font-normal text-muted">默认为当前时间，可点击修改</span></span>
-              <AppDateField v-model="measuredAt" mode="datetime" placeholder="选择测量时间" />
+              <span class="mb-2 flex items-center justify-between text-sm font-medium">{{ t('measurement.measuredAt') }} <span class="text-xs font-normal text-muted">{{ t('measurement.measuredAtHint') }}</span></span>
+              <AppDateField v-model="measuredAt" mode="datetime" :placeholder="t('measurement.selectMeasuredAt')" />
             </div>
 
             <label v-if="weightMetric" class="block rounded-2xl border border-primary/25 bg-primary/5 p-4">
               <span class="mb-2 flex items-center justify-between text-sm font-semibold">
-                体重
+                {{ metricName(weightMetric) }}
                 <span class="font-normal text-muted">{{ weightMetric.unit }}</span>
               </span>
               <input
@@ -94,17 +94,17 @@ const getErrorMessage = getTrackFitErrorMessage
                 :step="10 ** -weightMetric.decimalPlaces"
                 :min="weightMetric.minimumValue ?? undefined"
                 :max="weightMetric.maximumValue ?? undefined"
-                placeholder="例如 72.5"
+                :placeholder="t('measurement.weightExample')"
                 class="w-full bg-transparent text-3xl font-bold outline-none placeholder:text-muted/35"
               >
             </label>
 
             <section v-if="otherMetrics.length" class="rounded-2xl border border-default p-4">
-              <div class="mb-4"><h3 class="font-medium">其他身体指标</h3><p class="mt-1 text-xs text-muted">所有已启用指标均可直接填写</p></div>
+              <div class="mb-4"><h3 class="font-medium">{{ t('measurement.otherMetrics') }}</h3><p class="mt-1 text-xs text-muted">{{ t('measurement.otherMetricsHint') }}</p></div>
               <div class="grid gap-4 sm:grid-cols-2">
                 <label v-for="metric in otherMetrics" :key="metric.id" class="block">
                   <span class="mb-1.5 flex justify-between text-sm">
-                    {{ metric.name }}
+                    {{ metricName(metric) }}
                     <span class="text-muted">{{ metric.unit }}</span>
                   </span>
                   <input
@@ -121,16 +121,16 @@ const getErrorMessage = getTrackFitErrorMessage
             </section>
 
             <label class="block">
-              <span class="mb-2 block text-sm font-medium">备注 <span class="font-normal text-muted">可选</span></span>
-              <textarea v-model="note" maxlength="500" rows="3" class="w-full resize-none rounded-xl border border-default bg-default px-4 py-3 outline-none focus:border-primary" placeholder="记录当时值得关注的信息" />
+              <span class="mb-2 block text-sm font-medium">{{ t('common.note') }} <span class="font-normal text-muted">{{ t('common.optional') }}</span></span>
+              <textarea v-model="note" maxlength="500" rows="3" class="w-full resize-none rounded-xl border border-default bg-default px-4 py-3 outline-none focus:border-primary" :placeholder="t('measurement.notePlaceholder')" />
             </label>
 
             <p v-if="errorMessage" class="rounded-xl bg-error/10 px-4 py-3 text-sm text-error">{{ errorMessage }}</p>
 
             <div class="flex gap-3 pt-1">
-              <button type="button" class="flex-1 rounded-xl border border-default px-4 py-3 font-medium hover:bg-elevated" @click="emit('update:open', false)">取消</button>
+              <button type="button" class="flex-1 rounded-xl border border-default px-4 py-3 font-medium hover:bg-elevated" @click="emit('update:open', false)">{{ t('common.cancel') }}</button>
               <button type="submit" :disabled="saving" class="flex-1 rounded-xl bg-primary px-4 py-3 font-semibold text-white shadow-lg shadow-primary/20 disabled:opacity-60">
-                {{ saving ? '保存中…' : '保存记录' }}
+                {{ t(saving ? 'common.saving' : 'common.saveRecord') }}
               </button>
             </div>
           </form>

@@ -7,8 +7,10 @@ const props = withDefaults(defineProps<{
   label?: string
 }>(), {
   color: '#10b981',
-  label: '指标趋势折线',
+  label: '',
 })
+const { t } = useI18n()
+const accessibleLabel = computed(() => props.label || t('chart.sparkline'))
 
 const width = 220
 const height = 64
@@ -37,7 +39,7 @@ const endpointStyle = computed(() => {
 
 <template>
   <div class="relative h-16 w-full">
-    <svg :aria-label="label" class="block size-full" :viewBox="`0 0 ${width} ${height}`" role="img" preserveAspectRatio="none">
+    <svg :aria-label="accessibleLabel" class="block size-full" :viewBox="`0 0 ${width} ${height}`" role="img" preserveAspectRatio="none">
       <line x1="0" :y1="height / 2" :x2="width" :y2="height / 2" stroke="currentColor" stroke-opacity=".08" stroke-dasharray="4 4" />
       <polygon v-if="coordinates.length > 1" :points="areaPoints" :fill="color" fill-opacity=".1" />
       <polyline v-if="coordinates.length > 1" :points="linePoints" fill="none" :stroke="color" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
