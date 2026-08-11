@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { BehaviorTimelineItemDto, TrainingType } from '../../shared/types/api'
+import type { TrainingWrite } from '../../shared/schemas/trackfit'
+import type { BehaviorTimelineItemDto } from '../../shared/types/api'
 import dayjs from 'dayjs'
 
 const props = defineProps<{
@@ -16,7 +17,7 @@ const emit = defineEmits<{
 const store = useTrackFitData()
 const saving = ref(false)
 const errorMessage = ref('')
-const training = reactive({ startedAt: '', type: 'strength' as TrainingType, durationMinutes: 45, intensity: 6, note: '' })
+const training = reactive({ type: 'strength' as TrainingWrite['type'], durationMinutes: 45, note: '' })
 const sleep = reactive({ fellAsleepAt: '', durationHours: 8, quality: 80 })
 const calculatedWakeUpAt = computed(() => {
   const fellAsleepAt = dayjs(sleep.fellAsleepAt)
@@ -24,9 +25,9 @@ const calculatedWakeUpAt = computed(() => {
   return fellAsleepAt.add(sleep.durationHours, 'hour').format('YYYY-MM-DD HH:mm')
 })
 const trainingTemplates = [
-  { label: '力量训练', type: 'strength' as const, durationMinutes: 45, intensity: 8 },
-  { label: '有氧', type: 'cardio' as const, durationMinutes: 30, intensity: 6 },
-  { label: '拉伸', type: 'mobility' as const, durationMinutes: 15, intensity: 4 },
+  { label: '力量', type: 'strength' as const, durationMinutes: 45 },
+  { label: '慢步', type: 'cardio' as const, durationMinutes: 30 },
+  { label: '拉伸', type: 'mobility' as const, durationMinutes: 15 },
 ]
 
 watch(() => props.open, (open) => {
@@ -34,10 +35,8 @@ watch(() => props.open, (open) => {
   errorMessage.value = ''
   const sourceTraining = props.item?.training
   Object.assign(training, {
-    startedAt: dayjs(sourceTraining?.startedAt ?? new Date()).format('YYYY-MM-DDTHH:mm:ss'),
-    type: sourceTraining?.type ?? 'strength',
+    type: sourceTraining && sourceTraining.type !== 'other' ? sourceTraining.type : 'strength',
     durationMinutes: sourceTraining?.durationMinutes ?? 45,
-    intensity: sourceTraining?.intensity ?? 6,
     note: sourceTraining?.note ?? '',
   })
   const sourceSleep = props.item?.sleep
@@ -53,27 +52,14 @@ function applyTemplate(template: typeof trainingTemplates[number]) {
   Object.assign(training, template)
 }
 
-function copyLatestTraining() {
-  const latest = store.listBehaviors().find(item => item.kind === 'training')?.training
-  if (!latest) return
-  Object.assign(training, {
-    type: latest.type,
-    durationMinutes: latest.durationMinutes,
-    intensity: latest.intensity,
-    note: latest.note ?? '',
-  })
-}
-
 async function save() {
   saving.value = true
   errorMessage.value = ''
   try {
     if (props.kind === 'training') {
       await store.saveTraining({
-        startedAt: new Date(training.startedAt).toISOString(),
         type: training.type,
         durationMinutes: training.durationMinutes,
-        intensity: training.intensity,
         note: training.note || null,
       }, props.item?.training?.id)
     } else {
@@ -106,14 +92,9 @@ async function save() {
           <template v-if="kind === 'training'">
             <div v-if="!item" class="flex flex-wrap gap-2">
               <button v-for="template in trainingTemplates" :key="template.label" type="button" class="rounded-lg border border-default px-3 py-2 text-xs hover:border-primary hover:text-primary" @click="applyTemplate(template)">{{ template.label }}</button>
-              <button type="button" class="rounded-lg border border-default px-3 py-2 text-xs hover:border-primary hover:text-primary" @click="copyLatestTraining">复制上一条</button>
             </div>
-            <label class="block text-sm">训练时间<AppDateField v-model="training.startedAt" mode="datetime" class="mt-2" /></label>
-            <label class="block text-sm">训练类型<select v-model="training.type" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3"><option value="strength">力量训练</option><option value="cardio">有氧</option><option value="mobility">拉伸与灵活性</option><option value="other">其他</option></select></label>
-            <div class="grid grid-cols-2 gap-3">
-              <label class="text-sm">时长（分钟）<input v-model.number="training.durationMinutes" required type="number" min="1" max="1440" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3"></label>
-              <label class="text-sm">主观强度（1–10）<input v-model.number="training.intensity" required type="number" min="1" max="10" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3"></label>
-            </div>
+            <label class="block text-sm">训练类型<select v-model="training.type" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3"><option value="strength">力量</option><option value="cardio">慢步</option><option value="mobility">拉伸</option></select></label>
+            <label class="block text-sm">时长（分钟）<input v-model.number="training.durationMinutes" required type="number" min="1" max="1440" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3"></label>
             <label class="block text-sm">备注<textarea v-model="training.note" maxlength="500" rows="3" class="mt-2 w-full resize-none rounded-xl border border-default bg-default px-4 py-3" /></label>
           </template>
 

@@ -21,12 +21,11 @@ export const measurementWriteSchema = z.object({
 })
 
 export const trainingTypes = ['strength', 'cardio', 'mobility', 'other'] as const
+export const trainingWriteTypes = ['strength', 'cardio', 'mobility'] as const
 
 export const trainingWriteSchema = z.object({
-  startedAt: z.coerce.date(),
-  type: z.enum(trainingTypes),
+  type: z.enum(trainingWriteTypes),
   durationMinutes: z.number().int().min(1).max(1440),
-  intensity: z.number().int().min(1).max(10),
   note: z.string().trim().max(500).nullable().optional(),
 })
 
@@ -119,10 +118,9 @@ export const backupValueSchema = z.object({
 
 export const backupTrainingSchema = z.object({
   id: z.number().int().positive(),
-  startedAt: z.string().datetime(),
+  recordedAt: z.string().datetime(),
   type: z.enum(trainingTypes),
   durationMinutes: z.number().int().min(1).max(1440),
-  intensity: z.number().int().min(1).max(10),
   note: z.string().max(500).nullable(),
 })
 
@@ -140,7 +138,7 @@ export const backupSleepSchema = z.object({
 })
 
 const currentBackupSchema = z.object({
-  version: z.literal(3),
+  version: z.literal(4),
   exportedAt: z.string().datetime(),
   settings: z.array(backupSettingsSchema).max(1),
   metrics: z.array(backupMetricSchema),
@@ -182,18 +180,20 @@ export const backupSchema = z.preprocess(migrateLegacyBackup, currentBackupSchem
 function migrateLegacyBackup(input: unknown): unknown {
   if (!input || typeof input !== 'object') return input
   const data = input as Record<string, unknown>
-  if (data.version !== 1 && data.version !== 2) return input
+  if (data.version !== 1 && data.version !== 2 && data.version !== 3) return input
   const trainingSessions = Array.isArray(data.trainingSessions)
-    ? data.trainingSessions.map(item => item && typeof item === 'object'
-        ? { ...item, intensity: Number((item as Record<string, unknown>).intensity) * 2 }
-        : item)
+    ? data.trainingSessions.map((item) => {
+        if (!item || typeof item !== 'object') return item
+        const { startedAt, intensity: _intensity, ...training } = item as Record<string, unknown>
+        return { ...training, recordedAt: startedAt }
+      })
     : []
   const sleepRecords = Array.isArray(data.sleepRecords)
-    ? data.sleepRecords.map(item => item && typeof item === 'object'
+    ? data.sleepRecords.map(item => (data.version === 1 || data.version === 2) && item && typeof item === 'object'
         ? { ...item, quality: Number((item as Record<string, unknown>).quality) * 20 }
         : item)
     : []
-  return { ...data, version: 3, trainingSessions, sleepRecords }
+  return { ...data, version: 4, trainingSessions, sleepRecords }
 }
 
 function validateUnique(

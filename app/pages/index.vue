@@ -98,7 +98,7 @@ const behaviorInsights = computed(() => {
   if (trainings.length) {
     const dailyMinutes = new Map<string, number>()
     for (const item of trainings) {
-      const day = dayjs(item.startedAt).format('YYYY-MM-DD')
+      const day = dayjs(item.recordedAt).format('YYYY-MM-DD')
       dailyMinutes.set(day, (dailyMinutes.get(day) ?? 0) + item.durationMinutes)
     }
     const values = Array.from({ length: 7 }, (_, index) => dailyMinutes.get(dayjs().subtract(6 - index, 'day').format('YYYY-MM-DD')) ?? 0)

@@ -84,10 +84,9 @@ export type TrainingType = 'strength' | 'cardio' | 'mobility' | 'other'
 
 export interface TrainingSessionDto {
   id: number
-  startedAt: string
+  recordedAt: string
   type: TrainingType
   durationMinutes: number
-  intensity: number
   note: string | null
 }
 
@@ -116,7 +115,7 @@ export interface BehaviorTimelineItemDto {
 export interface CorrelationDto {
   metricCode: string
   metricName: string
-  factor: 'trainingDuration' | 'trainingIntensity' | 'sleepDuration' | 'sleepQuality'
+  factor: 'trainingDuration' | 'sleepDuration' | 'sleepQuality'
   lagDays: 0 | 1 | 3 | 7
   coefficient: number
   sampleSize: number
@@ -138,7 +137,6 @@ export interface PeriodReportDto {
   training: {
     count: number
     totalMinutes: number
-    averageIntensity: number | null
     previousTotalMinutes: number
   }
   sleep: {

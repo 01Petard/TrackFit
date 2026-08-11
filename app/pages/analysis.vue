@@ -31,7 +31,6 @@ const report = computed(() => store.getPeriodReport(reportPeriod.value))
 const correlations = computed(() => store.getBehaviorCorrelations().slice(0, 8))
 const factorLabels = {
   trainingDuration: '训练时长',
-  trainingIntensity: '训练强度',
   sleepDuration: '睡眠时长',
   sleepQuality: '睡眠质量',
 } as const

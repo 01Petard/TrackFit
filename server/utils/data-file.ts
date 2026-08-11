@@ -89,7 +89,7 @@ function createDefaultData(): TrackFitData {
     ['calf', '小腿围', 'cm', 1, 10, 150],
   ] as const
   return {
-    version: 3,
+    version: 4,
     exportedAt: new Date().toISOString(),
     settings: [{
       id: 1,

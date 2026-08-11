@@ -15,14 +15,14 @@ import { saveMeasurement } from '../../shared/utils/trackfit'
 describe('训练与睡眠业务', () => {
   it('保存、编辑和删除行为记录', () => {
     const data = fixture()
-    const trainingId = saveTraining(data, { startedAt: '2026-08-03T10:00:00+08:00', type: 'strength', durationMinutes: 45, intensity: 8 })
+    const trainingId = saveTraining(data, { type: 'strength', durationMinutes: 45 }, undefined, new Date('2026-08-03T10:00:00+08:00'))
     const sleepId = saveSleep(data, { fellAsleepAt: '2026-08-02T23:00:00+08:00', durationMinutes: 510, quality: 80 })
 
     expect(listBehaviorTimeline(data)).toMatchObject([
       { kind: 'training', training: { durationMinutes: 45 } },
       { kind: 'sleep', sleep: { durationMinutes: 510 } },
     ])
-    saveTraining(data, { startedAt: '2026-08-03T10:00:00+08:00', type: 'cardio', durationMinutes: 30, intensity: 6 }, trainingId)
+    saveTraining(data, { type: 'cardio', durationMinutes: 30 }, trainingId)
     expect(data.trainingSessions[0]?.type).toBe('cardio')
 
     deleteTraining(data, trainingId)
@@ -31,12 +31,12 @@ describe('训练与睡眠业务', () => {
     expect(data.sleepRecords).toEqual([])
   })
 
-  it('自动计算起床时间并拒绝超长睡眠和越界训练强度', () => {
+  it('自动计算起床时间并拒绝超长时长', () => {
     const data = fixture()
     saveSleep(data, { fellAsleepAt: '2026-08-03T23:00:00+08:00', durationMinutes: 480, quality: 80 })
     expect(data.sleepRecords[0]?.wokeUpAt).toBe('2026-08-03T23:00:00.000Z')
     expect(() => saveSleep(data, { fellAsleepAt: '2026-08-01T07:00:00+08:00', durationMinutes: 1441, quality: 80 })).toThrow()
-    expect(() => saveTraining(data, { startedAt: '2026-08-03T10:00:00+08:00', type: 'strength', durationMinutes: 45, intensity: 11 })).toThrow()
+    expect(() => saveTraining(data, { type: 'strength', durationMinutes: 1441 })).toThrow()
   })
 
   it('至少 14 个重叠日后计算滞后相关性，零方差不输出', () => {
@@ -44,7 +44,7 @@ describe('训练与睡眠业务', () => {
     for (let index = 0; index < 14; index++) {
       const behaviorDate = new Date(2026, 6, index + 1, 23, 30)
       const measurementDate = new Date(2026, 6, index + 2, 0, 30)
-      saveTraining(data, { startedAt: behaviorDate, type: 'strength', durationMinutes: 20 + index, intensity: (index % 10) + 1 })
+      saveTraining(data, { type: 'strength', durationMinutes: 20 + index }, undefined, behaviorDate)
       saveMeasurement(data, { measuredAt: measurementDate, values: [{ metricId: 1, value: 59 + index }] })
       saveMeasurement(data, { measuredAt: new Date(measurementDate.getTime() + 60 * 60 * 1000), values: [{ metricId: 1, value: 61 + index }] })
     }
@@ -57,8 +57,8 @@ describe('训练与睡眠业务', () => {
 
   it('生成周报并与等长上一周期对比', () => {
     const data = fixture()
-    saveTraining(data, { startedAt: '2026-08-03T10:00:00+08:00', type: 'strength', durationMinutes: 60, intensity: 8 })
-    saveTraining(data, { startedAt: '2026-07-30T14:00:00+08:00', type: 'cardio', durationMinutes: 30, intensity: 6 })
+    saveTraining(data, { type: 'strength', durationMinutes: 60 }, undefined, new Date('2026-08-03T10:00:00+08:00'))
+    saveTraining(data, { type: 'cardio', durationMinutes: 30 }, undefined, new Date('2026-07-30T14:00:00+08:00'))
     saveSleep(data, { fellAsleepAt: '2026-08-02T23:00:00+08:00', durationMinutes: 480, quality: 80 })
     const report = buildPeriodReport(data, 'week', new Date('2026-08-06T12:00:00+08:00'))
     expect(report.training).toMatchObject({ count: 1, totalMinutes: 60, previousTotalMinutes: 30 })

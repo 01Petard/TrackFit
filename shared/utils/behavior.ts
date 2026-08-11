@@ -9,9 +9,9 @@ export function listBehaviorTimeline(data: TrackFitData, query: BehaviorQuery = 
   const end = query.end ? new Date(query.end).getTime() : Number.POSITIVE_INFINITY
   return [
     ...data.trainingSessions.flatMap((item) => {
-      const occurredAt = new Date(item.startedAt).getTime()
+      const occurredAt = new Date(item.recordedAt).getTime()
       return occurredAt >= start && occurredAt <= end
-        ? [{ id: item.id, kind: 'training' as const, occurredAt: item.startedAt, training: item }]
+        ? [{ id: item.id, kind: 'training' as const, occurredAt: item.recordedAt, training: item }]
         : []
     }),
     ...data.sleepRecords.flatMap((item) => {
@@ -23,16 +23,15 @@ export function listBehaviorTimeline(data: TrackFitData, query: BehaviorQuery = 
   ].sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime() || b.id - a.id)
 }
 
-export function saveTraining(data: TrackFitData, input: TrainingWrite | unknown, id?: number): number {
+export function saveTraining(data: TrackFitData, input: TrainingWrite | unknown, id?: number, now = new Date()): number {
   const payload = trainingWriteSchema.parse(input)
   const existing = id == null ? undefined : data.trainingSessions.find(item => item.id === id)
   if (id != null && !existing) throw new Error('训练记录不存在')
   const item = {
     id: existing?.id ?? nextId(data.trainingSessions),
-    startedAt: payload.startedAt.toISOString(),
+    recordedAt: existing?.recordedAt ?? now.toISOString(),
     type: payload.type,
     durationMinutes: payload.durationMinutes,
-    intensity: payload.intensity,
     note: payload.note || null,
   }
   if (existing) Object.assign(existing, item)
@@ -75,7 +74,6 @@ export function buildBehaviorCorrelations(data: TrackFitData): CorrelationDto[] 
     .flatMap(metric => correlationLags.flatMap(lag => (
       [
         correlation(metric, measurementDays, behaviorDays, 'trainingDuration', lag),
-        correlation(metric, measurementDays, behaviorDays, 'trainingIntensity', lag),
         correlation(metric, measurementDays, behaviorDays, 'sleepDuration', lag),
         correlation(metric, measurementDays, behaviorDays, 'sleepQuality', lag),
       ].filter((item): item is CorrelationDto => item != null)
@@ -91,8 +89,8 @@ export function buildPeriodReport(data: TrackFitData, period: 'week' | 'month', 
   const previousStart = new Date(previousEnd.getTime() - duration)
   const currentMeasurements = measurementValuesInRange(data, start, end)
   const previousMeasurements = measurementValuesInRange(data, previousStart, previousEnd)
-  const currentTraining = data.trainingSessions.filter(item => inRange(item.startedAt, start, end))
-  const previousTraining = data.trainingSessions.filter(item => inRange(item.startedAt, previousStart, previousEnd))
+  const currentTraining = data.trainingSessions.filter(item => inRange(item.recordedAt, start, end))
+  const previousTraining = data.trainingSessions.filter(item => inRange(item.recordedAt, previousStart, previousEnd))
   const currentSleep = data.sleepRecords.filter(item => inRange(item.wokeUpAt, start, end)).map(hydrateSleep)
   const previousSleep = data.sleepRecords.filter(item => inRange(item.wokeUpAt, previousStart, previousEnd)).map(hydrateSleep)
   const sleepGoalMinutes = (data.settings[0]?.sleepGoalHours ?? 8) * 60
@@ -117,7 +115,6 @@ export function buildPeriodReport(data: TrackFitData, period: 'week' | 'month', 
     training: {
       count: currentTraining.length,
       totalMinutes: sum(currentTraining.map(item => item.durationMinutes)),
-      averageIntensity: average(currentTraining.map(item => item.intensity)),
       previousTotalMinutes: sum(previousTraining.map(item => item.durationMinutes)),
     },
     sleep: {
@@ -132,10 +129,10 @@ export function buildPeriodReport(data: TrackFitData, period: 'week' | 'month', 
 
 export function createTrainingCsv(data: TrackFitData): string {
   return csv([
-    ['记录ID', '训练时间', '训练类型', '时长（分钟）', '主观强度（十分制）', '备注'],
+    ['记录ID', '记录时间', '训练类型', '时长（分钟）', '备注'],
     ...[...data.trainingSessions]
-      .sort((a, b) => new Date(a.startedAt).getTime() - new Date(b.startedAt).getTime())
-      .map(item => [item.id, item.startedAt, item.type, item.durationMinutes, item.intensity, item.note ?? '']),
+      .sort((a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime())
+      .map(item => [item.id, item.recordedAt, item.type, item.durationMinutes, item.note ?? '']),
   ])
 }
 
@@ -163,13 +160,12 @@ function buildMeasurementDays(data: TrackFitData): Map<number, Map<string, numbe
 }
 
 function buildBehaviorDays(data: TrackFitData): Map<string, Record<CorrelationDto['factor'], number>> {
-  const days = new Map<string, { durations: number[], intensities: number[], sleepDurations: number[], qualities: number[] }>()
-  const bucket = (key: string) => days.get(key) ?? { durations: [], intensities: [], sleepDurations: [], qualities: [] }
+  const days = new Map<string, { durations: number[], sleepDurations: number[], qualities: number[] }>()
+  const bucket = (key: string) => days.get(key) ?? { durations: [], sleepDurations: [], qualities: [] }
   for (const item of data.trainingSessions) {
-    const key = localDayKey(item.startedAt)
+    const key = localDayKey(item.recordedAt)
     const day = bucket(key)
     day.durations.push(item.durationMinutes)
-    day.intensities.push(item.intensity)
     days.set(key, day)
   }
   for (const item of data.sleepRecords) {
@@ -181,7 +177,6 @@ function buildBehaviorDays(data: TrackFitData): Map<string, Record<CorrelationDt
   }
   return new Map([...days].map(([key, day]) => [key, {
     trainingDuration: sum(day.durations),
-    trainingIntensity: average(day.intensities) ?? 0,
     sleepDuration: average(day.sleepDurations) ?? 0,
     sleepQuality: average(day.qualities) ?? 0,
   }]))
