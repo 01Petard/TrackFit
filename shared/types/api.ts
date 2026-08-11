@@ -22,7 +22,6 @@ export interface MeasurementValueDto {
 export interface MeasurementDto {
   id: number
   measuredAt: string
-  heightCmSnapshot: number | null
   note: string | null
   bmi: number | null
   waistHipRatio: number | null

@@ -20,7 +20,7 @@ const trainingTypeLabels = { strength: '力量', cardio: '慢步', mobility: '�
 const completenessHints = computed(() => {
   const all = store.listBehaviors()
   const hints: string[] = []
-  const latestMeasurement = store.data.value?.sessions.reduce<string | undefined>((latest, item) => !latest || item.measuredAt > latest ? item.measuredAt : latest, undefined)
+  const latestMeasurement = store.data.value?.bodyRecords.reduce<string | undefined>((latest, item) => !latest || item.measuredAt > latest ? item.measuredAt : latest, undefined)
   const latestTraining = all.find(item => item.kind === 'training')?.occurredAt
   const latestSleepTime = all.find(item => item.kind === 'sleep')?.occurredAt
   if (!latestMeasurement || dayjs().diff(dayjs(latestMeasurement), 'day') >= 7) hints.push('身体指标已超过 7 天未记录')
@@ -36,7 +36,7 @@ const completenessHints = computed(() => {
 })
 const heatmapDays = computed(() => {
   const counts = new Map<string, number>()
-  for (const item of store.data.value?.sessions ?? []) {
+  for (const item of store.data.value?.bodyRecords ?? []) {
     const key = dayjs(item.measuredAt).format('YYYY-MM-DD')
     counts.set(key, (counts.get(key) ?? 0) + 1)
   }

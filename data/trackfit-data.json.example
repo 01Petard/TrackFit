@@ -1,6 +1,6 @@
 {
-  "version": 4,
-  "exportedAt": "2026-08-03T01:13:00.508Z",
+  "version": 6,
+  "exportedAt": "2026-08-11T01:30:00.000Z",
   "settings": [
     {
       "heightCm": 170,
@@ -112,8 +112,82 @@
       "sortOrder": 100
     }
   ],
-  "sessions": [],
-  "values": [],
-  "trainingSessions": [],
-  "sleepRecords": []
+  "bodyRecords": [
+    {
+      "id": 1,
+      "measuredAt": "2026-08-01T00:30:00.000Z",
+      "note": "晨起空腹",
+      "values": [
+        { "metricId": 1, "value": 75.8 },
+        { "metricId": 2, "value": 24.6 },
+        { "metricId": 3, "value": 88.2 }
+      ]
+    },
+    {
+      "id": 2,
+      "measuredAt": "2026-08-05T00:25:00.000Z",
+      "note": null,
+      "values": [
+        { "metricId": 1, "value": 75.3 },
+        { "metricId": 2, "value": 24.2 },
+        { "metricId": 3, "value": 87.6 }
+      ]
+    },
+    {
+      "id": 3,
+      "measuredAt": "2026-08-10T00:20:00.000Z",
+      "note": "训练日前测量",
+      "values": [
+        { "metricId": 1, "value": 74.9 },
+        { "metricId": 2, "value": 23.9 },
+        { "metricId": 3, "value": 87.1 }
+      ]
+    }
+  ],
+  "trainingRecords": [
+    {
+      "id": 1,
+      "recordedAt": "2026-08-02T10:00:00.000Z",
+      "type": "strength",
+      "durationMinutes": 45,
+      "note": "上肢训练"
+    },
+    {
+      "id": 2,
+      "recordedAt": "2026-08-06T10:00:00.000Z",
+      "type": "cardio",
+      "durationMinutes": 35,
+      "note": "晚饭后慢步"
+    },
+    {
+      "id": 3,
+      "recordedAt": "2026-08-09T10:00:00.000Z",
+      "type": "mobility",
+      "durationMinutes": 20,
+      "note": "全身拉伸"
+    }
+  ],
+  "sleepRecords": [
+    {
+      "id": 1,
+      "fellAsleepAt": "2026-08-01T15:30:00.000Z",
+      "wokeUpAt": "2026-08-01T23:20:00.000Z",
+      "quality": 82,
+      "note": null
+    },
+    {
+      "id": 2,
+      "fellAsleepAt": "2026-08-05T15:45:00.000Z",
+      "wokeUpAt": "2026-08-05T23:15:00.000Z",
+      "quality": 78,
+      "note": null
+    },
+    {
+      "id": 3,
+      "fellAsleepAt": "2026-08-09T15:20:00.000Z",
+      "wokeUpAt": "2026-08-09T23:30:00.000Z",
+      "quality": 88,
+      "note": null
+    }
+  ]
 }

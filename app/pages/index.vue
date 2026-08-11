@@ -41,7 +41,7 @@ const todayTraining = computed(() => behaviors.value.filter(item => item.kind ==
 const latestSleep = computed(() => behaviors.value.find(item => item.kind === 'sleep')?.sleep)
 const recordingStreak = computed(() => {
   const recordedDays = new Set([
-    ...(store.data.value?.sessions ?? []).map(item => dayjs(item.measuredAt).format('YYYY-MM-DD')),
+    ...(store.data.value?.bodyRecords ?? []).map(item => dayjs(item.measuredAt).format('YYYY-MM-DD')),
     ...behaviors.value.map(item => dayjs(item.occurredAt).format('YYYY-MM-DD')),
   ])
   let cursor = dayjs()

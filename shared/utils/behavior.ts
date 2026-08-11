@@ -8,7 +8,7 @@ export function listBehaviorTimeline(data: TrackFitData, query: BehaviorQuery = 
   const start = query.start ? new Date(query.start).getTime() : Number.NEGATIVE_INFINITY
   const end = query.end ? new Date(query.end).getTime() : Number.POSITIVE_INFINITY
   return [
-    ...data.trainingSessions.flatMap((item) => {
+    ...data.trainingRecords.flatMap((item) => {
       const occurredAt = new Date(item.recordedAt).getTime()
       return occurredAt >= start && occurredAt <= end
         ? [{ id: item.id, kind: 'training' as const, occurredAt: item.recordedAt, training: item }]
@@ -25,23 +25,23 @@ export function listBehaviorTimeline(data: TrackFitData, query: BehaviorQuery = 
 
 export function saveTraining(data: TrackFitData, input: TrainingWrite | unknown, id?: number, now = new Date()): number {
   const payload = trainingWriteSchema.parse(input)
-  const existing = id == null ? undefined : data.trainingSessions.find(item => item.id === id)
+  const existing = id == null ? undefined : data.trainingRecords.find(item => item.id === id)
   if (id != null && !existing) throw new Error('训练记录不存在')
   const item = {
-    id: existing?.id ?? nextId(data.trainingSessions),
+    id: existing?.id ?? nextId(data.trainingRecords),
     recordedAt: existing?.recordedAt ?? now.toISOString(),
     type: payload.type,
     durationMinutes: payload.durationMinutes,
     note: payload.note || null,
   }
   if (existing) Object.assign(existing, item)
-  else data.trainingSessions.push(item)
+  else data.trainingRecords.push(item)
   return item.id
 }
 
 export function deleteTraining(data: TrackFitData, id: number): void {
-  if (!data.trainingSessions.some(item => item.id === id)) throw new Error('训练记录不存在')
-  data.trainingSessions = data.trainingSessions.filter(item => item.id !== id)
+  if (!data.trainingRecords.some(item => item.id === id)) throw new Error('训练记录不存在')
+  data.trainingRecords = data.trainingRecords.filter(item => item.id !== id)
 }
 
 export function saveSleep(data: TrackFitData, input: SleepWrite | unknown, id?: number): number {
@@ -89,8 +89,8 @@ export function buildPeriodReport(data: TrackFitData, period: 'week' | 'month', 
   const previousStart = new Date(previousEnd.getTime() - duration)
   const currentMeasurements = measurementValuesInRange(data, start, end)
   const previousMeasurements = measurementValuesInRange(data, previousStart, previousEnd)
-  const currentTraining = data.trainingSessions.filter(item => inRange(item.recordedAt, start, end))
-  const previousTraining = data.trainingSessions.filter(item => inRange(item.recordedAt, previousStart, previousEnd))
+  const currentTraining = data.trainingRecords.filter(item => inRange(item.recordedAt, start, end))
+  const previousTraining = data.trainingRecords.filter(item => inRange(item.recordedAt, previousStart, previousEnd))
   const currentSleep = data.sleepRecords.filter(item => inRange(item.wokeUpAt, start, end)).map(hydrateSleep)
   const previousSleep = data.sleepRecords.filter(item => inRange(item.wokeUpAt, previousStart, previousEnd)).map(hydrateSleep)
   const sleepGoalMinutes = (data.settings[0]?.sleepGoalHours ?? 8) * 60
@@ -130,7 +130,7 @@ export function buildPeriodReport(data: TrackFitData, period: 'week' | 'month', 
 export function createTrainingCsv(data: TrackFitData): string {
   return csv([
     ['记录ID', '记录时间', '训练类型', '时长（分钟）', '备注'],
-    ...[...data.trainingSessions]
+    ...[...data.trainingRecords]
       .sort((a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime())
       .map(item => [item.id, item.recordedAt, item.type, item.durationMinutes, item.note ?? '']),
   ])
@@ -146,15 +146,14 @@ export function createSleepCsv(data: TrackFitData): string {
 }
 
 function buildMeasurementDays(data: TrackFitData): Map<number, Map<string, number>> {
-  const sessions = new Map(data.sessions.map(item => [item.id, item]))
   const buckets = new Map<number, Map<string, number[]>>()
-  for (const value of data.values) {
-    const session = sessions.get(value.sessionId)
-    if (!session) continue
-    const metricDays = buckets.get(value.metricId) ?? new Map<string, number[]>()
-    const key = localDayKey(session.measuredAt)
-    metricDays.set(key, [...(metricDays.get(key) ?? []), value.value])
-    buckets.set(value.metricId, metricDays)
+  for (const record of data.bodyRecords) {
+    for (const value of record.values) {
+      const metricDays = buckets.get(value.metricId) ?? new Map<string, number[]>()
+      const key = localDayKey(record.measuredAt)
+      metricDays.set(key, [...(metricDays.get(key) ?? []), value.value])
+      buckets.set(value.metricId, metricDays)
+    }
   }
   return new Map([...buckets].map(([metricId, days]) => [metricId, new Map([...days].map(([key, values]) => [key, average(values)!]))]))
 }
@@ -162,7 +161,7 @@ function buildMeasurementDays(data: TrackFitData): Map<number, Map<string, numbe
 function buildBehaviorDays(data: TrackFitData): Map<string, Record<CorrelationDto['factor'], number>> {
   const days = new Map<string, { durations: number[], sleepDurations: number[], qualities: number[] }>()
   const bucket = (key: string) => days.get(key) ?? { durations: [], sleepDurations: [], qualities: [] }
-  for (const item of data.trainingSessions) {
+  for (const item of data.trainingRecords) {
     const key = localDayKey(item.recordedAt)
     const day = bucket(key)
     day.durations.push(item.durationMinutes)

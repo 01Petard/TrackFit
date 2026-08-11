@@ -23,11 +23,11 @@ describe('训练与睡眠业务', () => {
       { kind: 'sleep', sleep: { durationMinutes: 510 } },
     ])
     saveTraining(data, { type: 'cardio', durationMinutes: 30 }, trainingId)
-    expect(data.trainingSessions[0]?.type).toBe('cardio')
+    expect(data.trainingRecords[0]?.type).toBe('cardio')
 
     deleteTraining(data, trainingId)
     deleteSleep(data, sleepId)
-    expect(data.trainingSessions).toEqual([])
+    expect(data.trainingRecords).toEqual([])
     expect(data.sleepRecords).toEqual([])
   })
 
@@ -51,7 +51,7 @@ describe('训练与睡眠业务', () => {
     const result = buildBehaviorCorrelations(data).find(item => item.factor === 'trainingDuration' && item.lagDays === 1)
     expect(result).toMatchObject({ metricCode: 'weight', coefficient: 1, sampleSize: 14 })
 
-    for (const value of data.values) value.value = 70
+    for (const record of data.bodyRecords) for (const value of record.values) value.value = 70
     expect(buildBehaviorCorrelations(data)).toEqual([])
   })
 
@@ -68,7 +68,7 @@ describe('训练与睡眠业务', () => {
 
 function fixture(): TrackFitData {
   return backupSchema.parse({
-    version: 1,
+    version: 6,
     exportedAt: '2026-08-01T00:00:00.000Z',
     settings: [{ id: 1, heightCm: 175, defaultDateRange: '30d', theme: 'system', dataVersion: 1 }],
     metrics: [{
@@ -83,7 +83,8 @@ function fixture(): TrackFitData {
       enabled: true,
       sortOrder: 10,
     }],
-    sessions: [],
-    values: [],
+    bodyRecords: [],
+    trainingRecords: [],
+    sleepRecords: [],
   })
 }

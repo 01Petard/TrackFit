@@ -31,18 +31,15 @@ export function getSettings(data: TrackFitData): AppSettingsDto {
 export function listMeasurements(data: TrackFitData, query: MeasurementQuery): MeasurementPageDto {
   const start = query.start ? new Date(query.start).getTime() : undefined
   const end = query.end ? new Date(query.end).getTime() : undefined
-  const matchingSessionIds = query.metricId == null
-    ? undefined
-    : new Set(data.values.filter(value => value.metricId === query.metricId).map(value => value.sessionId))
-  const sessions = data.sessions
-    .filter(session => start == null || new Date(session.measuredAt).getTime() >= start)
-    .filter(session => end == null || new Date(session.measuredAt).getTime() <= end)
-    .filter(session => !matchingSessionIds || matchingSessionIds.has(session.id))
+  const records = data.bodyRecords
+    .filter(record => start == null || new Date(record.measuredAt).getTime() >= start)
+    .filter(record => end == null || new Date(record.measuredAt).getTime() <= end)
+    .filter(record => query.metricId == null || record.values.some(value => value.metricId === query.metricId))
     .sort((a, b) => new Date(b.measuredAt).getTime() - new Date(a.measuredAt).getTime() || b.id - a.id)
   const offset = (query.page - 1) * query.pageSize
   return {
-    items: hydrateMeasurements(data, sessions.slice(offset, offset + query.pageSize)),
-    total: sessions.length,
+    items: hydrateMeasurements(data, records.slice(offset, offset + query.pageSize)),
+    total: records.length,
     page: query.page,
     pageSize: query.pageSize,
   }
@@ -51,15 +48,11 @@ export function listMeasurements(data: TrackFitData, query: MeasurementQuery): M
 export function getAnalytics(data: TrackFitData, metricCode: string, start?: string, end?: string): AnalyticsDto | null {
   const metric = data.metrics.find(item => item.code === metricCode)
   if (!metric) return null
-  const sessions = new Map(data.sessions.map(session => [session.id, session]))
   const startTime = start ? new Date(start).getTime() : undefined
   const endTime = end ? new Date(end).getTime() : undefined
-  const allPoints = data.values.flatMap((value) => {
-    if (value.metricId !== metric.id) return []
-    const session = sessions.get(value.sessionId)
-    if (!session) return []
-    return [{ id: session.id, measuredAt: session.measuredAt, value: value.value }]
-  })
+  const allPoints = data.bodyRecords.flatMap(record => record.values.flatMap(value => value.metricId === metric.id
+    ? [{ id: record.id, measuredAt: record.measuredAt, value: value.value }]
+    : []))
   const points = allPoints.filter((point) => {
     const time = new Date(point.measuredAt).getTime()
     return (startTime == null || time >= startTime) && (endTime == null || time <= endTime)
@@ -99,54 +92,42 @@ export function saveSettings(data: TrackFitData, input: SettingsUpdate): void {
 export function saveMeasurement(data: TrackFitData, input: unknown, id?: number): number {
   const payload = measurementWriteSchema.parse(input)
   validateMeasurementValues(data, payload)
-  const existing = id == null ? undefined : data.sessions.find(session => session.id === id)
+  const existing = id == null ? undefined : data.bodyRecords.find(record => record.id === id)
   if (id != null && !existing) throw new Error('测量记录不存在')
-  const sessionId = existing?.id ?? nextId(data.sessions)
+  const recordId = existing?.id ?? nextId(data.bodyRecords)
   const measuredAt = payload.measuredAt.toISOString()
   const note = payload.note || null
   if (existing) {
-    Object.assign(existing, { measuredAt, note })
-    data.values = data.values.filter(value => value.sessionId !== sessionId)
+    Object.assign(existing, { measuredAt, note, values: buildRecordValues(data, payload.values) })
   } else {
-    data.sessions.push({ id: sessionId, measuredAt, heightCmSnapshot: getSettings(data).heightCm, note })
+    data.bodyRecords.push({ id: recordId, measuredAt, note, values: buildRecordValues(data, payload.values) })
   }
-  let valueId = nextId(data.values)
-  const metrics = new Map(data.metrics.map(metric => [metric.id, metric]))
-  data.values.push(...payload.values.map(item => ({
-    id: valueId++,
-    sessionId,
-    metricId: item.metricId,
-    value: Number(item.value.toFixed(metrics.get(item.metricId)?.decimalPlaces ?? 3)),
-  })))
-  return sessionId
+  return recordId
 }
 
 export function deleteMeasurement(data: TrackFitData, id: number): void {
-  if (!data.sessions.some(session => session.id === id)) throw new Error('测量记录不存在')
-  data.sessions = data.sessions.filter(session => session.id !== id)
-  data.values = data.values.filter(value => value.sessionId !== id)
+  if (!data.bodyRecords.some(record => record.id === id)) throw new Error('测量记录不存在')
+  data.bodyRecords = data.bodyRecords.filter(record => record.id !== id)
 }
 
 export function createCsv(data: TrackFitData): string {
   const metrics = new Map(data.metrics.map(metric => [metric.id, metric]))
-  const sessions = new Map(data.sessions.map(session => [session.id, session]))
-  const rows = data.values.flatMap((value) => {
+  const rows = data.bodyRecords.flatMap(record => record.values.flatMap((value) => {
     const metric = metrics.get(value.metricId)
-    const session = sessions.get(value.sessionId)
-    return metric && session ? [{ value, metric, session }] : []
-  }).sort((a, b) => new Date(a.session.measuredAt).getTime() - new Date(b.session.measuredAt).getTime() || a.session.id - b.session.id || a.metric.sortOrder - b.metric.sortOrder)
+    return metric ? [{ value, metric, record }] : []
+  })).sort((a, b) => new Date(a.record.measuredAt).getTime() - new Date(b.record.measuredAt).getTime() || a.record.id - b.record.id || a.metric.sortOrder - b.metric.sortOrder)
   const lines = [
     ['记录ID', '测量时间', '指标编码', '指标名称', '数值', '单位', '备注'],
-    ...rows.map(({ value, metric, session }) => [session.id, session.measuredAt, metric.code, metric.name, value.value, metric.unit, session.note ?? '']),
+    ...rows.map(({ value, metric, record }) => [record.id, record.measuredAt, metric.code, metric.name, value.value, metric.unit, record.note ?? '']),
   ].map(columns => columns.map(csvCell).join(','))
   return `\uFEFF${lines.join('\r\n')}`
 }
 
-function hydrateMeasurements(data: TrackFitData, sessions: TrackFitData['sessions']): MeasurementDto[] {
+function hydrateMeasurements(data: TrackFitData, records: TrackFitData['bodyRecords']): MeasurementDto[] {
   const metrics = new Map(data.metrics.map(metric => [metric.id, metric]))
-  return sessions.map((session) => {
-    const values: MeasurementValueDto[] = data.values
-      .filter(value => value.sessionId === session.id)
+  const heightCm = getSettings(data).heightCm
+  return records.map((record) => {
+    const values: MeasurementValueDto[] = record.values
       .flatMap((value) => {
         const metric = metrics.get(value.metricId)
         return metric ? [{ metricId: metric.id, code: metric.code, name: metric.name, unit: metric.unit, value: value.value }] : []
@@ -154,15 +135,22 @@ function hydrateMeasurements(data: TrackFitData, sessions: TrackFitData['session
       .sort((a, b) => (metrics.get(a.metricId)?.sortOrder ?? 0) - (metrics.get(b.metricId)?.sortOrder ?? 0) || a.metricId - b.metricId)
     const byCode = new Map(values.map(value => [value.code, value.value]))
     return {
-      id: session.id,
-      measuredAt: session.measuredAt,
-      heightCmSnapshot: session.heightCmSnapshot,
-      note: session.note,
-      bmi: calculateBmi(byCode.get('weight'), session.heightCmSnapshot),
+      id: record.id,
+      measuredAt: record.measuredAt,
+      note: record.note,
+      bmi: calculateBmi(byCode.get('weight'), heightCm),
       waistHipRatio: calculateWaistHipRatio(byCode.get('waist'), byCode.get('hip')),
       values,
     }
   })
+}
+
+function buildRecordValues(data: TrackFitData, values: MeasurementWrite['values']): TrackFitData['bodyRecords'][number]['values'] {
+  const metrics = new Map(data.metrics.map(metric => [metric.id, metric]))
+  return values.map(item => ({
+    metricId: item.metricId,
+    value: Number(item.value.toFixed(metrics.get(item.metricId)?.decimalPlaces ?? 3)),
+  }))
 }
 
 function validateMeasurementValues(data: TrackFitData, payload: MeasurementWrite): void {

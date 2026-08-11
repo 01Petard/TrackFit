@@ -102,18 +102,16 @@ export const backupMetricSchema = z.object({
   { message: '最小值必须小于最大值', path: ['minimumValue'] },
 )
 
-export const backupSessionSchema = z.object({
-  id: z.number().int().positive(),
-  measuredAt: z.string().datetime(),
-  heightCmSnapshot: z.number().nullable(),
-  note: z.string().max(500).nullable(),
-})
-
-export const backupValueSchema = z.object({
-  id: z.number().int().positive(),
-  sessionId: z.number().int().positive(),
+export const backupBodyRecordValueSchema = z.object({
   metricId: z.number().int().positive(),
   value: z.number(),
+})
+
+export const backupBodyRecordSchema = z.object({
+  id: z.number().int().positive(),
+  measuredAt: z.string().datetime(),
+  note: z.string().max(500).nullable(),
+  values: z.array(backupBodyRecordValueSchema).min(1),
 })
 
 export const backupTrainingSchema = z.object({
@@ -138,13 +136,12 @@ export const backupSleepSchema = z.object({
 })
 
 const currentBackupSchema = z.object({
-  version: z.literal(4),
+  version: z.literal(6),
   exportedAt: z.string().datetime(),
   settings: z.array(backupSettingsSchema).max(1),
   metrics: z.array(backupMetricSchema),
-  sessions: z.array(backupSessionSchema),
-  values: z.array(backupValueSchema),
-  trainingSessions: z.array(backupTrainingSchema).default([]),
+  bodyRecords: z.array(backupBodyRecordSchema),
+  trainingRecords: z.array(backupTrainingSchema).default([]),
   sleepRecords: z.array(backupSleepSchema).default([]),
 }).superRefine((data, context) => {
   if (data.settings[0] && data.settings[0].id !== 1) {
@@ -152,26 +149,19 @@ const currentBackupSchema = z.object({
   }
   validateUnique(data.metrics.map(item => item.id), ['metrics'], '指标 ID 重复', context)
   validateUnique(data.metrics.map(item => item.code), ['metrics'], '指标编码重复', context)
-  validateUnique(data.sessions.map(item => item.id), ['sessions'], '测量记录 ID 重复', context)
-  validateUnique(data.values.map(item => item.id), ['values'], '测量值 ID 重复', context)
-  validateUnique(data.trainingSessions.map(item => item.id), ['trainingSessions'], '训练记录 ID 重复', context)
+  validateUnique(data.bodyRecords.map(item => item.id), ['bodyRecords'], '身体记录 ID 重复', context)
+  validateUnique(data.trainingRecords.map(item => item.id), ['trainingRecords'], '训练记录 ID 重复', context)
   validateUnique(data.sleepRecords.map(item => item.id), ['sleepRecords'], '睡眠记录 ID 重复', context)
 
   const metricIds = new Set(data.metrics.map(item => item.id))
-  const sessionIds = new Set(data.sessions.map(item => item.id))
-  const pairs = new Set<string>()
-  for (const [index, value] of data.values.entries()) {
-    if (!metricIds.has(value.metricId)) {
-      context.addIssue({ code: 'custom', path: ['values', index, 'metricId'], message: '指标不存在' })
+  for (const [recordIndex, record] of data.bodyRecords.entries()) {
+    const recordMetricIds = record.values.map(value => value.metricId)
+    validateUnique(recordMetricIds, ['bodyRecords', recordIndex, 'values'], '同一记录的指标不能重复', context)
+    for (const [valueIndex, value] of record.values.entries()) {
+      if (!metricIds.has(value.metricId)) {
+        context.addIssue({ code: 'custom', path: ['bodyRecords', recordIndex, 'values', valueIndex, 'metricId'], message: '指标不存在' })
+      }
     }
-    if (!sessionIds.has(value.sessionId)) {
-      context.addIssue({ code: 'custom', path: ['values', index, 'sessionId'], message: '测量记录不存在' })
-    }
-    const pair = `${value.sessionId}:${value.metricId}`
-    if (pairs.has(pair)) {
-      context.addIssue({ code: 'custom', path: ['values', index], message: '同一记录的指标不能重复' })
-    }
-    pairs.add(pair)
   }
 })
 
@@ -180,12 +170,34 @@ export const backupSchema = z.preprocess(migrateLegacyBackup, currentBackupSchem
 function migrateLegacyBackup(input: unknown): unknown {
   if (!input || typeof input !== 'object') return input
   const data = input as Record<string, unknown>
-  if (data.version !== 1 && data.version !== 2 && data.version !== 3) return input
+  if (data.version !== 1 && data.version !== 2 && data.version !== 3 && data.version !== 4 && data.version !== 5) return input
+  const sessions = Array.isArray(data.sessions)
+    ? data.sessions.map((item) => {
+        if (!item || typeof item !== 'object') return item
+        const { heightCmSnapshot: _heightCmSnapshot, ...session } = item as Record<string, unknown>
+        return session
+      })
+    : []
+  const values = Array.isArray(data.values) ? data.values : []
+  const sessionIds = new Set(sessions.flatMap(item => item && typeof item === 'object' && typeof (item as Record<string, unknown>).id === 'number' ? [(item as Record<string, unknown>).id] : []))
+  if (values.some(item => item && typeof item === 'object' && !sessionIds.has((item as Record<string, unknown>).sessionId))) return input
+  const bodyRecords = sessions.map((item) => {
+    if (!item || typeof item !== 'object') return item
+    const session = item as Record<string, unknown>
+    return {
+      ...session,
+      values: values.flatMap((value) => {
+        if (!value || typeof value !== 'object') return []
+        const legacyValue = value as Record<string, unknown>
+        return legacyValue.sessionId === session.id ? [{ metricId: legacyValue.metricId, value: legacyValue.value }] : []
+      }),
+    }
+  })
   const trainingSessions = Array.isArray(data.trainingSessions)
     ? data.trainingSessions.map((item) => {
         if (!item || typeof item !== 'object') return item
         const { startedAt, intensity: _intensity, ...training } = item as Record<string, unknown>
-        return { ...training, recordedAt: startedAt }
+        return 'recordedAt' in training ? training : { ...training, recordedAt: startedAt }
       })
     : []
   const sleepRecords = Array.isArray(data.sleepRecords)
@@ -193,7 +205,7 @@ function migrateLegacyBackup(input: unknown): unknown {
         ? { ...item, quality: Number((item as Record<string, unknown>).quality) * 20 }
         : item)
     : []
-  return { ...data, version: 4, trainingSessions, sleepRecords }
+  return { ...data, version: 6, bodyRecords, trainingRecords: trainingSessions, sleepRecords }
 }
 
 function validateUnique(

@@ -191,7 +191,7 @@ function getErrorMessage(cause: unknown): string {
 }
 
 function emptyData(): TrackFitData {
-  return { version: 4, exportedAt: new Date(0).toISOString(), settings: [], metrics: [], sessions: [], values: [], trainingSessions: [], sleepRecords: [] }
+  return { version: 6, exportedAt: new Date(0).toISOString(), settings: [], metrics: [], bodyRecords: [], trainingRecords: [], sleepRecords: [] }
 }
 
 function emptyPage(query: MeasurementQuery) {

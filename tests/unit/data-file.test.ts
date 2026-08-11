@@ -57,7 +57,7 @@ describe('JSON 数据文件仓储', () => {
     }), 'utf8')
     const snapshot = await readDataSnapshot()
     expect(snapshot.data.settings[0]).toMatchObject({ desiredWeightMinimum: null, desiredWeightMaximum: null })
-    expect(snapshot.data).toMatchObject({ version: 4, trainingSessions: [], sleepRecords: [] })
+    expect(snapshot.data).toMatchObject({ version: 6, bodyRecords: [], trainingRecords: [], sleepRecords: [] })
     expect(snapshot.data.settings[0]).toMatchObject({ sleepGoalHours: 8, weeklyTrainingGoalMinutes: 150 })
   })
 
@@ -73,9 +73,31 @@ describe('JSON 数据文件仓储', () => {
       sleepRecords: [{ id: 1, fellAsleepAt: '2026-07-31T15:00:00.000Z', wokeUpAt: '2026-07-31T23:00:00.000Z', quality: 4, note: null }],
     }), 'utf8')
     const snapshot = await readDataSnapshot()
-    expect(snapshot.data.version).toBe(4)
-    expect(snapshot.data.trainingSessions[0]).toMatchObject({ recordedAt: '2026-08-01T10:00:00.000Z', type: 'strength', durationMinutes: 45 })
-    expect(snapshot.data.trainingSessions[0]).not.toHaveProperty('intensity')
+    expect(snapshot.data.version).toBe(6)
+    expect(snapshot.data.trainingRecords[0]).toMatchObject({ recordedAt: '2026-08-01T10:00:00.000Z', type: 'strength', durationMinutes: 45 })
+    expect(snapshot.data.trainingRecords[0]).not.toHaveProperty('intensity')
     expect(snapshot.data.sleepRecords[0]?.quality).toBe(80)
+  })
+
+  it('读取 v5 数据时合并身体记录和值并重命名训练记录', async () => {
+    await writeFile(process.env.TRACKFIT_DATA_FILE!, JSON.stringify({
+      version: 5,
+      exportedAt: '2026-08-01T00:00:00.000Z',
+      settings: [{ id: 1, heightCm: 175, defaultDateRange: '30d', theme: 'system', dataVersion: 1 }],
+      metrics: [{ id: 1, code: 'weight', name: '体重', unit: 'kg', decimalPlaces: 2, minimumValue: 20, maximumValue: 400, metricType: 'core', enabled: true, sortOrder: 10 }],
+      sessions: [{ id: 1, measuredAt: '2026-08-01T00:00:00.000Z', note: null }],
+      values: [{ id: 1, sessionId: 1, metricId: 1, value: 70 }],
+      trainingSessions: [{ id: 1, recordedAt: '2026-08-01T10:00:00.000Z', type: 'strength', durationMinutes: 45, note: null }],
+      sleepRecords: [],
+    }), 'utf8')
+
+    const snapshot = await readDataSnapshot()
+    expect(snapshot.data.bodyRecords).toEqual([{
+      id: 1,
+      measuredAt: '2026-08-01T00:00:00.000Z',
+      note: null,
+      values: [{ metricId: 1, value: 70 }],
+    }])
+    expect(snapshot.data.trainingRecords).toHaveLength(1)
   })
 })

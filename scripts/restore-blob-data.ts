@@ -16,9 +16,9 @@ async function main(): Promise<void> {
     filePath,
     pathname,
     metrics: data.metrics.length,
-    sessions: data.sessions.length,
-    values: data.values.length,
-    trainingSessions: data.trainingSessions.length,
+    bodyRecords: data.bodyRecords.length,
+    bodyRecordValues: data.bodyRecords.reduce((total, record) => total + record.values.length, 0),
+    trainingRecords: data.trainingRecords.length,
     sleepRecords: data.sleepRecords.length,
   })
 

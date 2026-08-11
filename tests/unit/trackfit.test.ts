@@ -13,7 +13,7 @@ describe('前端数据业务', () => {
     })
 
     expect(id).toBe(1)
-    expect(data.values[0]?.value).toBe(70.13)
+    expect(data.bodyRecords[0]?.values[0]?.value).toBe(70.13)
     expect(listMeasurements(data, { page: 1, pageSize: 20, metricId: 1 }).items[0]).toMatchObject({
       id: 1,
       note: '晨起',
@@ -22,12 +22,21 @@ describe('前端数据业务', () => {
     expect(getAnalytics(data, 'weight')?.summary?.latest).toBe(70.13)
   })
 
+  it('设置身高变化后统一重新计算历史 BMI', () => {
+    const data = fixture()
+    saveMeasurement(data, { measuredAt: '2026-08-01T08:00:00.000Z', values: [{ metricId: 1, value: 70 }] })
+    expect(listMeasurements(data, { page: 1, pageSize: 20 }).items[0]?.bmi).toBe(22.86)
+
+    data.settings[0]!.heightCm = 170
+    expect(listMeasurements(data, { page: 1, pageSize: 20 }).items[0]?.bmi).toBe(24.22)
+    expect(data.bodyRecords[0]).not.toHaveProperty('heightCmSnapshot')
+  })
+
   it('删除记录时同步删除指标值', () => {
     const data = fixture()
     saveMeasurement(data, { measuredAt: '2026-08-01T08:00:00.000Z', values: [{ metricId: 1, value: 70 }] })
     deleteMeasurement(data, 1)
-    expect(data.sessions).toEqual([])
-    expect(data.values).toEqual([])
+    expect(data.bodyRecords).toEqual([])
   })
 
   it('按指标返回最近一次有效值，不受最新记录缺少该指标影响', () => {
@@ -57,9 +66,9 @@ describe('前端数据业务', () => {
     expect(() => saveMeasurement(data, { measuredAt: '2026-08-01T08:00:00.000Z', values: [{ metricId: 1, value: 500 }] })).toThrow('体重 超出合理范围')
   })
 
-  it('拒绝引用不存在记录的备份数据', () => {
+  it('拒绝引用不存在指标的备份数据', () => {
     const data = fixture()
-    data.values.push({ id: 1, sessionId: 99, metricId: 1, value: 70 })
+    data.bodyRecords.push({ id: 1, measuredAt: '2026-08-01T08:00:00.000Z', note: null, values: [{ metricId: 99, value: 70 }] })
     expect(backupSchema.safeParse(data).success).toBe(false)
   })
 
@@ -98,7 +107,7 @@ describe('前端数据业务', () => {
 
 function fixture(): TrackFitData {
   return {
-    version: 1,
+    version: 6,
     exportedAt: '2026-08-01T00:00:00.000Z',
     settings: [{ id: 1, heightCm: 175, desiredWeightMinimum: null, desiredWeightMaximum: null, defaultDateRange: '30d', theme: 'system', dataVersion: 1 }],
     metrics: [{
@@ -113,7 +122,8 @@ function fixture(): TrackFitData {
       enabled: true,
       sortOrder: 10,
     }],
-    sessions: [],
-    values: [],
+    bodyRecords: [],
+    trainingRecords: [],
+    sleepRecords: [],
   }
 }

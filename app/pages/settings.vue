@@ -17,8 +17,8 @@ const message = ref('')
 const restoreInput = ref<HTMLInputElement>()
 const counts = computed(() => ({
   metrics: store.data.value?.metrics.length ?? 0,
-  sessions: store.data.value?.sessions.length ?? 0,
-  values: store.data.value?.values.length ?? 0,
+  bodyRecords: store.data.value?.bodyRecords.length ?? 0,
+  values: store.data.value?.bodyRecords.reduce((total, record) => total + record.values.length, 0) ?? 0,
 }))
 
 async function save() {
@@ -96,7 +96,7 @@ function downloadFile(content: string, filename: string, type: string) {
 
     <div class="grid gap-6 xl:grid-cols-2">
       <form class="app-card rounded-3xl p-5 sm:p-6" @submit.prevent="save">
-        <h2 class="font-bold">个人与显示</h2><p class="mt-1 text-xs text-muted">身高用于计算 BMI，并在每次测量时保存快照</p>
+        <h2 class="font-bold">个人与显示</h2><p class="mt-1 text-xs text-muted">身高用于统一计算全部 BMI 记录</p>
         <div class="mt-6 space-y-5">
           <label class="block text-sm">身高（cm）<input v-model.number="heightCm" :disabled="!store.canWrite.value" required type="number" min="80" max="250" step="0.1" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3 disabled:opacity-60"></label>
           <fieldset class="rounded-2xl border border-default p-4">
@@ -139,7 +139,7 @@ function downloadFile(content: string, filename: string, type: string) {
         <div class="mt-5 grid gap-3 sm:grid-cols-4">
           <div class="rounded-2xl bg-elevated p-4"><p class="text-xs text-muted">存储权限</p><strong class="mt-1 block" :class="store.writable.value ? 'text-primary' : 'text-warning'">{{ store.writable.value ? '可写' : '只读' }}</strong></div>
           <div class="rounded-2xl bg-elevated p-4"><p class="text-xs text-muted">最后更新</p><strong class="mt-1 block text-sm">{{ store.data.value ? new Date(store.data.value.exportedAt).toLocaleString() : '—' }}</strong></div>
-          <div class="rounded-2xl bg-elevated p-4"><p class="text-xs text-muted">数据规模</p><strong class="mt-1 block text-sm">{{ counts.metrics }} 指标 / {{ counts.sessions }} 记录 / {{ counts.values }} 数值</strong></div>
+          <div class="rounded-2xl bg-elevated p-4"><p class="text-xs text-muted">数据规模</p><strong class="mt-1 block text-sm">{{ counts.metrics }} 指标 / {{ counts.bodyRecords }} 记录 / {{ counts.values }} 数值</strong></div>
           <div class="rounded-2xl bg-elevated p-4"><p class="text-xs text-muted">同步冲突</p><strong class="mt-1 block text-sm" :class="store.conflictCount.value ? 'text-warning' : 'text-primary'">{{ store.conflictCount.value }} 次</strong></div>
         </div>
       </section>
