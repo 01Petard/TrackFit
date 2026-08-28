@@ -100,21 +100,21 @@ function downloadFile(content: string, filename: string, type: string) {
       <form class="app-card rounded-3xl p-5 sm:p-6" @submit.prevent="save">
         <h2 class="font-bold">{{ t('settings.personal') }}</h2><p class="mt-1 text-xs text-muted">{{ t('settings.personalHint') }}</p>
         <div class="mt-6 space-y-5">
-          <label class="block text-sm">{{ t('settings.height') }}<input v-model.number="heightCm" :disabled="!store.canWrite.value" required type="number" min="80" max="250" step="0.1" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3 disabled:opacity-60"></label>
+          <AppNumberField v-model.number="heightCm" :label="t('settings.height')" required :min="80" :max="250" :step="0.1" :disabled="!store.canWrite.value" :suggestions="[155, 160, 165, 170, 175]" />
           <fieldset class="rounded-2xl border border-default p-4">
             <legend class="px-2 text-sm font-medium">{{ t('settings.weightTarget') }}</legend>
             <p class="mb-3 text-xs text-muted">{{ t('settings.weightTargetHint') }}</p>
             <div class="grid grid-cols-2 gap-3">
-              <label class="text-xs text-muted">{{ t('settings.minimum') }}<input v-model.number="desiredWeightMinimum" :disabled="!store.canWrite.value" type="number" min="20" max="400" step="0.1" :placeholder="t('settings.minimumExample')" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted disabled:opacity-60"></label>
-              <label class="text-xs text-muted">{{ t('settings.maximum') }}<input v-model.number="desiredWeightMaximum" :disabled="!store.canWrite.value" type="number" min="20" max="400" step="0.1" :placeholder="t('settings.maximumExample')" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted disabled:opacity-60"></label>
+              <AppNumberField v-model.number="desiredWeightMinimum" :label="t('settings.minimum')" :min="20" :max="400" :step="0.1" :placeholder="t('settings.minimumExample')" :disabled="!store.canWrite.value" :suggestions="[50, 55, 60, 65, 70]" />
+              <AppNumberField v-model.number="desiredWeightMaximum" :label="t('settings.maximum')" :min="20" :max="400" :step="0.1" :placeholder="t('settings.maximumExample')" :disabled="!store.canWrite.value" :suggestions="[55, 60, 65, 70, 75]" />
             </div>
           </fieldset>
           <fieldset class="rounded-2xl border border-default p-4">
             <legend class="px-2 text-sm font-medium">{{ t('settings.behaviorGoals') }}</legend>
             <p class="mb-3 text-xs text-muted">{{ t('settings.behaviorGoalsHint') }}</p>
             <div class="grid grid-cols-2 gap-3">
-              <label class="text-xs text-muted">{{ t('settings.dailySleep') }}<input v-model.number="sleepGoalHours" :disabled="!store.canWrite.value" required type="number" min="1" max="16" step="0.5" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted disabled:opacity-60"></label>
-              <label class="text-xs text-muted">{{ t('settings.weeklyTraining') }}<input v-model.number="weeklyTrainingGoalMinutes" :disabled="!store.canWrite.value" required type="number" min="0" max="10080" step="5" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted disabled:opacity-60"></label>
+              <AppNumberField v-model.number="sleepGoalHours" :label="t('settings.dailySleep')" required :min="1" :max="16" :step="0.5" duration-unit="hours" :disabled="!store.canWrite.value" :suggestions="[6, 6.5, 7, 7.5, 8]" />
+              <AppNumberField v-model.number="weeklyTrainingGoalMinutes" :label="t('settings.weeklyTraining')" required :min="0" :max="10080" :step="5" duration-unit="minutes" :disabled="!store.canWrite.value" :suggestions="[30, 60, 90, 120, 150]" />
             </div>
           </fieldset>
           <label class="block text-sm">{{ t('settings.defaultRange') }}<select v-model="defaultDateRange" :disabled="!store.canWrite.value" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3 disabled:opacity-60"><option value="24h">{{ t('range.24h') }}</option><option value="7d">{{ t('range.7d') }}</option><option value="30d">{{ t('range.30d') }}</option><option value="90d">{{ t('range.90d') }}</option><option value="all">{{ t('range.all') }}</option></select></label>

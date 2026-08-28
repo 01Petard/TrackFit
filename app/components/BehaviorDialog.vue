@@ -96,15 +96,15 @@ async function save() {
               <button v-for="template in trainingTemplates" :key="template.label" type="button" class="rounded-lg border border-default px-3 py-2 text-xs hover:border-primary hover:text-primary" @click="applyTemplate(template)">{{ template.label }}</button>
             </div>
             <label class="block text-sm">{{ t('behaviorDialog.trainingType') }}<select v-model="training.type" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3"><option value="strength">{{ t('training.strength') }}</option><option value="cardio">{{ t('training.cardio') }}</option><option value="mobility">{{ t('training.mobility') }}</option></select></label>
-            <label class="block text-sm">{{ t('behaviorDialog.durationMinutes') }}<input v-model.number="training.durationMinutes" required type="number" min="1" max="1440" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3"></label>
+            <AppNumberField v-model.number="training.durationMinutes" :label="t('behaviorDialog.durationMinutes')" required :min="1" :max="1440" duration-unit="minutes" :recent="props.item?.training?.durationMinutes" :suggestions="[15, 30, 45, 60, 90]" />
             <label class="block text-sm">{{ t('common.note') }}<textarea v-model="training.note" maxlength="500" rows="3" class="mt-2 w-full resize-none rounded-xl border border-default bg-default px-4 py-3" /></label>
           </template>
 
           <template v-else>
-            <label class="block text-sm">{{ t('behaviorDialog.bedtime') }}<AppDateField v-model="sleep.fellAsleepAt" mode="datetime" class="mt-2" /></label>
+            <div class="text-sm"><p>{{ t('behaviorDialog.bedtime') }}</p><AppBedtimeField v-model="sleep.fellAsleepAt" class="mt-2" /></div>
             <div class="grid grid-cols-2 gap-3">
-              <label class="text-sm">{{ t('behaviorDialog.sleepHours') }}<input v-model.number="sleep.durationHours" required type="number" min="0.02" max="24" step="0.01" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3"></label>
-              <label class="text-sm">{{ t('behaviorDialog.sleepScore') }}<input v-model.number="sleep.quality" required type="number" min="1" max="100" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3"></label>
+              <AppNumberField v-model.number="sleep.durationHours" :label="t('behaviorDialog.sleepHours')" required :min="0.02" :max="24" :step="0.01" duration-unit="hours" :recent="props.item?.sleep ? Number((props.item.sleep.durationMinutes / 60).toFixed(2)) : undefined" :suggestions="[6, 6.5, 7, 7.5, 8]" />
+              <AppNumberField v-model.number="sleep.quality" :label="t('behaviorDialog.sleepScore')" required :min="1" :max="100" :recent="props.item?.sleep?.quality" :suggestions="[50, 60, 70, 80, 90]" />
             </div>
             <p class="rounded-xl bg-elevated px-4 py-3 text-sm text-muted">
               {{ t('behaviorDialog.wakeTime') }}：<span class="font-medium text-highlighted">{{ calculatedWakeUpAt }}</span>

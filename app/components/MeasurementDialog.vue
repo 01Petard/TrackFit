@@ -26,6 +26,19 @@ const errorMessage = ref('')
 const enabledMetrics = computed(() => metrics.value.filter(metric => metric.enabled))
 const weightMetric = computed(() => enabledMetrics.value.find(metric => metric.code === 'weight'))
 const otherMetrics = computed(() => enabledMetrics.value.filter(metric => metric.code !== 'weight'))
+const metricHistory = computed(() => {
+  const history = new Map<number, number[]>()
+  const records = [...(store.data.value?.bodyRecords ?? [])]
+    .sort((a, b) => dayjs(b.measuredAt).valueOf() - dayjs(a.measuredAt).valueOf())
+  for (const record of records) {
+    for (const item of record.values) {
+      const list = history.get(item.metricId)
+      if (!list) history.set(item.metricId, [item.value])
+      else if (!list.includes(item.value) && list.length < 5) list.push(item.value)
+    }
+  }
+  return history
+})
 
 watch(() => props.open, (open) => {
   if (!open) return
@@ -82,41 +95,35 @@ async function save() {
               <AppDateField v-model="measuredAt" mode="datetime" :placeholder="t('measurement.selectMeasuredAt')" />
             </div>
 
-            <label v-if="weightMetric" class="block rounded-2xl border border-primary/25 bg-primary/5 p-4">
-              <span class="mb-2 flex items-center justify-between text-sm font-semibold">
-                {{ metricName(weightMetric) }}
-                <span class="font-normal text-muted">{{ weightMetric.unit }}</span>
-              </span>
-              <input
+            <div v-if="weightMetric" class="rounded-2xl border border-primary/25 bg-primary/5 p-4">
+              <AppNumberField
                 v-model="values[weightMetric.id]"
-                inputmode="decimal"
-                type="number"
-                :step="10 ** -weightMetric.decimalPlaces"
+                :label="metricName(weightMetric)"
+                :unit="weightMetric.unit"
                 :min="weightMetric.minimumValue ?? undefined"
                 :max="weightMetric.maximumValue ?? undefined"
+                :step="10 ** -weightMetric.decimalPlaces"
                 :placeholder="t('measurement.weightExample')"
-                class="w-full bg-transparent text-3xl font-bold outline-none placeholder:text-muted/35"
-              >
-            </label>
+                :recent="metricHistory.get(weightMetric.id)?.[0]"
+                :suggestions="[50, 60, 70, 80]"
+              />
+            </div>
 
             <section v-if="otherMetrics.length" class="rounded-2xl border border-default p-4">
               <div class="mb-4"><h3 class="font-medium">{{ t('measurement.otherMetrics') }}</h3><p class="mt-1 text-xs text-muted">{{ t('measurement.otherMetricsHint') }}</p></div>
               <div class="grid gap-4 sm:grid-cols-2">
-                <label v-for="metric in otherMetrics" :key="metric.id" class="block">
-                  <span class="mb-1.5 flex justify-between text-sm">
-                    {{ metricName(metric) }}
-                    <span class="text-muted">{{ metric.unit }}</span>
-                  </span>
-                  <input
-                    v-model="values[metric.id]"
-                    inputmode="decimal"
-                    type="number"
-                    :step="10 ** -metric.decimalPlaces"
-                    :min="metric.minimumValue ?? undefined"
-                    :max="metric.maximumValue ?? undefined"
-                    class="w-full rounded-xl border border-default bg-default px-3 py-2.5 outline-none focus:border-primary"
-                  >
-                </label>
+                <AppNumberField
+                  v-for="metric in otherMetrics"
+                  :key="metric.id"
+                  v-model="values[metric.id]"
+                  :label="metricName(metric)"
+                  :unit="metric.unit"
+                  :min="metric.minimumValue ?? undefined"
+                  :max="metric.maximumValue ?? undefined"
+                  :step="10 ** -metric.decimalPlaces"
+                  :recent="metricHistory.get(metric.id)?.[0]"
+                  :suggestions="(metricHistory.get(metric.id) ?? []).slice(1, 5)"
+                />
               </div>
             </section>
 

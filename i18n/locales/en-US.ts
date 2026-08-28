@@ -91,6 +91,18 @@ export default defineI18nLocale(() => ({
     specificTime: 'Specific time',
     setNow: 'Set to now',
     today: 'Today',
+    hour: 'Hour',
+    minute: 'Minute',
+    wheelHint: 'Scroll to choose a time, or tap a number',
+    changeDate: 'Change date',
+    selectTime: 'Select time',
+    confirm: 'Confirm',
+  },
+  numberInput: {
+    chooseDuration: 'Choose {label}',
+    manualHint: 'Or type it directly in the input above',
+    suggestions: '{label} suggestions',
+    recent: 'Recent',
   },
   training: {
     strength: 'Strength',

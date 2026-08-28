@@ -91,6 +91,18 @@ export default defineI18nLocale(() => ({
     specificTime: '具体时间',
     setNow: '设为现在',
     today: '今天',
+    hour: '小时',
+    minute: '分钟',
+    wheelHint: '上下滑动选择时间，也可点击数字',
+    changeDate: '更改日期',
+    selectTime: '选择时间',
+    confirm: '确定',
+  },
+  numberInput: {
+    chooseDuration: '选择{label}',
+    manualHint: '也可直接在上方输入框手动输入',
+    suggestions: '{label}建议值',
+    recent: '最近',
   },
   training: {
     strength: '力量',
