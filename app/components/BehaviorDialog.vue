@@ -96,7 +96,7 @@ async function save() {
               <button v-for="template in trainingTemplates" :key="template.label" type="button" class="rounded-lg border border-default px-3 py-2 text-xs hover:border-primary hover:text-primary" @click="applyTemplate(template)">{{ template.label }}</button>
             </div>
             <label class="block text-sm">{{ t('behaviorDialog.trainingType') }}<select v-model="training.type" class="mt-2 w-full rounded-xl border border-default bg-default px-4 py-3"><option value="strength">{{ t('training.strength') }}</option><option value="cardio">{{ t('training.cardio') }}</option><option value="mobility">{{ t('training.mobility') }}</option></select></label>
-            <AppNumberField v-model.number="training.durationMinutes" :label="t('behaviorDialog.durationMinutes')" required :min="1" :max="1440" duration-unit="minutes" :recent="props.item?.training?.durationMinutes" :suggestions="[15, 30, 45, 60, 90]" />
+            <AppNumberField v-model.number="training.durationMinutes" :label="t('behaviorDialog.durationMinutes')" required :min="1" :max="1440" duration-unit="minutes" :recent="props.item?.training?.durationMinutes" :suggestions="[20, 25, 30, 35, 40]" />
             <label class="block text-sm">{{ t('common.note') }}<textarea v-model="training.note" maxlength="500" rows="3" class="mt-2 w-full resize-none rounded-xl border border-default bg-default px-4 py-3" /></label>
           </template>
 
