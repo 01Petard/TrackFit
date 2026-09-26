@@ -82,20 +82,23 @@ async function save() {
       <div v-if="open" class="fixed inset-0 z-50 grid items-end bg-slate-950/50 p-0 backdrop-blur-sm sm:place-items-center sm:p-4" @click.self="emit('update:open', false)">
         <section role="dialog" aria-modal="true" class="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-default p-5 shadow-2xl sm:max-w-xl sm:rounded-3xl sm:p-7">
           <header class="mb-6 flex items-start justify-between gap-4">
-            <div>
-              <h2 class="text-xl font-bold">{{ t(measurement ? 'measurement.editTitle' : 'measurement.createTitle') }}</h2>
-              <p class="mt-1 text-sm text-muted">{{ t('measurement.description') }}</p>
+            <div class="flex items-center gap-3">
+              <span class="app-icon-tile"><AppIcon name="weight" class="size-6" /></span><div>
+                <h2 class="text-xl font-bold">{{ t(measurement ? 'measurement.editTitle' : 'measurement.createTitle') }}</h2>
+                <p class="mt-1 text-sm text-muted">{{ t('measurement.description') }}</p>
+              </div>
             </div>
             <button class="grid size-9 place-items-center rounded-full bg-elevated text-muted hover:text-highlighted" @click="emit('update:open', false)">×</button>
           </header>
 
           <form class="space-y-5" @submit.prevent="save">
             <div class="block">
-              <span class="mb-2 flex items-center justify-between text-sm font-medium">{{ t('measurement.measuredAt') }} <span class="text-xs font-normal text-muted">{{ t('measurement.measuredAtHint') }}</span></span>
-              <AppDateField v-model="measuredAt" mode="datetime" :placeholder="t('measurement.selectMeasuredAt')" />
+              <span class="mb-2 flex items-center justify-between text-sm font-medium"><span class="flex items-center gap-2"><AppIcon name="chart" class="size-4 text-primary" />{{ t('measurement.measuredAt') }}</span> <span class="text-xs font-normal text-muted">{{ t('measurement.measuredAtHint') }}</span></span>
+              <AppDateField v-model="measuredAt" mode="datetime" prominent :placeholder="t('measurement.selectMeasuredAt')" />
             </div>
 
             <div v-if="weightMetric" class="rounded-2xl border border-primary/25 bg-primary/5 p-4">
+              <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-primary"><AppIcon name="weight" class="size-4" />{{ metricName(weightMetric) }}</div>
               <AppNumberField
                 v-model="values[weightMetric.id]"
                 :label="metricName(weightMetric)"
@@ -110,7 +113,7 @@ async function save() {
             </div>
 
             <section v-if="otherMetrics.length" class="rounded-2xl border border-default p-4">
-              <div class="mb-4"><h3 class="font-medium">{{ t('measurement.otherMetrics') }}</h3><p class="mt-1 text-xs text-muted">{{ t('measurement.otherMetricsHint') }}</p></div>
+              <div class="mb-4 flex items-start gap-2"><AppIcon name="barChart" class="mt-0.5 size-4 text-primary" /><div><h3 class="font-medium">{{ t('measurement.otherMetrics') }}</h3><p class="mt-1 text-xs text-muted">{{ t('measurement.otherMetricsHint') }}</p></div></div>
               <div class="grid gap-4 sm:grid-cols-2">
                 <AppNumberField
                   v-for="metric in otherMetrics"
@@ -128,16 +131,16 @@ async function save() {
             </section>
 
             <label class="block">
-              <span class="mb-2 block text-sm font-medium">{{ t('common.note') }} <span class="font-normal text-muted">{{ t('common.optional') }}</span></span>
+              <span class="mb-2 flex items-center gap-2 text-sm font-medium"><AppIcon name="file" class="size-4 text-primary" />{{ t('common.note') }} <span class="font-normal text-muted">{{ t('common.optional') }}</span></span>
               <textarea v-model="note" maxlength="500" rows="3" class="w-full resize-none rounded-xl border border-default bg-default px-4 py-3 outline-none focus:border-primary" :placeholder="t('measurement.notePlaceholder')" />
             </label>
 
             <p v-if="errorMessage" class="rounded-xl bg-error/10 px-4 py-3 text-sm text-error">{{ errorMessage }}</p>
 
-            <div class="flex gap-3 pt-1">
-              <button type="button" class="flex-1 rounded-xl border border-default px-4 py-3 font-medium hover:bg-elevated" @click="emit('update:open', false)">{{ t('common.cancel') }}</button>
-              <button type="submit" :disabled="saving" class="flex-1 rounded-xl bg-primary px-4 py-3 font-semibold text-white shadow-lg shadow-primary/20 disabled:opacity-60">
-                {{ t(saving ? 'common.saving' : 'common.saveRecord') }}
+            <div class="flex gap-3 border-t border-default pt-5">
+              <button type="button" class="app-btn app-btn--secondary flex-1" @click="emit('update:open', false)">{{ t('common.cancel') }}</button>
+              <button type="submit" :disabled="saving" class="app-btn app-btn--primary flex-1">
+                <AppIcon name="shield" class="size-4" />{{ t(saving ? 'common.saving' : 'common.saveRecord') }}
               </button>
             </div>
           </form>

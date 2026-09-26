@@ -42,6 +42,19 @@ const candidates = computed(() => {
     return Math.abs(steps - Math.round(steps)) < 0.000001
   }).slice(0, 5)
 })
+const numericValue = computed(() => {
+  const value = Number(props.modelValue)
+  return Number.isFinite(value) ? value : null
+})
+const canDecrement = computed(() => !props.disabled && numericValue.value != null && (props.min == null || numericValue.value - (props.step === 'any' ? 1 : props.step) >= props.min))
+const canIncrement = computed(() => !props.disabled && (numericValue.value == null || props.max == null || numericValue.value + (props.step === 'any' ? 1 : props.step) <= props.max))
+
+function adjustValue(direction: -1 | 1) {
+  const current = numericValue.value ?? (direction > 0 ? props.min ?? 0 : props.max ?? 0)
+  const increment = props.step === 'any' ? 1 : props.step
+  const next = Math.min(props.max ?? Infinity, Math.max(props.min ?? -Infinity, Number((current + direction * increment).toFixed(6))))
+  updateValue(next)
+}
 
 function updateValue(value: string | number) {
   // Match native v-model.number; an empty optional field must remain empty, not zero.
@@ -75,7 +88,8 @@ function confirmDuration() {
   <div class="min-w-0">
     <label :for="inputId" :class="hideLabel ? 'sr-only' : 'mb-2 block text-sm'">{{ label }}</label>
     <div class="flex items-center gap-2">
-      <div class="relative min-w-0 flex-1">
+      <div class="app-stepper min-w-0 flex-1">
+        <button type="button" class="app-stepper__button" :aria-label="`${label} −`" :disabled="!canDecrement" @click="adjustValue(-1)">−</button>
         <input
           :id="inputId"
           :value="modelValue"
@@ -87,12 +101,13 @@ function confirmDuration() {
           :required="required"
           :disabled="disabled"
           :placeholder="placeholder"
-          class="min-h-12 min-w-0 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-base text-highlighted tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60 sm:text-sm"
-          :class="[inputClass, unit ? 'pr-12' : '']"
+          class="app-stepper__value min-h-12 min-w-0 w-full rounded-xl border border-default bg-default px-2 py-2.5 text-base font-semibold text-highlighted tabular-nums outline-none disabled:opacity-60 sm:text-sm"
+          :class="inputClass"
           @input="updateValue(($event.target as HTMLInputElement).value)"
         >
-        <span v-if="unit" class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted">{{ unit }}</span>
+        <button type="button" class="app-stepper__button" :aria-label="`${label} +`" :disabled="!canIncrement" @click="adjustValue(1)">+</button>
       </div>
+      <span v-if="unit" class="shrink-0 text-sm text-muted">{{ unit }}</span>
       <AppPickerPanel v-if="durationUnit" v-model:open="open" :title="label" :description="t('date.wheelHint')" :confirm-disabled="durationInvalid" @confirm="confirmDuration">
         <button type="button" :disabled="disabled" :aria-label="t('numberInput.chooseDuration', { label })" class="grid size-12 shrink-0 place-items-center rounded-xl border border-default text-primary outline-none hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60">
           <AppIcon name="clock" class="size-5" />
@@ -113,8 +128,7 @@ function confirmDuration() {
         :key="value"
         type="button"
         :aria-pressed="modelValue !== '' && modelValue != null && Number(modelValue) === value"
-        class="min-h-11 min-w-11 flex-1 rounded-lg px-2 py-2 text-sm tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-primary"
-        :class="modelValue !== '' && modelValue != null && Number(modelValue) === value ? 'bg-primary/15 font-semibold text-highlighted' : 'bg-elevated text-muted hover:bg-primary/10 hover:text-highlighted'"
+        class="app-quick-chip min-w-11 flex-1 px-2 py-2 text-sm tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-primary"
         @click="updateValue(value)"
       >
         <span v-if="value === recent" class="mr-1 text-xs">{{ t('numberInput.recent') }}</span>{{ value }}

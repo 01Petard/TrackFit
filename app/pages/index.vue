@@ -24,7 +24,6 @@ const latestWeightRecord = computed(() => weightMetricId.value == null
   : store.listMeasurements({ page: 1, pageSize: 1, metricId: weightMetricId.value }).items[0])
 const settings = store.settings
 const visibleMovingAverages = ref<MovingAveragePeriod[]>([3, 7, 30, 90])
-const overviewTime = useState('overview-time', () => Date.now())
 
 function openManager(kind: 'records' | 'metrics') {
   managerDialogKind.value = kind
@@ -59,10 +58,10 @@ const recordingStreak = computed(() => {
   return days
 })
 const cards = computed(() => [
-  { label: t('metrics.weight'), value: latestAnalytics.value.get('weight')?.summary?.latest, unit: 'kg', change: latestAnalytics.value.get('weight')?.summary?.previousChange, measuredAt: latestAnalytics.value.get('weight')?.points.at(-1)?.measuredAt },
-  { label: 'BMI', value: latestWeightRecord.value?.bmi, unit: '', change: null, measuredAt: latestWeightRecord.value?.measuredAt },
-  { label: t('metrics.waist'), value: latestAnalytics.value.get('waist')?.summary?.latest, unit: 'cm', change: null, measuredAt: latestAnalytics.value.get('waist')?.points.at(-1)?.measuredAt },
-  { label: t('metrics.bodyFat'), value: latestAnalytics.value.get('body_fat')?.summary?.latest, unit: '%', change: null, measuredAt: latestAnalytics.value.get('body_fat')?.points.at(-1)?.measuredAt },
+  { label: t('metrics.weight'), icon: 'weight' as const, value: latestAnalytics.value.get('weight')?.summary?.latest, unit: 'kg', change: latestAnalytics.value.get('weight')?.summary?.previousChange, measuredAt: latestAnalytics.value.get('weight')?.points.at(-1)?.measuredAt, color: '#19a974', values: latestAnalytics.value.get('weight')?.points.slice(-7).map(point => point.value) ?? [] },
+  { label: 'BMI', icon: 'bmi' as const, value: latestWeightRecord.value?.bmi, unit: '', change: null, measuredAt: latestWeightRecord.value?.measuredAt, color: '#4a92c7', values: store.listMeasurements({ page: 1, pageSize: 7, metricId: weightMetricId.value }).items.slice().reverse().flatMap(record => record.bmi == null ? [] : [record.bmi]) },
+  { label: t('metrics.waist'), icon: 'waist' as const, value: latestAnalytics.value.get('waist')?.summary?.latest, unit: 'cm', change: latestAnalytics.value.get('waist')?.summary?.previousChange, measuredAt: latestAnalytics.value.get('waist')?.points.at(-1)?.measuredAt, color: '#5e8fbe', values: latestAnalytics.value.get('waist')?.points.slice(-7).map(point => point.value) ?? [] },
+  { label: t('metrics.bodyFat'), icon: 'percent' as const, value: latestAnalytics.value.get('body_fat')?.summary?.latest, unit: '%', change: latestAnalytics.value.get('body_fat')?.summary?.previousChange, measuredAt: latestAnalytics.value.get('body_fat')?.points.at(-1)?.measuredAt, color: '#9276bd', values: latestAnalytics.value.get('body_fat')?.points.slice(-7).map(point => point.value) ?? [] },
 ])
 const weightTargetStatus = computed(() => {
   const latest = latestAnalytics.value.get('weight')?.summary?.latest
@@ -159,6 +158,16 @@ const behaviorInsights = computed(() => {
   return insights
 })
 const dashboardInsights = computed(() => [...smartInsights.value, ...behaviorInsights.value])
+const featuredInsights = computed(() => {
+  const weight = dashboardInsights.value.find(item => item.code === 'weight')
+  const training = dashboardInsights.value.find(item => item.code === 'training_duration')
+  const sleepScore = dashboardInsights.value.find(item => item.code === 'sleep_score')
+  return [
+    { code: 'weight', icon: 'weight' as const, title: t('home.weightTrend.title'), color: '#10b981', latest: weight?.latest ?? cards.value[0]?.value ?? '—', unit: 'kg', values: weight?.values ?? [], direction: weight?.direction ?? 'insufficient' as const, trendLabel: weight?.trendLabel ?? t('common.noRecords'), changeLabel: weight?.changeLabel ?? t('home.insights.noComparableChange') },
+    { code: 'training_duration', icon: 'dumbbell' as const, title: t('home.insights.trainingDuration'), color: '#eaa11b', latest: training?.latest ?? todayTraining.value, unit: t('common.minuteUnit'), values: training?.values ?? [], direction: training?.direction ?? 'insufficient' as const, trendLabel: training?.trendLabel ?? t('common.noRecords'), changeLabel: training?.changeLabel ?? t('home.insights.noComparableChange') },
+    { code: 'sleep_score', icon: 'moon' as const, title: t('home.insights.sleepScore'), color: '#7964ed', latest: sleepScore?.latest ?? latestSleep.value?.quality ?? '—', unit: t('common.pointUnit'), values: sleepScore?.values ?? [], direction: sleepScore?.direction ?? 'insufficient' as const, trendLabel: sleepScore?.trendLabel ?? t('common.noRecords'), changeLabel: sleepScore?.changeLabel ?? t('home.insights.noComparableChange') },
+  ]
+})
 const smartSummary = computed(() => {
   if (!dashboardInsights.value.length) return t('home.insights.emptySummary')
   const trends = dashboardInsights.value.map(item => `${item.name} ${item.trendLabel}`).join(locale.value === 'zh' ? '，' : ', ')
@@ -168,21 +177,11 @@ const smartSummary = computed(() => {
 
 function formatLastMeasuredAt(measuredAt?: string): string {
   if (!measuredAt) return t('home.noValidRecord')
-  const elapsed = overviewTime.value - new Date(measuredAt).getTime()
-  if (elapsed < 0 || elapsed > 7 * 86_400_000) return new Intl.DateTimeFormat(locale.value === 'zh' ? 'zh-CN' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(measuredAt))
-  if (elapsed < 3_600_000) return t('home.minutesAgo', { count: Math.max(1, Math.floor(elapsed / 60_000)) })
-  if (elapsed < 86_400_000) return t('home.hoursAgo', { count: Math.floor(elapsed / 3_600_000) })
-  return t('home.daysAgo', { count: Math.floor(elapsed / 86_400_000) })
+  return new Intl.DateTimeFormat(locale.value === 'zh' ? 'zh-CN' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(measuredAt))
 }
 
 function durationLabel(minutes: number): string {
   return t('common.hoursMinutes', { hours: Math.floor(minutes / 60), minutes: minutes % 60 })
-}
-
-function insightToneClass(tone: 'positive' | 'warning' | 'neutral'): string {
-  if (tone === 'positive') return 'bg-primary/10 text-primary'
-  if (tone === 'warning') return 'bg-warning/10 text-warning'
-  return 'bg-elevated text-muted'
 }
 
 function trendSymbol(direction: 'up' | 'down' | 'stable' | 'insufficient'): string {
@@ -196,10 +195,10 @@ function trendSymbol(direction: 'up' | 'down' | 'stable' | 'insufficient'): stri
 <template>
   <div>
     <PageHeader :title="t('home.title')" :description="t('home.description')">
-      <div class="grid w-full grid-cols-3 gap-2 sm:flex sm:w-auto">
-        <button v-if="store.canWrite.value" class="rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/20" @click="dialogOpen = true">＋ {{ t('home.quickRecord') }}</button>
-        <button class="rounded-xl border border-default px-4 py-3 text-center text-sm font-medium hover:border-primary/40 hover:text-primary" @click="openManager('records')">{{ t('common.measurementRecords') }}</button>
-        <button class="rounded-xl border border-default px-5 py-3 text-center text-sm font-medium hover:border-primary/40 hover:text-primary" @click="openManager('metrics')">{{ t('common.metricManagement') }}</button>
+      <div class="flex flex-wrap gap-2">
+        <button v-if="store.canWrite.value" class="app-btn app-btn--primary" @click="dialogOpen = true"><AppIcon name="plus" class="size-4" />{{ t('home.quickRecord') }}</button>
+        <button class="app-btn app-btn--secondary" @click="openManager('records')"><AppIcon name="file" class="size-4" />{{ t('common.measurementRecords') }}</button>
+        <button class="app-btn app-btn--secondary" @click="openManager('metrics')"><AppIcon name="barChart" class="size-4" />{{ t('common.metricManagement') }}</button>
       </div>
     </PageHeader>
 
@@ -211,102 +210,56 @@ function trendSymbol(direction: 'up' | 'down' | 'stable' | 'insufficient'): stri
       <span>{{ t('home.setWeightTargetNotice') }}</span><span>{{ t('common.goToSettings') }} →</span>
     </NuxtLink>
 
-    <section class="mb-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
-      <article v-for="card in cards" :key="card.label" class="app-card rounded-2xl p-4 sm:p-5">
-        <p class="text-xs font-medium text-muted">{{ card.label }}</p>
-        <div class="mt-2 flex items-baseline gap-1.5">
-          <strong class="text-2xl tracking-tight sm:text-3xl">{{ card.value ?? '—' }}</strong>
-          <span class="text-xs text-muted">{{ card.unit }}</span>
+    <section class="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <article v-for="card in cards" :key="card.label" class="app-card min-w-0 p-5">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-3"><span class="app-icon-tile"><AppIcon :name="card.icon" class="size-6" /></span><span class="text-sm font-bold text-[#253d59]">{{ card.label }}</span></div>
+          <span v-if="card.change != null" class="app-pill">{{ card.change > 0 ? '↗' : '↘' }} {{ Math.abs(card.change) }} {{ card.unit }}</span>
         </div>
-        <p v-if="card.change != null" class="mt-2 text-xs" :class="card.change <= 0 ? 'text-primary' : 'text-warning'">
-          {{ t('home.sincePrevious') }} {{ card.change > 0 ? '+' : '' }}{{ card.change }} {{ card.unit }}
-        </p>
-        <p v-else class="mt-2 text-xs text-muted">{{ t('home.latestValidRecord') }}</p>
-        <p class="mt-1 text-xs text-muted">{{ t('home.recordedAt') }}：{{ formatLastMeasuredAt(card.measuredAt) }}</p>
+        <div class="mt-2 grid grid-cols-[minmax(0,1fr)_95px] items-end gap-2">
+          <div class="min-w-0">
+            <div class="flex items-baseline gap-1.5"><strong class="app-value text-[29px] font-extrabold leading-tight">{{ card.value ?? '—' }}</strong><span class="text-sm text-[#69809b]">{{ card.unit }}</span></div>
+            <p v-if="card.change != null" class="mt-2 text-xs font-medium" :class="card.change <= 0 ? 'text-[#08aa63]' : 'text-[#d39b2c]'">{{ t('home.sincePrevious') }} {{ card.change > 0 ? '+' : '' }}{{ card.change }} {{ card.unit }}</p>
+            <p v-else class="mt-2 text-xs text-[#7b8ba2]">{{ t('home.latestValidRecord') }}</p>
+          </div>
+          <MetricSparkline :values="card.values" :color="card.color" />
+        </div>
+        <p class="mt-3 truncate text-[11px] text-[#8798ad]">{{ t('home.recordedAt') }}：{{ formatLastMeasuredAt(card.measuredAt) }}</p>
       </article>
     </section>
 
-    <section class="mb-6">
-      <div class="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div><h2 class="font-bold">{{ t('home.behavior.title') }}</h2><p class="mt-1 text-xs text-muted">{{ t('home.behavior.description') }}</p></div>
+    <section class="app-card mb-4 p-5 sm:p-6">
+      <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div class="app-section-heading"><span class="app-icon-tile"><AppIcon name="run" class="size-6" /></span><div><h2>{{ t('home.behavior.title') }}</h2><p>{{ t('home.behavior.description') }}</p></div></div>
         <div class="flex flex-wrap items-center gap-2">
-          <button v-if="store.canWrite.value" class="rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white" @click="openBehaviorDialog('sleep')">＋ {{ t('common.sleep') }}</button>
-          <button v-if="store.canWrite.value" class="rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white" @click="openBehaviorDialog('training')">＋ {{ t('common.training') }}</button>
-          <NuxtLink :to="localePath('/behavior')" class="rounded-xl border border-primary px-4 py-3 text-sm font-medium text-primary">{{ t('home.behavior.open') }} →</NuxtLink>
+          <button v-if="store.canWrite.value" class="app-btn app-btn--primary" :aria-label="`＋ ${t('common.sleep')}`" @click="openBehaviorDialog('sleep')"><AppIcon name="plus" class="size-4" />{{ t('common.sleep') }}</button>
+          <button v-if="store.canWrite.value" class="app-btn app-btn--primary" :aria-label="`＋ ${t('common.training')}`" @click="openBehaviorDialog('training')"><AppIcon name="plus" class="size-4" />{{ t('common.training') }}</button>
+          <NuxtLink :to="localePath('/behavior')" class="app-btn app-btn--outline">{{ t('home.behavior.open') }}<AppIcon name="arrowRight" class="size-4" /></NuxtLink>
         </div>
       </div>
       <div class="grid gap-3 sm:grid-cols-3">
-        <article class="app-card rounded-2xl p-4"><p class="text-xs text-muted">{{ t('home.behavior.todayTraining') }}</p><strong class="mt-2 block text-xl">{{ t('common.minutes', { count: todayTraining }) }}</strong><p class="mt-1 text-xs text-muted">{{ t('home.behavior.todayTrainingHint') }}</p></article>
-        <article class="app-card rounded-2xl p-4"><p class="text-xs text-muted">{{ t('home.behavior.latestSleep') }}</p><strong class="mt-2 block text-xl">{{ latestSleep ? durationLabel(latestSleep.durationMinutes) : t('common.noRecords') }}</strong><p class="mt-1 text-xs text-muted">{{ t('home.behavior.sleepGoal', { hours: settings.sleepGoalHours }) }}</p></article>
-        <article class="app-card rounded-2xl p-4"><p class="text-xs text-muted">{{ t('home.behavior.streak') }}</p><strong class="mt-2 block text-xl">{{ t('common.days', { count: recordingStreak }) }}</strong><p class="mt-1 text-xs text-muted">{{ t('home.behavior.streakHint') }}</p></article>
+        <article class="app-inner-card flex items-center gap-3 p-4"><span class="app-icon-tile app-icon-tile--blue"><AppIcon name="run" class="size-6" /></span><div><p class="text-sm font-semibold text-[#526b8b]">{{ t('home.behavior.todayTraining') }}</p><strong class="app-value mt-1 block text-2xl font-extrabold">{{ t('common.minutes', { count: todayTraining }) }}</strong><p class="mt-1 text-xs text-[#8a9ab0]">{{ t('home.behavior.todayTrainingHint') }}</p></div></article>
+        <article class="app-inner-card flex items-center gap-3 p-4"><span class="app-icon-tile app-icon-tile--purple"><AppIcon name="moon" class="size-6" /></span><div><p class="text-sm font-semibold text-[#526b8b]">{{ t('home.behavior.latestSleep') }}</p><strong class="app-value mt-1 block text-2xl font-extrabold">{{ latestSleep ? durationLabel(latestSleep.durationMinutes) : t('common.noRecords') }}</strong><p class="mt-1 text-xs text-[#8a9ab0]">{{ t('home.behavior.sleepGoal', { hours: settings.sleepGoalHours }) }}</p></div></article>
+        <article class="app-inner-card flex items-center gap-3 p-4"><span class="app-icon-tile"><AppIcon name="streak" class="size-6" /></span><div><p class="text-sm font-semibold text-[#526b8b]">{{ t('home.behavior.streak') }}</p><strong class="app-value mt-1 block text-2xl font-extrabold">{{ t('common.days', { count: recordingStreak }) }}</strong><p class="mt-1 text-xs text-[#8a9ab0]">{{ t('home.behavior.streakHint') }}</p></div></article>
       </div>
     </section>
 
-    <section class="app-card mb-6 overflow-hidden rounded-3xl">
-      <div class="border-b border-default bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-5 sm:p-6">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div class="flex gap-3">
-            <span class="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary text-lg font-bold text-white shadow-lg shadow-primary/20">✦</span>
-            <div>
-              <h2 class="font-bold">{{ t('home.insights.title') }}</h2>
-              <p class="mt-1 text-xs text-muted">{{ t('home.insights.description') }}</p>
-            </div>
-          </div>
-          <NuxtLink :to="localePath('/analysis')" class="text-sm font-medium text-primary">{{ t('home.insights.open') }} →</NuxtLink>
+    <section class="grid gap-4 xl:h-[405px] xl:grid-cols-[minmax(0,1.65fr)_minmax(280px,.75fr)]">
+      <article data-testid="weight-trend-card" class="app-card h-full overflow-hidden p-5 sm:p-6">
+        <div class="mb-5 flex items-start justify-between gap-3">
+          <div class="app-section-heading"><span class="app-icon-tile"><AppIcon name="chart" class="size-6" /></span><div><h2>{{ t('home.insights.title') }}</h2><p>{{ t('home.insights.description') }}</p></div></div>
+          <NuxtLink :to="localePath('/analysis')" class="shrink-0 text-sm font-semibold text-primary">{{ t('home.insights.open') }} →</NuxtLink>
         </div>
-        <p class="mt-4 max-w-4xl text-sm leading-6 text-highlighted">{{ smartSummary }}</p>
-      </div>
-
-      <div v-if="dashboardInsights.length" data-testid="smart-insights" tabindex="0" :aria-label="t('home.insights.scrollLabel')" class="scrollbar-hidden grid grid-cols-1 gap-4 p-4 sm:p-6 lg:flex lg:snap-x lg:snap-mandatory lg:overflow-x-auto lg:overscroll-x-contain">
-        <article v-for="insight in dashboardInsights" :key="insight.code" data-testid="smart-insight-card" class="rounded-2xl border border-default bg-default p-4 lg:w-[calc(33.333333%_-_0.666667rem)] lg:min-w-[calc(33.333333%_-_0.666667rem)] lg:shrink-0 lg:snap-start">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <p class="text-xs text-muted">{{ insight.name }}</p>
-              <p class="mt-1 flex items-baseline gap-1.5"><strong class="text-2xl">{{ insight.latest }}</strong><span class="text-xs text-muted">{{ insight.unit }}</span></p>
-            </div>
-            <span class="rounded-lg px-2.5 py-1 text-xs font-medium" :class="insightToneClass(insight.tone)">{{ trendSymbol(insight.direction) }} {{ insight.trendLabel }}</span>
-          </div>
-          <MetricSparkline :values="insight.values" :color="insight.color" :label="t('home.insights.sparklineLabel', { name: insight.name })" />
-          <div class="flex items-center justify-between text-xs">
-            <span class="font-medium text-highlighted">{{ insight.changeLabel }}</span>
-            <span class="text-muted">{{ t('common.recordCount', { count: insight.count }) }}</span>
-          </div>
-          <p class="mt-3 border-t border-default pt-3 text-xs leading-5 text-muted">{{ insight.evaluation }}</p>
-        </article>
-      </div>
-      <div v-else class="grid min-h-48 place-items-center p-6 text-center">
-        <div><p class="text-3xl text-primary">⌁</p><p class="mt-2 text-sm text-muted">{{ t('home.insights.empty') }}</p><button v-if="store.canWrite.value" class="mt-4 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white" @click="dialogOpen = true">{{ t('home.insights.start') }}</button></div>
-      </div>
-    </section>
-
-    <section class="grid gap-6 xl:h-[560px] xl:grid-cols-[minmax(0,1.65fr)_minmax(280px,.75fr)]">
-      <article data-testid="weight-trend-card" class="app-card h-full overflow-hidden rounded-3xl p-4 sm:p-6">
-        <div class="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h2 class="font-bold">{{ t('home.weightTrend.title') }}</h2>
-            <p class="mt-1 text-xs text-muted">{{ t('home.weightTrend.description') }}</p>
-            <p v-if="weightTargetStatus" class="mt-1 text-xs font-medium" :class="weightTargetStatus.class">{{ weightTargetStatus.label }}</p>
-          </div>
-          <NuxtLink :to="localePath('/analysis')" class="text-sm font-medium text-primary">{{ t('home.weightTrend.open') }} →</NuxtLink>
+        <div data-testid="smart-insights" class="grid gap-3 md:grid-cols-3">
+          <article v-for="insight in featuredInsights" :key="insight.code" data-testid="smart-insight-card" class="app-inner-card min-w-0 p-4">
+            <div class="flex items-center justify-between gap-2"><span class="app-icon-tile" :class="insight.code === 'training_duration' ? 'app-icon-tile--orange' : insight.code === 'sleep_score' ? 'app-icon-tile--purple' : ''"><AppIcon :name="insight.icon" class="size-5" /></span><span class="text-xs font-semibold text-primary">{{ trendSymbol(insight.direction) }} {{ insight.trendLabel }}</span></div>
+            <p class="mt-4 text-sm font-semibold text-[#526b8b]">{{ insight.title }}</p>
+            <p class="mt-1 flex items-baseline gap-1"><strong class="app-value text-2xl font-extrabold">{{ insight.latest }}</strong><span class="text-xs text-muted">{{ insight.unit }}</span></p>
+            <MetricSparkline :values="insight.values" :color="insight.color" :label="t('home.insights.sparklineLabel', { name: insight.title })" />
+            <p class="mt-2 truncate text-xs text-muted" :title="insight.changeLabel">{{ insight.changeLabel }}</p>
+          </article>
         </div>
-        <div class="mb-2 flex flex-wrap gap-2">
-          <label v-for="period in ([3, 7, 30, 90] as const)" :key="period" class="flex items-center gap-2 rounded-lg border border-default px-2.5 py-1.5 text-xs">
-            <input v-model="visibleMovingAverages" type="checkbox" :value="period" class="size-3.5 accent-emerald-500">{{ t('common.dayAverage', { count: period }) }}
-          </label>
-        </div>
-        <ClientOnly>
-          <MetricChart
-            :points="analytics?.points ?? []"
-            :moving-averages="analytics?.movingAverages"
-            :visible-moving-averages="visibleMovingAverages"
-            :target-minimum="settings.desiredWeightMinimum"
-            :target-maximum="settings.desiredWeightMaximum"
-            metric-code="weight"
-            :unit="analytics?.metric.unit ?? 'kg'"
-            height="340px"
-          />
-          <template #fallback><div class="grid h-[340px] place-items-center text-sm text-muted">{{ t('common.loadingChart') }}</div></template>
-        </ClientOnly>
+        <p class="mt-4 line-clamp-2 text-xs leading-5 text-muted">{{ smartSummary }}</p>
       </article>
 
       <article data-testid="recent-records-card" class="app-card flex h-full min-h-0 flex-col overflow-hidden rounded-3xl p-5 sm:p-6">
@@ -325,6 +278,12 @@ function trendSymbol(direction: 'up' | 'down' | 'stable' | 'insufficient'): stri
         </div>
         <NuxtLink :to="localePath('/history')" class="mt-2 shrink-0 border-t border-default pt-3 text-center text-sm font-medium text-primary">{{ t('home.recent.open') }} →</NuxtLink>
       </article>
+    </section>
+
+    <section class="app-card mt-4 p-5 sm:p-6">
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-3"><div class="app-section-heading"><span class="app-icon-tile app-icon-tile--blue"><AppIcon name="chart" class="size-6" /></span><div><h2>{{ t('home.weightTrend.title') }}</h2><p>{{ t('home.weightTrend.description') }}</p></div></div><p v-if="weightTargetStatus" class="text-xs font-medium" :class="weightTargetStatus.class">{{ weightTargetStatus.label }}</p></div>
+      <div class="mb-2 flex flex-wrap gap-2"><label v-for="period in ([3, 7, 30, 90] as const)" :key="period" class="flex items-center gap-2 rounded-lg border border-default px-2.5 py-1.5 text-xs"><input v-model="visibleMovingAverages" type="checkbox" :value="period" class="size-3.5 accent-emerald-500">{{ t('common.dayAverage', { count: period }) }}</label></div>
+      <ClientOnly><MetricChart :points="analytics?.points ?? []" :moving-averages="analytics?.movingAverages" :visible-moving-averages="visibleMovingAverages" :target-minimum="settings.desiredWeightMinimum" :target-maximum="settings.desiredWeightMaximum" metric-code="weight" :unit="analytics?.metric.unit ?? 'kg'" height="340px" /><template #fallback><div class="grid h-[340px] place-items-center text-sm text-muted">{{ t('common.loadingChart') }}</div></template></ClientOnly>
     </section>
 
     <MeasurementDialog v-if="store.canWrite.value" v-model:open="dialogOpen" />

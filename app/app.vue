@@ -10,7 +10,6 @@ useHead(() => ({
 
 <template>
   <UApp>
-    <AmbientParticles />
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>

@@ -85,27 +85,30 @@ function itemContent(item: BehaviorTimelineItemDto): string {
 <template>
   <div>
     <PageHeader :title="t('behavior.title')" :description="t('behavior.description')">
-      <div v-if="store.canWrite.value" class="grid grid-cols-2 gap-2 sm:flex"><button class="rounded-xl border border-primary px-4 py-3 text-sm font-semibold text-primary" @click="openCreate('sleep')">＋ {{ t('common.sleep') }}</button><button class="rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white" @click="openCreate('training')">＋ {{ t('common.training') }}</button></div>
+      <div v-if="store.canWrite.value" class="grid grid-cols-2 gap-2 sm:flex"><button class="app-btn app-btn--secondary" :aria-label="`＋ ${t('common.sleep')}`" @click="openCreate('sleep')"><AppIcon name="plus" class="size-4" />{{ t('common.sleep') }}</button><button class="app-btn app-btn--primary" :aria-label="`＋ ${t('common.training')}`" @click="openCreate('training')"><AppIcon name="plus" class="size-4" />{{ t('common.training') }}</button></div>
     </PageHeader>
 
     <section class="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-      <article class="app-card rounded-2xl p-4"><p class="text-xs text-muted">{{ t('behavior.weeklyTraining') }}</p><strong class="mt-2 block text-2xl">{{ t('behavior.times', { count: weekReport?.training.count ?? 0 }) }}</strong></article>
-      <article class="app-card rounded-2xl p-4"><p class="text-xs text-muted">{{ t('behavior.weeklyDuration') }}</p><strong class="mt-2 block text-2xl">{{ weekReport?.training.totalMinutes ?? 0 }} <span class="text-xs font-normal text-muted">/ {{ t('common.minutes', { count: store.settings.value.weeklyTrainingGoalMinutes }) }}</span></strong></article>
-      <article class="app-card rounded-2xl p-4"><p class="text-xs text-muted">{{ t('behavior.latestSleep') }}</p><strong class="mt-2 block text-2xl">{{ latestSleep ? durationLabel(latestSleep.durationMinutes) : '—' }}</strong></article>
-      <article class="app-card rounded-2xl p-4"><p class="text-xs text-muted">{{ t('behavior.weeklySleepGoal') }}</p><strong class="mt-2 block text-2xl">{{ t('common.days', { count: weekReport?.sleep.goalDays ?? 0 }) }}</strong></article>
+      <article class="app-card p-5"><span class="app-icon-tile"><AppIcon name="dumbbell" class="size-6" /></span><p class="mt-4 text-sm text-muted">{{ t('behavior.weeklyTraining') }}</p><strong class="app-value mt-1 block text-2xl tabular-nums">{{ t('behavior.times', { count: weekReport?.training.count ?? 0 }) }}</strong></article>
+      <article class="app-card p-5"><span class="app-icon-tile app-icon-tile--orange"><AppIcon name="run" class="size-6" /></span><p class="mt-4 text-sm text-muted">{{ t('behavior.weeklyDuration') }}</p><strong class="app-value mt-1 block text-2xl tabular-nums">{{ weekReport?.training.totalMinutes ?? 0 }} <span class="text-xs font-normal text-muted">/ {{ t('common.minutes', { count: store.settings.value.weeklyTrainingGoalMinutes }) }}</span></strong></article>
+      <article class="app-card p-5"><span class="app-icon-tile app-icon-tile--purple"><AppIcon name="moon" class="size-6" /></span><p class="mt-4 text-sm text-muted">{{ t('behavior.latestSleep') }}</p><strong class="app-value mt-1 block text-2xl tabular-nums">{{ latestSleep ? durationLabel(latestSleep.durationMinutes) : '—' }}</strong></article>
+      <article class="app-card p-5"><span class="app-icon-tile app-icon-tile--blue"><AppIcon name="target" class="size-6" /></span><p class="mt-4 text-sm text-muted">{{ t('behavior.weeklySleepGoal') }}</p><strong class="app-value mt-1 block text-2xl tabular-nums">{{ t('common.days', { count: weekReport?.sleep.goalDays ?? 0 }) }}</strong></article>
     </section>
 
     <section class="app-card mb-5 rounded-2xl p-4">
-      <div class="mb-3 flex items-center justify-between"><div><h2 class="text-sm font-bold">{{ t('behavior.heatmapTitle') }}</h2><p class="mt-1 text-xs text-muted">{{ t('behavior.heatmapDescription') }}</p></div><span class="text-xs text-muted">0–3+</span></div>
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-3"><div class="app-section-heading"><span class="app-icon-tile"><AppIcon name="barChart" class="size-6" /></span><div><h2>{{ t('behavior.heatmapTitle') }}</h2><p>{{ t('behavior.heatmapDescription') }}</p></div></div><div class="flex items-center gap-1 text-[10px] text-muted"><span>0</span><span v-for="level in [0, 1, 2, 3, 4, 5]" :key="level" class="size-3 rounded-sm" :class="level === 0 ? 'bg-elevated' : ''" :style="level ? { backgroundColor: `rgba(16, 185, 129, ${level / 5})` } : undefined" /><span>5+</span></div></div>
       <div class="grid grid-cols-[repeat(14,minmax(0,1fr))] gap-1 sm:grid-cols-[repeat(28,minmax(0,1fr))]">
-        <div v-for="day in heatmapDays" :key="day.key" class="aspect-square rounded-sm" :class="day.count === 0 ? 'bg-elevated' : day.count === 1 ? 'bg-primary/30' : day.count === 2 ? 'bg-primary/60' : 'bg-primary'" :title="t('behavior.heatmapDay', { date: day.label, count: day.count })" />
+        <div v-for="day in heatmapDays" :key="day.key" class="aspect-square rounded-[4px]" :class="day.count === 0 ? 'bg-elevated' : day.count === 1 ? 'bg-primary/20' : day.count === 2 ? 'bg-primary/40' : day.count === 3 ? 'bg-primary/60' : day.count === 4 ? 'bg-primary/80' : 'bg-primary'" :title="t('behavior.heatmapDay', { date: day.label, count: day.count })" />
       </div>
+      <div class="mt-1 grid grid-cols-[repeat(14,minmax(0,1fr))] gap-1 sm:grid-cols-[repeat(28,minmax(0,1fr))]"> <span v-for="day in heatmapDays" :key="day.key" class="truncate text-center text-[9px] text-muted">{{ day.label.slice(-2) }}</span></div>
     </section>
 
-    <section class="mb-5 rounded-2xl border px-4 py-3 text-sm" :class="completenessHints.length ? 'border-warning/30 bg-warning/10 text-warning' : 'border-primary/20 bg-primary/5 text-primary'">
-      <strong>{{ t(completenessHints.length ? 'behavior.completenessWarning' : 'behavior.completenessGood') }}</strong>
-      <ul v-if="completenessHints.length" class="mt-2 list-disc space-y-1 pl-5 text-xs"><li v-for="hint in completenessHints" :key="hint">{{ hint }}</li></ul>
-      <p v-else class="mt-1 text-xs">{{ t('behavior.completenessDescription') }}</p>
+    <section class="mb-5 flex gap-3 rounded-2xl border px-4 py-3 text-sm" :class="completenessHints.length ? 'border-warning/30 bg-warning/10 text-warning' : 'border-primary/20 bg-primary/5 text-primary'">
+      <AppIcon name="sparkles" class="mt-0.5 size-5 shrink-0" /><div>
+        <strong>{{ t(completenessHints.length ? 'behavior.completenessWarning' : 'behavior.completenessGood') }}</strong>
+        <ul v-if="completenessHints.length" class="mt-2 list-disc space-y-1 pl-5 text-xs"><li v-for="hint in completenessHints" :key="hint">{{ hint }}</li></ul>
+        <p v-else class="mt-1 text-xs">{{ t('behavior.completenessDescription') }}</p>
+      </div>
     </section>
 
     <section class="app-card mb-5 grid gap-3 rounded-2xl p-4 sm:grid-cols-2">
@@ -116,14 +119,14 @@ function itemContent(item: BehaviorTimelineItemDto): string {
     <section class="app-card overflow-hidden rounded-3xl">
       <div v-if="!timeline.length" class="grid min-h-72 place-items-center text-center text-sm text-muted"><div><p class="text-3xl">◌</p><p class="mt-2">{{ t('behavior.empty') }}</p></div></div>
       <div v-else class="hidden overflow-x-auto md:block">
-        <table class="w-full text-left text-sm">
+        <table class="app-table w-full text-left text-sm">
           <thead class="border-b border-default bg-elevated/60 text-xs text-muted"><tr><th class="px-5 py-4 font-medium">{{ t('behavior.time') }}</th><th class="px-5 py-4 font-medium">{{ t('behavior.type') }}</th><th class="px-5 py-4 font-medium">{{ t('behavior.content') }}</th><th class="px-5 py-4 font-medium">{{ t('common.note') }}</th><th v-if="store.canWrite.value" class="px-5 py-4 text-right font-medium">{{ t('common.actions') }}</th></tr></thead><tbody>
-            <tr v-for="item in timeline" :key="`${item.kind}-${item.id}`" class="border-b border-default last:border-0"><td class="whitespace-nowrap px-5 py-4">{{ formatDateTime(item.occurredAt) }}</td><td class="px-5 py-4"><span class="rounded-lg bg-elevated px-2.5 py-1 text-xs">{{ t(item.kind === 'training' ? 'common.training' : 'common.sleep') }}</span></td><td class="px-5 py-4">{{ itemContent(item) }}</td><td class="max-w-56 truncate px-5 py-4 text-muted">{{ item.training?.note || '—' }}</td><td v-if="store.canWrite.value" class="whitespace-nowrap px-5 py-4 text-right"><button class="mr-3 text-primary" @click="openEdit(item)">{{ t('common.edit') }}</button><button class="text-error" @click="remove(item)">{{ t('common.delete') }}</button></td></tr>
+            <tr v-for="item in timeline" :key="`${item.kind}-${item.id}`" class="border-b border-default/70 last:border-0"><td class="whitespace-nowrap px-5 py-4">{{ formatDateTime(item.occurredAt) }}</td><td class="px-5 py-4"><span class="rounded-lg px-2.5 py-1 text-xs font-medium" :class="item.kind === 'training' ? 'bg-primary/10 text-primary' : 'bg-violet-500/10 text-violet-600'">{{ t(item.kind === 'training' ? 'common.training' : 'common.sleep') }}</span></td><td class="px-5 py-4">{{ itemContent(item) }}</td><td class="max-w-56 truncate px-5 py-4 text-muted">{{ item.training?.note || '—' }}</td><td v-if="store.canWrite.value" class="whitespace-nowrap px-5 py-4 text-right"><button class="mr-3 text-primary hover:underline" @click="openEdit(item)">{{ t('common.edit') }}</button><button class="text-error hover:underline" @click="remove(item)">{{ t('common.delete') }}</button></td></tr>
           </tbody>
         </table>
       </div>
       <div v-if="timeline.length" class="divide-y divide-default md:hidden">
-        <article v-for="item in timeline" :key="`${item.kind}-${item.id}`" class="p-4"><div class="flex items-start justify-between gap-3"><div><span class="text-xs font-medium text-primary">{{ t(item.kind === 'training' ? 'common.training' : 'common.sleep') }}</span><strong class="mt-1 block">{{ item.training ? trainingTypeLabels[item.training.type] : durationLabel(item.sleep!.durationMinutes) }}</strong><p class="mt-1 text-xs text-muted">{{ formatDateTime(item.occurredAt) }}</p></div><div v-if="store.canWrite.value" class="flex gap-3 text-sm"><button class="text-primary" @click="openEdit(item)">{{ t('common.edit') }}</button><button class="text-error" @click="remove(item)">{{ t('common.delete') }}</button></div></div><p class="mt-3 text-xs text-muted">{{ item.training ? t('common.minutes', { count: item.training.durationMinutes }) : t('behavior.sleepScoreValue', { score: item.sleep!.quality }) }}<span v-if="item.training?.note"> · {{ item.training.note }}</span></p></article>
+        <article v-for="item in timeline" :key="`${item.kind}-${item.id}`" class="p-4"><div class="flex items-start justify-between gap-3"><div><span class="rounded-lg px-2 py-1 text-xs font-medium" :class="item.kind === 'training' ? 'bg-primary/10 text-primary' : 'bg-violet-500/10 text-violet-600'">{{ t(item.kind === 'training' ? 'common.training' : 'common.sleep') }}</span><strong class="mt-1 block">{{ item.training ? trainingTypeLabels[item.training.type] : durationLabel(item.sleep!.durationMinutes) }}</strong><p class="mt-1 text-xs text-muted">{{ formatDateTime(item.occurredAt) }}</p></div><div v-if="store.canWrite.value" class="flex gap-3 text-sm"><button class="text-primary" @click="openEdit(item)">{{ t('common.edit') }}</button><button class="text-error" @click="remove(item)">{{ t('common.delete') }}</button></div></div><p class="mt-3 text-xs text-muted">{{ item.training ? t('common.minutes', { count: item.training.durationMinutes }) : t('behavior.sleepScoreValue', { score: item.sleep!.quality }) }}<span v-if="item.training?.note"> · {{ item.training.note }}</span></p></article>
       </div>
     </section>
 

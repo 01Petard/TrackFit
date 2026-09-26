@@ -5,13 +5,18 @@ const { t } = useI18n()
 const localePath = useLocalePath()
 const navigation = computed(() => [
   { to: localePath('/'), label: t('nav.home'), icon: 'home' as const },
+  { to: localePath('/analysis'), label: t('nav.analysis'), icon: 'analysis' as const },
+  { to: localePath('/behavior'), label: t('nav.behavior'), icon: 'file' as const },
+  { to: localePath('/history'), label: t('nav.history'), icon: 'calendar' as const },
   { to: localePath('/settings'), label: t('nav.settings'), icon: 'settings' as const },
 ])
 const headerVisible = ref(true)
 let previousScrollY = 0
 
 function active(to: string) {
-  return to === '/' ? route.path === '/' : route.path.startsWith(to)
+  const currentPath = route.path.replace(/\/+$/, '') || '/'
+  const targetPath = to.replace(/\/+$/, '') || '/'
+  return currentPath === targetPath || (targetPath !== localePath('/').replace(/\/+$/, '') && currentPath.startsWith(`${targetPath}/`))
 }
 
 function syncHeaderVisibility() {
@@ -37,8 +42,8 @@ onBeforeUnmount(() => window.removeEventListener('scroll', syncHeaderVisibility)
 
 <template>
   <div class="relative z-10 min-h-screen">
-    <header class="sticky top-0 z-30 bg-transparent px-4 py-3 backdrop-blur-md transition-transform duration-300 ease-out will-change-transform sm:px-6 lg:px-10" :class="headerVisible ? 'translate-y-0' : '-translate-y-full'">
-      <div class="mx-auto flex max-w-7xl items-center justify-between">
+    <header class="sticky top-0 z-30 border-b border-white/80 bg-white/80 px-4 py-3 backdrop-blur-xl transition-transform duration-300 ease-out will-change-transform sm:px-6 lg:px-10" :class="headerVisible ? 'translate-y-0' : '-translate-y-full'">
+      <div class="app-main-width mx-auto flex max-w-[1440px] items-center justify-between">
         <NuxtLink :to="localePath('/')" class="flex items-center gap-2.5 font-bold">
           <LiquidLogo :size="38" />
           <span>
@@ -52,7 +57,8 @@ onBeforeUnmount(() => window.removeEventListener('scroll', syncHeaderVisibility)
               v-for="item in navigation"
               :key="item.to"
               :to="item.to"
-              class="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-muted transition hover:bg-elevated hover:text-highlighted"
+              class="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition hover:bg-elevated hover:text-highlighted"
+              :class="active(item.to) ? 'bg-[#e4f9ec] font-semibold text-[#079e59]' : 'text-muted'"
             >
               <AppIcon :name="item.icon" class="size-4 shrink-0" />
               {{ item.label }}
@@ -76,12 +82,12 @@ onBeforeUnmount(() => window.removeEventListener('scroll', syncHeaderVisibility)
     </header>
 
     <main class="safe-bottom min-w-0">
-      <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+      <div class="app-main-width mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
         <slot />
       </div>
     </main>
 
-    <nav class="fixed inset-x-0 bottom-0 z-30 grid grid-cols-2 border-t border-default bg-default/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden" :aria-label="t('nav.mobile')">
+    <nav class="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-default bg-default/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden" :aria-label="t('nav.mobile')">
       <NuxtLink
         v-for="item in navigation"
         :key="item.to"

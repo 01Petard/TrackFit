@@ -70,10 +70,10 @@ function confirm() {
 
 <template>
   <component :is="mobile ? UDrawer : UPopover" v-model:open="open" v-bind="overlayProps">
-    <button type="button" :aria-label="`${t('behaviorDialog.bedtime')}：${displayValue}`" class="flex min-h-12 w-full items-center gap-2.5 rounded-xl border border-default bg-default px-3 py-3 text-left text-sm text-highlighted outline-none transition hover:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary">
-      <AppIcon name="clock" class="size-5 shrink-0 text-primary" />
-      <span class="min-w-0 flex-1 truncate tabular-nums">{{ displayValue }}</span>
-      <span class="shrink-0 text-xs text-muted">{{ t('common.edit') }}</span>
+    <button type="button" :aria-label="`${t('behaviorDialog.bedtime')}：${displayValue}`" class="group flex min-h-16 w-full items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 px-3.5 py-3 text-left text-sm text-highlighted shadow-sm outline-none transition hover:border-primary/50 hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-primary/30">
+      <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-white text-primary shadow-sm"><AppIcon name="clock" class="size-5" /></span>
+      <span class="min-w-0 flex-1 truncate text-base font-semibold tabular-nums">{{ displayValue }}</span>
+      <span class="flex shrink-0 items-center gap-1 text-xs font-medium text-primary"><span class="hidden sm:inline">{{ t('common.edit') }}</span><AppIcon name="chevronRight" class="size-4" /></span>
     </button>
 
     <template #content>

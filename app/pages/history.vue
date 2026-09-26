@@ -20,13 +20,13 @@ const records = computed(() => store.listHistoryRecords(query.value))
 <template>
   <div>
     <PageHeader :title="t('historyPage.title')" :description="t('historyPage.description')">
-      <NuxtLink :to="localePath('/')" class="inline-flex rounded-xl border border-default px-4 py-3 text-sm font-medium text-primary hover:border-primary/40">{{ t('historyPage.back') }}</NuxtLink>
+      <NuxtLink :to="localePath('/')" class="app-btn app-btn--secondary"><AppIcon name="arrowRight" class="size-4 rotate-180" />{{ t('historyPage.back') }}</NuxtLink>
     </PageHeader>
 
     <section class="app-card mb-5 grid gap-3 rounded-2xl p-4 sm:grid-cols-3 sm:p-5">
       <label class="text-xs text-muted">
         {{ t('historyPage.kind') }}
-        <select v-model="kind" data-testid="history-kind-filter" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted">
+        <select v-model="kind" data-testid="history-kind-filter" class="app-select mt-1.5 w-full border border-default text-sm text-highlighted">
           <option value="all">{{ t('historyPage.all') }}</option>
           <option value="body">{{ t('historyPage.body') }}</option>
           <option value="training">{{ t('historyPage.training') }}</option>
@@ -43,9 +43,9 @@ const records = computed(() => store.listHistoryRecords(query.value))
       </div>
     </section>
 
-    <section class="app-card rounded-3xl p-4 sm:p-6">
+    <section class="app-card rounded-2xl p-4 sm:p-6">
       <div class="mb-2 flex flex-wrap items-center justify-between gap-3 border-b border-default pb-4">
-        <div><h2 class="font-bold">{{ t('historyPage.timeline') }}</h2><p class="mt-1 text-xs text-muted">{{ t('historyPage.timelineDescription', { count: records.length }) }}</p></div>
+        <div class="app-section-heading"><span class="app-icon-tile"><AppIcon name="chart" class="size-6" /></span><div><h2>{{ t('historyPage.timeline') }}</h2><p>{{ t('historyPage.timelineDescription', { count: records.length }) }}</p></div></div>
         <span class="rounded-lg bg-elevated px-3 py-1.5 text-xs text-muted">{{ t('historyPage.readOnly') }}</span>
       </div>
       <UnifiedRecordList v-if="records.length" :items="records" />
