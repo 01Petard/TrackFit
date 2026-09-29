@@ -8,6 +8,8 @@ const { formatDateTime } = useTrackFitI18n()
 await store.ensureLoaded()
 const start = ref('')
 const end = ref('')
+const page = ref(1)
+const pageSize = 20
 const dialogOpen = ref(false)
 const dialogKind = ref<'training' | 'sleep'>('training')
 const editing = ref<BehaviorTimelineItemDto | null>(null)
@@ -16,6 +18,8 @@ const query = computed(() => ({
   end: end.value ? new Date(`${end.value}T23:59:59`).toISOString() : undefined,
 }))
 const timeline = computed(() => store.listBehaviors(query.value))
+const totalPages = computed(() => Math.max(1, Math.ceil(timeline.value.length / pageSize)))
+const pagedTimeline = computed(() => timeline.value.slice((page.value - 1) * pageSize, page.value * pageSize))
 const weekReport = computed(() => store.getPeriodReport('week'))
 const latestSleep = computed(() => store.listBehaviors().find(item => item.kind === 'sleep')?.sleep)
 const trainingTypeLabels = computed(() => ({ strength: t('training.strength'), cardio: t('training.cardio'), mobility: t('training.mobility'), other: t('training.other') }))
@@ -50,6 +54,13 @@ const heatmapDays = computed(() => {
     const date = dayjs().subtract(27 - index, 'day')
     return { key: date.format('YYYY-MM-DD'), label: date.format('MM-DD'), count: counts.get(date.format('YYYY-MM-DD')) ?? 0 }
   })
+})
+
+watch([start, end], () => {
+  page.value = 1
+})
+watch(totalPages, (count) => {
+  if (page.value > count) page.value = count
 })
 
 function openCreate(kind: 'training' | 'sleep') {
@@ -121,13 +132,16 @@ function itemContent(item: BehaviorTimelineItemDto): string {
       <div v-else class="hidden overflow-x-auto md:block">
         <table class="app-table w-full text-left text-sm">
           <thead class="border-b border-default bg-elevated/60 text-xs text-muted"><tr><th class="px-5 py-4 font-medium">{{ t('behavior.time') }}</th><th class="px-5 py-4 font-medium">{{ t('behavior.type') }}</th><th class="px-5 py-4 font-medium">{{ t('behavior.content') }}</th><th class="px-5 py-4 font-medium">{{ t('common.note') }}</th><th v-if="store.canWrite.value" class="px-5 py-4 text-right font-medium">{{ t('common.actions') }}</th></tr></thead><tbody>
-            <tr v-for="item in timeline" :key="`${item.kind}-${item.id}`" class="border-b border-default/70 last:border-0"><td class="whitespace-nowrap px-5 py-4">{{ formatDateTime(item.occurredAt) }}</td><td class="px-5 py-4"><span class="rounded-lg px-2.5 py-1 text-xs font-medium" :class="item.kind === 'training' ? 'bg-primary/10 text-primary' : 'bg-violet-500/10 text-violet-600'">{{ t(item.kind === 'training' ? 'common.training' : 'common.sleep') }}</span></td><td class="px-5 py-4">{{ itemContent(item) }}</td><td class="max-w-56 truncate px-5 py-4 text-muted">{{ item.training?.note || '—' }}</td><td v-if="store.canWrite.value" class="whitespace-nowrap px-5 py-4 text-right"><button class="mr-3 text-primary hover:underline" @click="openEdit(item)">{{ t('common.edit') }}</button><button class="text-error hover:underline" @click="remove(item)">{{ t('common.delete') }}</button></td></tr>
+            <tr v-for="item in pagedTimeline" :key="`${item.kind}-${item.id}`" class="border-b border-default/70 last:border-0"><td class="whitespace-nowrap px-5 py-4">{{ formatDateTime(item.occurredAt) }}</td><td class="px-5 py-4"><span class="rounded-lg px-2.5 py-1 text-xs font-medium" :class="item.kind === 'training' ? 'bg-primary/10 text-primary' : 'bg-violet-500/10 text-violet-600'">{{ t(item.kind === 'training' ? 'common.training' : 'common.sleep') }}</span></td><td class="px-5 py-4">{{ itemContent(item) }}</td><td class="max-w-56 truncate px-5 py-4 text-muted">{{ item.training?.note || '—' }}</td><td v-if="store.canWrite.value" class="whitespace-nowrap px-5 py-4 text-right"><button class="mr-3 text-primary hover:underline" @click="openEdit(item)">{{ t('common.edit') }}</button><button class="text-error hover:underline" @click="remove(item)">{{ t('common.delete') }}</button></td></tr>
           </tbody>
         </table>
       </div>
       <div v-if="timeline.length" class="divide-y divide-default md:hidden">
-        <article v-for="item in timeline" :key="`${item.kind}-${item.id}`" class="p-4"><div class="flex items-start justify-between gap-3"><div><span class="rounded-lg px-2 py-1 text-xs font-medium" :class="item.kind === 'training' ? 'bg-primary/10 text-primary' : 'bg-violet-500/10 text-violet-600'">{{ t(item.kind === 'training' ? 'common.training' : 'common.sleep') }}</span><strong class="mt-1 block">{{ item.training ? trainingTypeLabels[item.training.type] : durationLabel(item.sleep!.durationMinutes) }}</strong><p class="mt-1 text-xs text-muted">{{ formatDateTime(item.occurredAt) }}</p></div><div v-if="store.canWrite.value" class="flex gap-3 text-sm"><button class="text-primary" @click="openEdit(item)">{{ t('common.edit') }}</button><button class="text-error" @click="remove(item)">{{ t('common.delete') }}</button></div></div><p class="mt-3 text-xs text-muted">{{ item.training ? t('common.minutes', { count: item.training.durationMinutes }) : t('behavior.sleepScoreValue', { score: item.sleep!.quality }) }}<span v-if="item.training?.note"> · {{ item.training.note }}</span></p></article>
+        <article v-for="item in pagedTimeline" :key="`${item.kind}-${item.id}`" class="p-4"><div class="flex items-start justify-between gap-3"><div><span class="rounded-lg px-2 py-1 text-xs font-medium" :class="item.kind === 'training' ? 'bg-primary/10 text-primary' : 'bg-violet-500/10 text-violet-600'">{{ t(item.kind === 'training' ? 'common.training' : 'common.sleep') }}</span><strong class="mt-1 block">{{ item.training ? trainingTypeLabels[item.training.type] : durationLabel(item.sleep!.durationMinutes) }}</strong><p class="mt-1 text-xs text-muted">{{ formatDateTime(item.occurredAt) }}</p></div><div v-if="store.canWrite.value" class="flex gap-3 text-sm"><button class="text-primary" @click="openEdit(item)">{{ t('common.edit') }}</button><button class="text-error" @click="remove(item)">{{ t('common.delete') }}</button></div></div><p class="mt-3 text-xs text-muted">{{ item.training ? t('common.minutes', { count: item.training.durationMinutes }) : t('behavior.sleepScoreValue', { score: item.sleep!.quality }) }}<span v-if="item.training?.note"> · {{ item.training.note }}</span></p></article>
       </div>
+      <footer v-if="timeline.length" class="flex flex-wrap items-center justify-between gap-3 border-t border-default px-4 py-3 text-sm text-muted">
+        <span>{{ t('records.total', { count: timeline.length }) }}</span><div class="flex items-center gap-2"><button class="rounded-lg border border-default px-3 py-1.5 disabled:opacity-40" :disabled="page <= 1" @click="page--">{{ t('common.previousPage') }}</button><span>{{ page }} / {{ totalPages }}</span><button class="rounded-lg border border-default px-3 py-1.5 disabled:opacity-40" :disabled="page >= totalPages" @click="page++">{{ t('common.nextPage') }}</button></div>
+      </footer>
     </section>
 
     <BehaviorDialog v-if="store.canWrite.value" v-model:open="dialogOpen" :kind="dialogKind" :item="editing" />

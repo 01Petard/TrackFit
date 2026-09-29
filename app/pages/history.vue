@@ -9,12 +9,23 @@ await store.ensureLoaded()
 const kind = ref<'all' | HistoryRecordKind>('all')
 const start = ref('')
 const end = ref('')
+const page = ref(1)
+const pageSize = 20
 const query = computed(() => ({
   kind: kind.value === 'all' ? undefined : kind.value,
   start: start.value ? new Date(`${start.value}T00:00:00`).toISOString() : undefined,
   end: end.value ? new Date(`${end.value}T23:59:59.999`).toISOString() : undefined,
 }))
 const records = computed(() => store.listHistoryRecords(query.value))
+const totalPages = computed(() => Math.max(1, Math.ceil(records.value.length / pageSize)))
+const pagedRecords = computed(() => records.value.slice((page.value - 1) * pageSize, page.value * pageSize))
+
+watch([kind, start, end], () => {
+  page.value = 1
+})
+watch(totalPages, (count) => {
+  if (page.value > count) page.value = count
+})
 </script>
 
 <template>
@@ -48,10 +59,13 @@ const records = computed(() => store.listHistoryRecords(query.value))
         <div class="app-section-heading"><span class="app-icon-tile"><AppIcon name="chart" class="size-6" /></span><div><h2>{{ t('historyPage.timeline') }}</h2><p>{{ t('historyPage.timelineDescription', { count: records.length }) }}</p></div></div>
         <span class="rounded-lg bg-elevated px-3 py-1.5 text-xs text-muted">{{ t('historyPage.readOnly') }}</span>
       </div>
-      <UnifiedRecordList v-if="records.length" :items="records" />
+      <UnifiedRecordList v-if="records.length" :items="pagedRecords" />
       <div v-else class="grid min-h-64 place-items-center text-center text-sm text-muted">
         <div><p class="mb-2 text-3xl">⌁</p><p>{{ t('historyPage.empty') }}</p></div>
       </div>
+      <footer v-if="records.length" class="flex flex-wrap items-center justify-between gap-3 border-t border-default pt-4 text-sm text-muted">
+        <span>{{ t('records.total', { count: records.length }) }}</span><div class="flex items-center gap-2"><button class="rounded-lg border border-default px-3 py-1.5 disabled:opacity-40" :disabled="page <= 1" @click="page--">{{ t('common.previousPage') }}</button><span>{{ page }} / {{ totalPages }}</span><button class="rounded-lg border border-default px-3 py-1.5 disabled:opacity-40" :disabled="page >= totalPages" @click="page++">{{ t('common.nextPage') }}</button></div>
+      </footer>
     </section>
   </div>
 </template>
