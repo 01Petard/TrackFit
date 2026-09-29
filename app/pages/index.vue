@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { MovingAveragePeriod } from '../../shared/types/api'
+import type { MakeupKind } from '../../shared/utils/makeup'
 import { buildMetricTrendInsight } from '../../shared/utils/analytics'
 import dayjs from 'dayjs'
 
@@ -8,6 +9,8 @@ const behaviorDialogOpen = ref(false)
 const behaviorDialogKind = ref<'training' | 'sleep'>('training')
 const managerDialogOpen = ref(false)
 const managerDialogKind = ref<'records' | 'metrics'>('records')
+const makeupOpen = ref(false)
+const makeupKind = ref<MakeupKind>('all')
 const start = dayjs().subtract(7, 'day').toISOString()
 const weightStart = dayjs().subtract(30, 'day').toISOString()
 const store = useTrackFitData()
@@ -36,6 +39,11 @@ function openBehaviorDialog(kind: 'training' | 'sleep') {
   behaviorDialogOpen.value = true
 }
 
+function openMakeup(kind: MakeupKind) {
+  makeupKind.value = kind
+  makeupOpen.value = true
+}
+
 const behaviors = computed(() => store.listBehaviors())
 const todayCount = computed(() => (
   (store.data.value?.bodyRecords.filter(record => dayjs(record.measuredAt).isSame(dayjs(), 'day')).length ?? 0)
@@ -58,31 +66,25 @@ const recordingStreak = computed(() => {
   }
   return days
 })
+const latestMissingDay = computed(() => store.getLatestMissingDay())
+const latestSingleMissing = computed(() => ({
+  weight: store.getLatestMissingDay('weight'),
+  sleep: store.getLatestMissingDay('sleep'),
+  training: store.getLatestMissingDay('training'),
+}))
+const makeupDate = computed(() => makeupKind.value === 'all' ? latestMissingDay.value : latestSingleMissing.value[makeupKind.value])
 const cards = computed(() => [
   { label: t('metrics.weight'), icon: 'weight' as const, value: latestAnalytics.value.get('weight')?.summary?.latest, unit: 'kg', change: latestAnalytics.value.get('weight')?.summary?.previousChange, measuredAt: latestAnalytics.value.get('weight')?.points.at(-1)?.measuredAt, color: '#19a974', values: latestAnalytics.value.get('weight')?.points.slice(-7).map(point => point.value) ?? [] },
   { label: 'BMI', icon: 'bmi' as const, value: latestWeightRecord.value?.bmi, unit: '', change: null, measuredAt: latestWeightRecord.value?.measuredAt, color: '#4a92c7', values: store.listMeasurements({ page: 1, pageSize: 7, metricId: weightMetricId.value }).items.slice().reverse().flatMap(record => record.bmi == null ? [] : [record.bmi]) },
   { label: t('metrics.waist'), icon: 'waist' as const, value: latestAnalytics.value.get('waist')?.summary?.latest, unit: 'cm', change: latestAnalytics.value.get('waist')?.summary?.previousChange, measuredAt: latestAnalytics.value.get('waist')?.points.at(-1)?.measuredAt, color: '#5e8fbe', values: latestAnalytics.value.get('waist')?.points.slice(-7).map(point => point.value) ?? [] },
   { label: t('metrics.bodyFat'), icon: 'percent' as const, value: latestAnalytics.value.get('body_fat')?.summary?.latest, unit: '%', change: latestAnalytics.value.get('body_fat')?.summary?.previousChange, measuredAt: latestAnalytics.value.get('body_fat')?.points.at(-1)?.measuredAt, color: '#9276bd', values: latestAnalytics.value.get('body_fat')?.points.slice(-7).map(point => point.value) ?? [] },
 ])
-const weightTargetStatus = computed(() => {
-  const latest = latestAnalytics.value.get('weight')?.summary?.latest
-  const minimum = settings.value.desiredWeightMinimum
-  const maximum = settings.value.desiredWeightMaximum
-  if (latest == null || minimum == null || maximum == null) return null
-  if (latest < minimum) return { label: t('home.target.below', { amount: Number((minimum - latest).toFixed(2)) }), class: 'text-warning' }
-  if (latest > maximum) return { label: t('home.target.above', { amount: Number((latest - maximum).toFixed(2)) }), class: 'text-warning' }
-  return { label: t('home.target.within'), class: 'text-primary' }
-})
 const insightColors = ['#10b981', '#0ea5e9', '#8b5cf6', '#f59e0b', '#ef4444', '#14b8a6', '#6366f1', '#ec4899']
 const fixedInsightColors: Record<string, string> = { weight: '#10b981', waist: '#0ea5e9', body_fat: '#8b5cf6' }
 const smartInsights = computed(() => store.metrics.value.filter(metric => metric.enabled).flatMap((metric, index) => {
   const metricAnalytics = store.getAnalytics(metric.code, start)
   if (!metricAnalytics?.summary) return []
-  const insight = buildMetricTrendInsight(
-    metricAnalytics,
-    settings.value.desiredWeightMinimum,
-    settings.value.desiredWeightMaximum,
-  )
+  const insight = buildMetricTrendInsight(metricAnalytics)
   return insight ? [{
     code: metric.code,
     color: fixedInsightColors[metric.code] ?? insightColors[index % insightColors.length],
@@ -226,6 +228,7 @@ function trendSymbol(direction: 'up' | 'down' | 'stable' | 'insufficient'): stri
           <MetricSparkline :values="card.values" :color="card.color" />
         </div>
         <p class="mt-3 truncate text-[11px] text-[#8798ad]">{{ t('home.recordedAt') }}：{{ formatLastMeasuredAt(card.measuredAt) }}</p>
+        <p v-if="card.icon === 'weight' && latestSingleMissing.weight" class="mt-2 text-xs text-muted">{{ t('makeup.singleMissing', { date: latestSingleMissing.weight }) }}<button v-if="store.canWrite.value" type="button" class="ml-2 font-medium text-primary hover:underline" @click="openMakeup('weight')">{{ t('makeup.singleAction') }}</button></p>
       </article>
     </section>
 
@@ -239,9 +242,9 @@ function trendSymbol(direction: 'up' | 'down' | 'stable' | 'insufficient'): stri
         </div>
       </div>
       <div class="grid gap-3 sm:grid-cols-3">
-        <article class="app-inner-card flex items-center gap-3 p-4"><span class="app-icon-tile app-icon-tile--blue"><AppIcon name="run" class="size-6" /></span><div><p class="text-sm font-semibold text-[#526b8b]">{{ t('home.behavior.todayTraining') }}</p><strong class="app-value mt-1 block text-2xl font-extrabold">{{ t('common.minutes', { count: todayTraining }) }}</strong><p class="mt-1 text-xs text-[#8a9ab0]">{{ t('home.behavior.todayTrainingHint') }}</p></div></article>
-        <article class="app-inner-card flex items-center gap-3 p-4"><span class="app-icon-tile app-icon-tile--purple"><AppIcon name="moon" class="size-6" /></span><div><p class="text-sm font-semibold text-[#526b8b]">{{ t('home.behavior.latestSleep') }}</p><strong class="app-value mt-1 block text-2xl font-extrabold">{{ latestSleep ? durationLabel(latestSleep.durationMinutes) : t('common.noRecords') }}</strong><p class="mt-1 text-xs text-[#8a9ab0]">{{ t('home.behavior.sleepGoal', { hours: settings.sleepGoalHours }) }}</p></div></article>
-        <article class="app-inner-card flex items-center gap-3 p-4"><span class="app-icon-tile"><AppIcon name="streak" class="size-6" /></span><div><p class="text-sm font-semibold text-[#526b8b]">{{ t('home.behavior.streak') }}</p><strong class="app-value mt-1 block text-2xl font-extrabold">{{ t('common.days', { count: recordingStreak }) }}</strong><p class="mt-1 text-xs text-[#8a9ab0]">{{ t('home.behavior.streakHint') }}</p></div></article>
+        <article class="app-inner-card flex items-start gap-3 p-4"><span class="app-icon-tile app-icon-tile--blue"><AppIcon name="run" class="size-6" /></span><div class="min-w-0"><p class="text-sm font-semibold text-[#526b8b]">{{ t('home.behavior.todayTraining') }}</p><strong class="app-value mt-1 block text-2xl font-extrabold">{{ t('common.minutes', { count: todayTraining }) }}</strong><p class="mt-1 text-xs text-[#8a9ab0]">{{ t('home.behavior.todayTrainingHint') }}</p><p v-if="latestSingleMissing.training" class="mt-2 text-xs text-muted">{{ t('makeup.singleMissing', { date: latestSingleMissing.training }) }}<button v-if="store.canWrite.value" type="button" class="ml-2 font-medium text-primary hover:underline" @click="openMakeup('training')">{{ t('makeup.singleAction') }}</button></p></div></article>
+        <article class="app-inner-card flex items-start gap-3 p-4"><span class="app-icon-tile app-icon-tile--purple"><AppIcon name="moon" class="size-6" /></span><div class="min-w-0"><p class="text-sm font-semibold text-[#526b8b]">{{ t('home.behavior.latestSleep') }}</p><strong class="app-value mt-1 block text-2xl font-extrabold">{{ latestSleep ? durationLabel(latestSleep.durationMinutes) : t('common.noRecords') }}</strong><p class="mt-1 text-xs text-[#8a9ab0]">{{ t('home.behavior.sleepGoal', { hours: settings.sleepGoalHours }) }}</p><p v-if="latestSingleMissing.sleep" class="mt-2 text-xs text-muted">{{ t('makeup.singleMissing', { date: latestSingleMissing.sleep }) }}<button v-if="store.canWrite.value" type="button" class="ml-2 font-medium text-primary hover:underline" @click="openMakeup('sleep')">{{ t('makeup.singleAction') }}</button></p></div></article>
+        <article class="app-inner-card flex items-start gap-3 p-4"><span class="app-icon-tile"><AppIcon name="streak" class="size-6" /></span><div class="min-w-0"><p class="text-sm font-semibold text-[#526b8b]">{{ t('home.behavior.streak') }}</p><strong class="app-value mt-1 block text-2xl font-extrabold">{{ t('common.days', { count: recordingStreak }) }}</strong><p class="mt-1 text-xs text-[#8a9ab0]">{{ t('home.behavior.streakHint') }}</p><p v-if="latestMissingDay" class="mt-2 text-xs text-warning">{{ t('makeup.latestMissing', { date: latestMissingDay }) }}</p><button v-if="latestMissingDay && store.canWrite.value" type="button" class="mt-2 text-sm font-semibold text-primary hover:underline" @click="openMakeup('all')">{{ t('makeup.action') }}</button></div></article>
       </div>
     </section>
 
@@ -282,7 +285,7 @@ function trendSymbol(direction: 'up' | 'down' | 'stable' | 'insufficient'): stri
     </section>
 
     <section class="app-card mt-4 p-5 sm:p-6">
-      <div class="mb-4 flex flex-wrap items-center justify-between gap-3"><div class="app-section-heading"><span class="app-icon-tile app-icon-tile--blue"><AppIcon name="chart" class="size-6" /></span><div><h2>{{ t('home.weightTrend.chartTitle') }}</h2><p>{{ t('home.weightTrend.description') }}</p></div></div><p v-if="weightTargetStatus" class="text-xs font-medium" :class="weightTargetStatus.class">{{ weightTargetStatus.label }}</p></div>
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-3"><div class="app-section-heading"><span class="app-icon-tile app-icon-tile--blue"><AppIcon name="chart" class="size-6" /></span><div><h2>{{ t('home.weightTrend.chartTitle') }}</h2><p>{{ t('home.weightTrend.description') }}</p></div></div><NuxtLink :to="localePath('/analysis')" class="text-sm font-semibold text-primary hover:underline">{{ t('home.weightTrend.viewFullAnalysis') }} →</NuxtLink></div>
       <div class="mb-2 flex flex-wrap gap-2"><label v-for="period in ([3, 7, 30, 90] as const)" :key="period" class="flex items-center gap-2 rounded-lg border border-default px-2.5 py-1.5 text-xs"><input v-model="visibleMovingAverages" type="checkbox" :value="period" class="size-3.5 accent-emerald-500">{{ t('common.dayAverage', { count: period }) }}</label></div>
       <ClientOnly><MetricChart :points="analytics?.points ?? []" :moving-averages="analytics?.movingAverages" :visible-moving-averages="visibleMovingAverages" :target-minimum="settings.desiredWeightMinimum" :target-maximum="settings.desiredWeightMaximum" metric-code="weight" :unit="analytics?.metric.unit ?? 'kg'" height="340px" /><template #fallback><div class="grid h-[340px] place-items-center text-sm text-muted">{{ t('common.loadingChart') }}</div></template></ClientOnly>
     </section>
@@ -290,5 +293,6 @@ function trendSymbol(direction: 'up' | 'down' | 'stable' | 'insufficient'): stri
     <MeasurementDialog v-if="store.canWrite.value" v-model:open="dialogOpen" />
     <BehaviorDialog v-if="store.canWrite.value" v-model:open="behaviorDialogOpen" :kind="behaviorDialogKind" />
     <ManagerDialog v-model:open="managerDialogOpen" :kind="managerDialogKind" />
+    <MakeupDialog v-if="store.canWrite.value" v-model:open="makeupOpen" :date="makeupDate" :kind="makeupKind" />
   </div>
 </template>

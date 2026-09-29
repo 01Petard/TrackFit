@@ -25,6 +25,15 @@ const weightForecast = computed(() => analyzeWeightForecast(store.getAnalytics('
 const hasWeightProjection = computed(() => weightForecast.value.projections.some(item => item.value != null))
 const status = store.status
 const settings = store.settings
+const weightTargetStatus = computed(() => {
+  const latest = store.getAnalytics('weight')?.summary?.latest
+  const minimum = settings.value.desiredWeightMinimum
+  const maximum = settings.value.desiredWeightMaximum
+  if (latest == null || minimum == null || maximum == null) return null
+  if (latest < minimum) return { label: t('analysis.target.below', { amount: Number((minimum - latest).toFixed(2)) }), class: 'text-warning' }
+  if (latest > maximum) return { label: t('analysis.target.above', { amount: Number((latest - maximum).toFixed(2)) }), class: 'text-warning' }
+  return { label: t('analysis.target.within'), class: 'text-primary' }
+})
 const reportPeriod = ref<'week' | 'month'>('week')
 const report = computed(() => store.getPeriodReport(reportPeriod.value))
 const correlations = computed(() => store.getBehaviorCorrelations().slice(0, 8))
@@ -95,7 +104,7 @@ function minutesLabel(minutes: number | null): string {
     </section>
 
     <section class="app-card mt-5 rounded-3xl p-4 sm:p-6">
-      <div class="app-section-heading mb-4"><span class="app-icon-tile app-icon-tile--blue"><AppIcon name="chart" class="size-6" /></span><div><h2>{{ t('analysis.weightForecast') }}</h2><p>{{ t('analysis.weightForecastHint') }}</p></div></div>
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-3"><div class="app-section-heading"><span class="app-icon-tile app-icon-tile--blue"><AppIcon name="chart" class="size-6" /></span><div><h2>{{ t('analysis.weightForecast') }}</h2><p>{{ t('analysis.weightForecastHint') }}</p></div></div><p v-if="weightTargetStatus" class="text-xs font-medium" :class="weightTargetStatus.class">{{ weightTargetStatus.label }}</p></div>
       <p v-if="hasWeightProjection && weightForecast.forecastDate" class="mb-4 text-sm text-muted">{{ t('analysis.forecastDate', { date: dayjs(weightForecast.forecastDate).format('YYYY-MM-DD') }) }}</p>
       <p v-else class="mb-4 text-sm text-muted">{{ t(weightForecast.stale ? 'analysis.forecastStale' : 'analysis.forecastInsufficient') }}</p>
       <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

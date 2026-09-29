@@ -7,6 +7,7 @@ const props = withDefaults(defineProps<{
   min?: number
   max?: number
   step?: number | 'any'
+  inputStep?: number | 'any'
   required?: boolean
   disabled?: boolean
   placeholder?: string
@@ -37,8 +38,9 @@ const candidates = computed(() => {
   const values = props.recent == null ? props.suggestions : [props.recent, ...props.suggestions]
   return [...new Set(values)].filter((value) => {
     if (!Number.isFinite(value) || (props.min != null && value < props.min) || (props.max != null && value > props.max)) return false
-    if (props.step === 'any') return true
-    const steps = (value - (props.min ?? 0)) / props.step
+    const inputStep = props.inputStep ?? props.step
+    if (inputStep === 'any') return true
+    const steps = (value - (props.min ?? 0)) / inputStep
     return Math.abs(steps - Math.round(steps)) < 0.000001
   }).slice(0, 5)
 })
@@ -97,7 +99,7 @@ function confirmDuration() {
           :inputmode="step === 1 ? 'numeric' : 'decimal'"
           :min="min"
           :max="max"
-          :step="step"
+          :step="inputStep ?? step"
           :required="required"
           :disabled="disabled"
           :placeholder="placeholder"

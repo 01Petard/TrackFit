@@ -132,7 +132,7 @@ async function save() {
               <p class="flex items-center gap-2 text-sm font-medium"><AppIcon name="moon" class="size-4 text-primary" />{{ t('behaviorDialog.sleepHours') }}</p>
               <div class="grid grid-cols-2 gap-3">
                 <AppNumberField v-model.number="sleep.durationHours" :label="t('behaviorDialog.durationHoursField')" unit="h" required :min="0" :max="24" :placeholder="t('behaviorDialog.hoursPlaceholder')" />
-                <AppNumberField v-model.number="sleep.durationMinutes" :label="t('behaviorDialog.durationMinutesField')" unit="min" required :min="0" :max="sleep.durationHours === 24 ? 0 : 59" :step="1" :placeholder="t('behaviorDialog.minutesPlaceholder')" />
+                <AppNumberField v-model.number="sleep.durationMinutes" :label="t('behaviorDialog.durationMinutesField')" unit="min" required :min="0" :max="sleep.durationHours === 24 ? 0 : 59" :step="5" input-step="any" :placeholder="t('behaviorDialog.minutesPlaceholder')" />
               </div>
               <div class="flex flex-wrap gap-2">
                 <button v-for="minutes in [360, 390, 420, 450, 480]" :key="minutes" type="button" :aria-pressed="sleep.durationHours * 60 + sleep.durationMinutes === minutes" class="app-quick-chip px-3 text-xs" @click="sleep.durationHours = Math.floor(minutes / 60); sleep.durationMinutes = minutes % 60">{{ Math.floor(minutes / 60) }} {{ t('date.hour') }}<template v-if="minutes % 60"> {{ minutes % 60 }} {{ t('date.minute') }}</template></button>

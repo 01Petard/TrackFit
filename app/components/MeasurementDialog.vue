@@ -47,6 +47,10 @@ watch(() => props.open, (open) => {
   note.value = props.measurement?.note ?? ''
   for (const key of Object.keys(values)) delete values[Number(key)]
   for (const item of props.measurement?.values ?? []) values[item.metricId] = String(item.value)
+  if (!props.measurement && weightMetric.value) {
+    const latestWeight = metricHistory.value.get(weightMetric.value.id)?.[0]
+    if (latestWeight != null) values[weightMetric.value.id] = String(latestWeight)
+  }
 }, { immediate: true })
 
 async function save() {
@@ -101,11 +105,10 @@ async function save() {
               <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-primary"><AppIcon name="weight" class="size-4" />{{ metricName(weightMetric) }}</div>
               <AppNumberField
                 v-model="values[weightMetric.id]"
-                :label="metricName(weightMetric)"
-                :unit="weightMetric.unit"
+                :label="t('measurement.metricWithUnit', { name: metricName(weightMetric), unit: weightMetric.unit })"
                 :min="weightMetric.minimumValue ?? undefined"
                 :max="weightMetric.maximumValue ?? undefined"
-                :step="10 ** -weightMetric.decimalPlaces"
+                :step="0.01"
                 :placeholder="t('measurement.weightExample')"
                 :recent="metricHistory.get(weightMetric.id)?.[0]"
                 :suggestions="[50, 60, 70, 80]"

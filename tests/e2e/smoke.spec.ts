@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import dayjs from 'dayjs'
 
 test.beforeEach(async ({ page }) => {
   const response = await page.request.post('/api/auth/login', {
@@ -114,6 +115,61 @@ test('首页可以快捷记录睡眠和训练', async ({ page }) => {
   await expect(page.getByRole('heading', { name: '新增训练记录' })).toBeVisible()
 })
 
+test('补记支持体重日期与训练时间，体重默认使用最近记录', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop')
+  const initial = await page.request.get('/api/data')
+  const original = await initial.json()
+  const firstDay = dayjs().subtract(3, 'day').hour(8).minute(0).second(0)
+  const customDay = dayjs().subtract(2, 'day').format('YYYY-MM-DD')
+  try {
+    const seeded = await page.request.put('/api/data', {
+      headers: { 'If-Match': initial.headers().etag! },
+      data: { ...original, settings: original.settings.map((item: object) => ({ ...item, desiredWeightMinimum: 70, desiredWeightMaximum: 75 })), bodyRecords: [{ id: 1, measuredAt: firstDay.subtract(1, 'day').toISOString(), note: null, values: [{ metricId: 1, value: 72.5 }] }, { id: 2, measuredAt: firstDay.toISOString(), note: null, values: [{ metricId: 1, value: 72.67 }] }], trainingRecords: [], sleepRecords: [] },
+    })
+    expect(seeded.ok()).toBe(true)
+    await page.goto('/zh/')
+    await expect(page.getByRole('link', { name: '查看完整记录分析 →' })).toHaveAttribute('href', '/zh/analysis')
+    await expect(page.getByText('当前体重在目标区间内')).toHaveCount(0)
+    await expect(page.getByText(/当前体重处于个人目标区间/)).toHaveCount(0)
+    await page.getByRole('link', { name: '查看完整记录分析 →' }).click()
+    await expect(page.getByText('当前体重在目标区间内')).toBeVisible()
+    await page.goto('/zh/')
+
+    await page.getByRole('button', { name: /快速记录/ }).click()
+    const measurementDialog = page.getByRole('dialog')
+    const currentWeight = measurementDialog.getByLabel('体重（kg）', { exact: true })
+    await expect(currentWeight).toHaveValue('72.67')
+    await expect(currentWeight).toHaveAttribute('step', '0.01')
+    await measurementDialog.getByRole('button', { name: '×' }).click()
+
+    await page.getByRole('button', { name: '补记' }).first().click()
+    const dialog = page.getByRole('dialog')
+    const weight = dialog.getByLabel('体重', { exact: true })
+    await expect(weight).toHaveValue('72.67')
+    await expect(weight).toHaveAttribute('step', '0.01')
+    await dialog.getByLabel('测量日期').fill(customDay)
+    await dialog.getByRole('button', { name: '体重 +' }).click()
+    await expect(weight).toHaveValue('72.68')
+    await dialog.getByRole('button', { name: '保存记录' }).click()
+    await expect(dialog).toBeHidden()
+
+    const trainingCard = page.locator('article').filter({ hasText: '今日训练' }).first()
+    await trainingCard.getByRole('button', { name: '补记' }).click()
+    await dialog.getByLabel('训练时间').fill('15:45')
+    const trainingDay = (await dialog.getByRole('heading', { level: 2 }).textContent())!.match(/\d{4}-\d{2}-\d{2}/)![0]
+    await dialog.getByRole('button', { name: '保存记录' }).click()
+    await expect(dialog).toBeHidden()
+
+    const stored = await (await page.request.get('/api/data')).json()
+    expect(stored.bodyRecords.some((record: { measuredAt: string, values: { value: number }[] }) => dayjs(record.measuredAt).format('YYYY-MM-DD') === customDay && record.values.some(value => value.value === 72.68))).toBe(true)
+    expect(stored.trainingRecords.some((record: { recordedAt: string }) => dayjs(record.recordedAt).format('YYYY-MM-DD HH:mm') === `${trainingDay} 15:45`)).toBe(true)
+  } finally {
+    const current = await page.request.get('/api/data')
+    const restored = await page.request.put('/api/data', { headers: { 'If-Match': current.headers().etag! }, data: original })
+    expect(restored.ok()).toBe(true)
+  }
+})
+
 test('记录页使用统一日期选择器', async ({ page }) => {
   await page.goto('/zh/records')
   await page.getByRole('button', { name: '不限开始日期' }).click()
@@ -219,7 +275,7 @@ test('数字输入支持建议值快捷选择与时长滚轮', async ({ page }) 
   await dialog.getByLabel('睡眠时长（小时）', { exact: true }).fill('7')
   await dialog.getByLabel('睡眠时长（分钟）', { exact: true }).fill('30')
   await dialog.getByRole('button', { name: '睡眠时长（分钟） +' }).click()
-  await expect(dialog.getByLabel('睡眠时长（分钟）', { exact: true })).toHaveValue('31')
+  await expect(dialog.getByLabel('睡眠时长（分钟）', { exact: true })).toHaveValue('35')
   await dialog.getByRole('button', { name: '睡眠时长（分钟） −' }).click()
   await expect(dialog.getByLabel('睡眠时长（小时）', { exact: true })).toHaveValue('7')
   await expect(dialog.getByLabel('睡眠时长（分钟）', { exact: true })).toHaveValue('30')

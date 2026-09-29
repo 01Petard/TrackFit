@@ -12,6 +12,8 @@ export type DomainErrorCode
     | 'metric.unavailable'
     | 'metric.outOfRange'
     | 'measurement.notFound'
+    | 'makeup.dayUnavailable'
+    | 'makeup.dateMismatch'
     | 'sleep.notFound'
     | 'training.notFound'
     | 'unknown'

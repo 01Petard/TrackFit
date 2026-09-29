@@ -1,11 +1,13 @@
 import type { MeasurementWrite, MetricCreate, SettingsUpdate, SleepWrite, TrackFitData, TrainingWrite } from '../../shared/schemas/trackfit'
 import type { BehaviorQuery } from '../../shared/types/api'
 import type { HistoryRecordQuery } from '../../shared/utils/history'
+import type { MakeupDayInput, MakeupKind, SingleMakeupInput } from '../../shared/utils/makeup'
 import type { MeasurementQuery } from '../../shared/utils/trackfit'
 import { backupSchema } from '../../shared/schemas/trackfit'
 import { TrackFitDomainError } from '../../shared/utils/domain-error'
 import { dataIfMatchHeader, dataIfNoneMatchHeader, readDataEtag } from '../../shared/utils/data-version'
 import { listHistoryRecords as listHistoryRecordsFromData } from '../../shared/utils/history'
+import { findLatestMissingDay, saveMakeupDay as saveMakeupDayInData, saveSingleMakeupDay as saveSingleMakeupDayInData } from '../../shared/utils/makeup'
 import {
   buildBehaviorCorrelations,
   buildPeriodReport,
@@ -156,6 +158,9 @@ export function useTrackFitData() {
     deleteMeasurement: (id: number) => mutate(draft => deleteMeasurementInData(draft, id)),
     listBehaviors: (query?: BehaviorQuery) => data.value ? listBehaviorTimeline(data.value, query) : [],
     listHistoryRecords: (query?: HistoryRecordQuery) => data.value ? listHistoryRecordsFromData(data.value, query) : [],
+    getLatestMissingDay: (kind: MakeupKind = 'all') => data.value ? findLatestMissingDay(data.value, new Date(), kind) : null,
+    saveMakeupDay: (input: MakeupDayInput) => mutate(draft => saveMakeupDayInData(draft, input)),
+    saveSingleMakeupDay: (input: SingleMakeupInput) => mutate(draft => saveSingleMakeupDayInData(draft, input)),
     saveTraining: (input: TrainingWrite | unknown, id?: number) => mutate(draft => saveTrainingInData(draft, input, id)),
     deleteTraining: (id: number) => mutate(draft => deleteTrainingInData(draft, id)),
     saveSleep: (input: SleepWrite | unknown, id?: number) => mutate(draft => saveSleepInData(draft, input, id)),
