@@ -99,7 +99,7 @@ function createDefaultData(): TrackFitData {
       defaultDateRange: '30d',
       sleepGoalHours: 8,
       weeklyTrainingGoalMinutes: 150,
-      theme: 'system',
+      theme: 'light',
       dataVersion: 1,
     }],
     metrics: metrics.map(([code, name, unit, decimalPlaces, minimumValue, maximumValue], index) => ({

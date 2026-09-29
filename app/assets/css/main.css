@@ -2,18 +2,13 @@
 @import "@nuxt/ui";
 
 :root {
+  color-scheme: light;
   --app-bg: #eef7f7;
   --app-surface: #ffffff;
   --app-border: #e2edf0;
   --app-ink: #142846;
   --app-muted: #6a7d99;
   --app-green: #09b969;
-}
-
-.dark {
-  --app-bg: #07110e;
-  --app-surface: rgba(15, 23, 42, 0.82);
-  --app-border: rgba(255, 255, 255, 0.08);
 }
 
 html { background: var(--app-bg); }
@@ -25,8 +20,6 @@ body {
   color: var(--app-ink);
   font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
-
-.dark body { background: var(--app-bg); color: #e8f5f2; }
 
 .app-card {
   border: 1px solid var(--app-border);
@@ -40,11 +33,6 @@ body {
   border-radius: 14px;
   background: #fff;
 }
-.dark .app-inner-card { border-color: var(--app-border); background: #15251f; }
-.dark .app-value, .dark .app-section-heading h2 { color: #e8f5f2; }
-.dark .app-btn--secondary, .dark .app-btn--outline { background: #15251f; border-color: var(--app-border); color: #d5e5dd; }
-.dark .app-select { background-color: #15251f; }
-
 .app-icon-tile {
   display: inline-grid;
   width: 44px;

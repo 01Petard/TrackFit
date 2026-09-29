@@ -16,6 +16,7 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   ui: {
     fonts: false,
+    colorMode: false,
   },
   runtimeConfig: {
     dataFile: process.env.TRACKFIT_DATA_FILE ?? '',

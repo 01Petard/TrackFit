@@ -64,7 +64,7 @@ const settingsBaseSchema = z.object({
   defaultDateRange: z.enum(['24h', '7d', '30d', '90d', 'all']).default('30d'),
   sleepGoalHours: z.number().min(1).max(16).default(8),
   weeklyTrainingGoalMinutes: z.number().int().min(0).max(10080).default(150),
-  theme: z.enum(['system', 'light', 'dark']).default('system'),
+  theme: z.enum(['system', 'light', 'dark']).default('light'),
 })
 
 function validateDesiredWeightRange(

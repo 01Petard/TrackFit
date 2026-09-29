@@ -9,7 +9,7 @@
       "defaultDateRange": "all",
       "sleepGoalHours": 8,
       "weeklyTrainingGoalMinutes": 150,
-      "theme": "system",
+      "theme": "light",
       "id": 1,
       "dataVersion": 1
     }

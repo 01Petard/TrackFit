@@ -122,7 +122,7 @@ onMounted(() => {
     const motionTime = time * motionSpeed
     activeContext.clearRect(0, 0, width, height)
     activeContext.lineCap = 'round'
-    const baseOpacity = document.documentElement.classList.contains('dark') ? 0.72 : 0.64
+    const baseOpacity = 0.64
 
     for (const particle of particles) {
       const position = particlePosition(particle, motionTime, width, height)

@@ -6,14 +6,12 @@ const store = useTrackFitData()
 await store.ensureLoaded()
 const { t, locale } = useI18n()
 const { formatDateTime, formatError } = useTrackFitI18n()
-const colorMode = useColorMode()
 const heightCm = ref<number | null>(store.settings.value.heightCm)
 const desiredWeightMinimum = ref<number | ''>(store.settings.value.desiredWeightMinimum ?? '')
 const desiredWeightMaximum = ref<number | ''>(store.settings.value.desiredWeightMaximum ?? '')
 const defaultDateRange = ref<AppSettingsDto['defaultDateRange']>(store.settings.value.defaultDateRange)
 const sleepGoalMinutes = ref(Math.round(store.settings.value.sleepGoalHours * 60))
 const weeklyTrainingGoalMinutes = ref(store.settings.value.weeklyTrainingGoalMinutes)
-const theme = ref<AppSettingsDto['theme']>(store.settings.value.theme)
 const saving = ref(false)
 const message = ref('')
 const restoreInput = ref<HTMLInputElement>()
@@ -47,9 +45,8 @@ async function save() {
       defaultDateRange: defaultDateRange.value,
       sleepGoalHours: sleepGoalMinutes.value / 60,
       weeklyTrainingGoalMinutes: weeklyTrainingGoalMinutes.value,
-      theme: theme.value,
+      theme: 'light',
     })
-    colorMode.preference = theme.value
     message.value = t('settings.saved')
   } catch (error) {
     message.value = formatError(error)
@@ -135,7 +132,6 @@ function updateSleepGoalMinutes(minutes: number) {
             </div>
           </fieldset>
           <label class="block text-sm">{{ t('settings.defaultRange') }}<select v-model="defaultDateRange" :disabled="!store.canWrite.value" class="app-select mt-2 w-full border border-default text-sm disabled:opacity-60"><option value="24h">{{ t('range.24h') }}</option><option value="7d">{{ t('range.7d') }}</option><option value="30d">{{ t('range.30d') }}</option><option value="90d">{{ t('range.90d') }}</option><option value="all">{{ t('range.all') }}</option></select></label>
-          <label class="block text-sm">{{ t('settings.theme') }}<select v-model="theme" :disabled="!store.canWrite.value" class="app-select mt-2 w-full border border-default text-sm disabled:opacity-60"><option value="system">{{ t('settings.themeSystem') }}</option><option value="light">{{ t('settings.themeLight') }}</option><option value="dark">{{ t('settings.themeDark') }}</option></select></label>
         </div>
         <button v-if="store.canWrite.value" :disabled="saving" class="app-btn app-btn--primary mt-6 w-full"><AppIcon name="shield" class="size-4" />{{ t(saving ? 'common.saving' : 'settings.save') }}</button>
       </form>

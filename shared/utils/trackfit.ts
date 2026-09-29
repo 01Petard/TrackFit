@@ -24,7 +24,7 @@ export function getSettings(data: TrackFitData): AppSettingsDto {
     defaultDateRange: '30d',
     sleepGoalHours: 8,
     weeklyTrainingGoalMinutes: 150,
-    theme: 'system',
+    theme: 'light',
     dataVersion: 1,
   }
 }
