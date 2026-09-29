@@ -397,6 +397,7 @@ export default defineI18nLocale(() => ({
     },
     weightTrend: {
       title: 'Weight trend over the past 7 days',
+      chartTitle: 'Weight trend over the past 30 days',
       description: 'Averages smooth daily values; use the bottom and right sliders to adjust the X and Y ranges.',
       open: 'Detailed analysis',
     },

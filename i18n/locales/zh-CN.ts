@@ -397,6 +397,7 @@ export default defineI18nLocale(() => ({
     },
     weightTrend: {
       title: '最近 7 天体重趋势',
+      chartTitle: '最近 30 天体重趋势',
       description: '均线按每日均值平滑展示；底部和右侧滑块分别选择 X、Y 轴范围',
       open: '详细分析',
     },
