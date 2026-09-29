@@ -59,13 +59,13 @@ watch(totalPages, (count) => {
         <div class="app-section-heading"><span class="app-icon-tile"><AppIcon name="chart" class="size-6" /></span><div><h2>{{ t('historyPage.timeline') }}</h2><p>{{ t('historyPage.timelineDescription', { count: records.length }) }}</p></div></div>
         <span class="rounded-lg bg-elevated px-3 py-1.5 text-xs text-muted">{{ t('historyPage.readOnly') }}</span>
       </div>
+      <div v-if="records.length" class="flex flex-wrap items-center justify-between gap-3 border-b border-default pb-4 text-sm text-muted">
+        <span>{{ t('records.total', { count: records.length }) }}</span><div class="flex items-center gap-2"><button class="rounded-lg border border-default px-3 py-1.5 disabled:opacity-40" :disabled="page <= 1" @click="page--">{{ t('common.previousPage') }}</button><span>{{ page }} / {{ totalPages }}</span><button class="rounded-lg border border-default px-3 py-1.5 disabled:opacity-40" :disabled="page >= totalPages" @click="page++">{{ t('common.nextPage') }}</button></div>
+      </div>
       <UnifiedRecordList v-if="records.length" :items="pagedRecords" />
       <div v-else class="grid min-h-64 place-items-center text-center text-sm text-muted">
         <div><p class="mb-2 text-3xl">⌁</p><p>{{ t('historyPage.empty') }}</p></div>
       </div>
-      <footer v-if="records.length" class="flex flex-wrap items-center justify-between gap-3 border-t border-default pt-4 text-sm text-muted">
-        <span>{{ t('records.total', { count: records.length }) }}</span><div class="flex items-center gap-2"><button class="rounded-lg border border-default px-3 py-1.5 disabled:opacity-40" :disabled="page <= 1" @click="page--">{{ t('common.previousPage') }}</button><span>{{ page }} / {{ totalPages }}</span><button class="rounded-lg border border-default px-3 py-1.5 disabled:opacity-40" :disabled="page >= totalPages" @click="page++">{{ t('common.nextPage') }}</button></div>
-      </footer>
     </section>
   </div>
 </template>

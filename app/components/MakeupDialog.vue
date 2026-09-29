@@ -11,6 +11,7 @@ const { metricName, formatError, formatDateTime } = useTrackFitI18n()
 const values = reactive<Record<number, string>>({})
 const measurementDate = ref('')
 const measurementTime = ref('08:00')
+const trainingDate = ref('')
 const trainingTime = ref('18:00')
 const trainingType = ref<TrainingWrite['type']>('strength')
 const trainingDuration = ref(30)
@@ -32,7 +33,7 @@ const trainingTypes = computed(() => ([
 ]))
 const wakeUpAt = computed(() => dayjs(bedtime.value).add(sleepHours.value * 60 + sleepMinutes.value, 'minute'))
 const latestSelectableDate = dayjs().subtract(1, 'day').format('YYYY-MM-DD')
-const displayDate = computed(() => props.kind === 'weight' ? measurementDate.value : props.date)
+const displayDate = computed(() => props.kind === 'weight' ? measurementDate.value : props.kind === 'training' ? trainingDate.value : props.date)
 
 watch(sleepHours, (hours) => {
   if (hours >= 24) sleepMinutes.value = 0
@@ -45,6 +46,7 @@ watch(() => props.open, (open) => {
   if (weightMetric && latestWeight.value != null) values[weightMetric.id] = String(latestWeight.value)
   measurementDate.value = props.date
   measurementTime.value = '08:00'
+  trainingDate.value = props.date
   trainingTime.value = '18:00'
   trainingType.value = 'strength'
   trainingDuration.value = 30
@@ -57,7 +59,7 @@ watch(() => props.open, (open) => {
 
 async function save() {
   if (!props.date) return
-  const date = props.kind === 'weight' ? measurementDate.value : props.date
+  const date = props.kind === 'weight' ? measurementDate.value : props.kind === 'training' ? trainingDate.value : props.date
   if (!date) return
   const metricValues = Object.entries(values)
     .filter(([, value]) => value !== '')
@@ -125,6 +127,7 @@ async function save() {
 
           <section v-if="kind === 'all' || kind === 'training'" class="rounded-2xl border border-default p-4">
             <h3 class="mb-3 flex items-center gap-2 font-semibold"><AppIcon name="dumbbell" class="size-5 text-primary" />{{ t('makeup.training') }}</h3>
+            <label v-if="kind === 'training'" class="mb-4 block text-sm">{{ t('makeup.trainingDate') }}<input v-model="trainingDate" type="date" required :max="latestSelectableDate" class="app-select mt-2 w-full border border-default text-sm"></label>
             <label class="mb-4 block text-sm">{{ t('makeup.trainingTime') }}<input v-model="trainingTime" type="time" required class="app-select mt-2 w-full border border-default text-sm"></label>
             <div class="mb-4 grid grid-cols-3 gap-2"><button v-for="item in trainingTypes" :key="item.value" type="button" :aria-pressed="trainingType === item.value" class="flex flex-col items-center gap-2 rounded-xl border px-2 py-3 text-xs font-semibold" :class="trainingType === item.value ? 'border-primary/50 bg-primary/5 text-primary' : 'border-default text-muted'" @click="trainingType = item.value"><AppIcon :name="item.icon" class="size-5" />{{ item.label }}</button></div>
             <AppNumberField v-model.number="trainingDuration" :label="t('behaviorDialog.durationMinutes')" unit="min" required :min="1" :max="1440" duration-unit="minutes" />

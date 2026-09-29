@@ -128,6 +128,9 @@ function itemContent(item: BehaviorTimelineItemDto): string {
     </section>
 
     <section class="app-card overflow-hidden rounded-3xl">
+      <div v-if="timeline.length" class="flex flex-wrap items-center justify-between gap-3 border-b border-default px-4 py-3 text-sm text-muted">
+        <span>{{ t('records.total', { count: timeline.length }) }}</span><div class="flex items-center gap-2"><button class="rounded-lg border border-default px-3 py-1.5 disabled:opacity-40" :disabled="page <= 1" @click="page--">{{ t('common.previousPage') }}</button><span>{{ page }} / {{ totalPages }}</span><button class="rounded-lg border border-default px-3 py-1.5 disabled:opacity-40" :disabled="page >= totalPages" @click="page++">{{ t('common.nextPage') }}</button></div>
+      </div>
       <div v-if="!timeline.length" class="grid min-h-72 place-items-center text-center text-sm text-muted"><div><p class="text-3xl">◌</p><p class="mt-2">{{ t('behavior.empty') }}</p></div></div>
       <div v-else class="hidden overflow-x-auto md:block">
         <table class="app-table w-full text-left text-sm">
@@ -139,9 +142,6 @@ function itemContent(item: BehaviorTimelineItemDto): string {
       <div v-if="timeline.length" class="divide-y divide-default md:hidden">
         <article v-for="item in pagedTimeline" :key="`${item.kind}-${item.id}`" class="p-4"><div class="flex items-start justify-between gap-3"><div><span class="rounded-lg px-2 py-1 text-xs font-medium" :class="item.kind === 'training' ? 'bg-primary/10 text-primary' : 'bg-violet-500/10 text-violet-600'">{{ t(item.kind === 'training' ? 'common.training' : 'common.sleep') }}</span><strong class="mt-1 block">{{ item.training ? trainingTypeLabels[item.training.type] : durationLabel(item.sleep!.durationMinutes) }}</strong><p class="mt-1 text-xs text-muted">{{ formatDateTime(item.occurredAt) }}</p></div><div v-if="store.canWrite.value" class="flex gap-3 text-sm"><button class="text-primary" @click="openEdit(item)">{{ t('common.edit') }}</button><button class="text-error" @click="remove(item)">{{ t('common.delete') }}</button></div></div><p class="mt-3 text-xs text-muted">{{ item.training ? t('common.minutes', { count: item.training.durationMinutes }) : t('behavior.sleepScoreValue', { score: item.sleep!.quality }) }}<span v-if="item.training?.note"> · {{ item.training.note }}</span></p></article>
       </div>
-      <footer v-if="timeline.length" class="flex flex-wrap items-center justify-between gap-3 border-t border-default px-4 py-3 text-sm text-muted">
-        <span>{{ t('records.total', { count: timeline.length }) }}</span><div class="flex items-center gap-2"><button class="rounded-lg border border-default px-3 py-1.5 disabled:opacity-40" :disabled="page <= 1" @click="page--">{{ t('common.previousPage') }}</button><span>{{ page }} / {{ totalPages }}</span><button class="rounded-lg border border-default px-3 py-1.5 disabled:opacity-40" :disabled="page >= totalPages" @click="page++">{{ t('common.nextPage') }}</button></div>
-      </footer>
     </section>
 
     <BehaviorDialog v-if="store.canWrite.value" v-model:open="dialogOpen" :kind="dialogKind" :item="editing" />

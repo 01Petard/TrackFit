@@ -72,7 +72,7 @@ test('英文页面显示本地化登录错误', async ({ page }) => {
 test('英文分析、行为和历史页使用英文标题', async ({ page }) => {
   await loginAsAdmin(page)
   for (const [path, heading] of [
-    ['/en/analysis', 'Analysis'],
+    ['/en/analysis', 'Trend Analysis'],
     ['/en/behavior', 'Behavior records'],
     ['/en/history', 'History'],
   ] as const) {

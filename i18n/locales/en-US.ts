@@ -46,7 +46,7 @@ export default defineI18nLocale(() => ({
   },
   nav: {
     home: 'Home',
-    analysis: 'Analysis',
+    analysis: 'Trend Analysis',
     behavior: 'Activity',
     history: 'History',
     settings: 'Settings',
@@ -264,7 +264,7 @@ export default defineI18nLocale(() => ({
     },
   },
   analysis: {
-    title: 'Analysis',
+    title: 'Trend Analysis',
     description: 'Raw data preserves every measurement; moving averages use daily measurement means.',
     timeRange: 'Time range',
     primaryMetric: 'Primary metric',
@@ -366,6 +366,7 @@ export default defineI18nLocale(() => ({
     wakeTime: 'Wake time: {time} (must be on the missed day)',
     wakeDateMismatch: 'Wake time must be on the missed day',
     training: 'Training',
+    trainingDate: 'Training date',
     trainingTime: 'Training time',
     save: 'Save all three records',
   },

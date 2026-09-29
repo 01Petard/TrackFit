@@ -79,7 +79,13 @@ export function saveSingleMakeupDay(data: TrackFitData, input: SingleMakeupInput
       || measurement.values[0]?.metricId !== weightMetricId) throw new TrackFitDomainError('makeup.dateMismatch')
     saveMeasurement(data, measurement)
   } else if (input.kind === 'training') {
-    if (findLatestMissingDay(data, now, input.kind) !== input.date) throw new TrackFitDomainError('makeup.dayUnavailable')
+    const targetDay = dayjs(input.date)
+    if (!targetDay.isValid()
+      || targetDay.format('YYYY-MM-DD') !== input.date
+      || !targetDay.isBefore(dayjs(now), 'day')
+      || data.trainingRecords.some(item => dayjs(item.recordedAt).format('YYYY-MM-DD') === input.date)) {
+      throw new TrackFitDomainError('makeup.dayUnavailable')
+    }
     const training = trainingWriteSchema.parse(input.training)
     const trainingAt = new Date(input.trainingAt)
     if (!Number.isFinite(trainingAt.getTime()) || dayjs(trainingAt).format('YYYY-MM-DD') !== input.date) throw new TrackFitDomainError('makeup.dateMismatch')

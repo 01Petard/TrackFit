@@ -115,7 +115,7 @@ test('首页可以快捷记录睡眠和训练', async ({ page }) => {
   await expect(page.getByRole('heading', { name: '新增训练记录' })).toBeVisible()
 })
 
-test('补记支持体重日期与训练时间，体重默认使用最近记录', async ({ page }, testInfo) => {
+test('补记支持体重和训练自选日期，体重默认使用最近记录', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop')
   const initial = await page.request.get('/api/data')
   const original = await initial.json()
@@ -155,6 +155,7 @@ test('补记支持体重日期与训练时间，体重默认使用最近记录',
 
     const trainingCard = page.locator('article').filter({ hasText: '今日训练' }).first()
     await trainingCard.getByRole('button', { name: '补记' }).click()
+    await dialog.getByLabel('训练日期').fill(customDay)
     await dialog.getByLabel('训练时间').fill('15:45')
     const trainingDay = (await dialog.getByRole('heading', { level: 2 }).textContent())!.match(/\d{4}-\d{2}-\d{2}/)![0]
     await dialog.getByRole('button', { name: '保存记录' }).click()
@@ -163,6 +164,7 @@ test('补记支持体重日期与训练时间，体重默认使用最近记录',
     const stored = await (await page.request.get('/api/data')).json()
     expect(stored.bodyRecords.some((record: { measuredAt: string, values: { value: number }[] }) => dayjs(record.measuredAt).format('YYYY-MM-DD') === customDay && record.values.some(value => value.value === 72.68))).toBe(true)
     expect(stored.trainingRecords.some((record: { recordedAt: string }) => dayjs(record.recordedAt).format('YYYY-MM-DD HH:mm') === `${trainingDay} 15:45`)).toBe(true)
+    expect(trainingDay).toBe(customDay)
   } finally {
     const current = await page.request.get('/api/data')
     const restored = await page.request.put('/api/data', { headers: { 'If-Match': current.headers().etag! }, data: original })

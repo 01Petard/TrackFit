@@ -46,7 +46,7 @@ export default defineI18nLocale(() => ({
   },
   nav: {
     home: '主页',
-    analysis: '分析',
+    analysis: '趋势分析',
     behavior: '行为记录',
     history: '历史记录',
     settings: '设置',
@@ -366,6 +366,7 @@ export default defineI18nLocale(() => ({
     wakeTime: '起床时间：{time}（需在补卡当天）',
     wakeDateMismatch: '起床时间必须在补卡当天',
     training: '训练',
+    trainingDate: '训练日期',
     trainingTime: '训练时间',
     save: '保存三项补卡记录',
   },

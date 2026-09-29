@@ -75,6 +75,19 @@ describe('连续记录补卡', () => {
     expect(() => saveSingleMakeupDay(data, { kind: 'weight', date: '2026-09-27', measurement: { measuredAt: new Date(2026, 8, 27, 9), values: [{ metricId: 1, value: 69 }] } }, now)).toThrow('makeup.dayUnavailable')
   })
 
+  it('训练补记支持自选历史日期和时间，并拒绝重复日期', () => {
+    const data = fixture()
+    saveMeasurement(data, { measuredAt: new Date(2026, 8, 26, 8), values: [{ metricId: 1, value: 70 }] })
+    expect(findLatestMissingDay(data, now, 'training')).toBe('2026-09-28')
+
+    const input = { kind: 'training' as const, date: '2026-09-27', training: { type: 'cardio' as const, durationMinutes: 45 }, trainingAt: new Date(2026, 8, 27, 15, 45) }
+    saveSingleMakeupDay(data, input, now)
+    expect(new Date(data.trainingRecords[0]!.recordedAt)).toEqual(new Date(2026, 8, 27, 15, 45))
+    expect(findLatestMissingDay(data, now, 'training')).toBe('2026-09-28')
+    expect(() => saveSingleMakeupDay(data, input, now)).toThrow('makeup.dayUnavailable')
+    expect(() => saveSingleMakeupDay(data, { ...input, date: '2026-09-29', trainingAt: new Date(2026, 8, 29, 15, 45) }, now)).toThrow('makeup.dayUnavailable')
+  })
+
   it('三项全空的日期也允许只补其中一项，随后算已记录', () => {
     const data = fixture()
     saveMeasurement(data, { measuredAt: new Date(2026, 8, 26, 8), values: [{ metricId: 1, value: 70 }] })
