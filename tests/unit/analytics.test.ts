@@ -83,6 +83,32 @@ describe('原始时间序列分析', () => {
     expect(result.movingAverages[90]).toEqual([])
   })
 
+  it('只在相邻实测日期之间线性插值，不改变原始点和统计', () => {
+    const result = buildAnalytics([
+      { id: 1, measuredAt: '2026-07-01T08:00:00.000Z', value: 80 },
+      { id: 2, measuredAt: '2026-07-01T12:00:00.000Z', value: 82 },
+      { id: 3, measuredAt: '2026-07-04T08:00:00.000Z', value: 75 },
+    ])
+
+    expect(result.points).toHaveLength(3)
+    expect(result.summary?.count).toBe(3)
+    expect(result.movingAverages[3]).toEqual([
+      { measuredAt: new Date(2026, 6, 3, 12).toISOString(), value: 79 },
+      { measuredAt: '2026-07-04T08:00:00.000Z', value: 77 },
+    ])
+    expect(result.movingAverages[7]).toEqual([])
+  })
+
+  it('少量实测值覆盖完整日期区间时，也可形成 90 日均线', () => {
+    const result = buildAnalytics([
+      { id: 1, measuredAt: '2026-01-01T08:00:00.000Z', value: 80 },
+      { id: 2, measuredAt: '2026-03-31T08:00:00.000Z', value: 90 },
+    ])
+
+    expect(result.points).toHaveLength(2)
+    expect(result.movingAverages[90]).toEqual([{ measuredAt: '2026-03-31T08:00:00.000Z', value: 85 }])
+  })
+
   it('统计首次、最新、变化和记录次数', () => {
     expect(buildAnalytics(points).summary).toEqual({
       first: 80,

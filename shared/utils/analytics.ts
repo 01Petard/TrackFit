@@ -58,18 +58,34 @@ export function buildAnalytics(points: RawAnalyticsPoint[]): {
 }
 
 function buildDailyMovingAverages(points: RawAnalyticsPoint[]): Record<MovingAveragePeriod, MovingAveragePointDto[]> {
-  const days = new Map<string, { sum: number, count: number, measuredAt: string }>()
+  const dayMs = 24 * 60 * 60 * 1000
+  const days = new Map<number, { sum: number, count: number, measuredAt: string }>()
   for (const point of points) {
     const date = new Date(point.measuredAt)
-    const dayKey = [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-')
-    const current = days.get(dayKey)
-    days.set(dayKey, {
+    const day = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / dayMs
+    const current = days.get(day)
+    days.set(day, {
       sum: (current?.sum ?? 0) + point.value,
       count: (current?.count ?? 0) + 1,
       measuredAt: date.toISOString(),
     })
   }
-  const dailyValues = [...days.values()].map(day => ({ measuredAt: day.measuredAt, value: day.sum / day.count }))
+  const observedDays = [...days].map(([day, entry]) => ({ day, measuredAt: entry.measuredAt, value: entry.sum / entry.count }))
+  const dailyValues: MovingAveragePointDto[] = []
+  for (let index = 0; index < observedDays.length; index++) {
+    const current = observedDays[index]!
+    const next = observedDays[index + 1]
+    dailyValues.push({ measuredAt: current.measuredAt, value: current.value })
+    if (!next) continue
+
+    for (let day = current.day + 1; day < next.day; day++) {
+      const date = new Date(day * dayMs)
+      dailyValues.push({
+        measuredAt: new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 12).toISOString(),
+        value: current.value + (next.value - current.value) * (day - current.day) / (next.day - current.day),
+      })
+    }
+  }
   return Object.fromEntries(movingAveragePeriods.map(period => [
     period,
     dailyValues.flatMap((day, index) => {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { MovingAveragePeriod } from '../../shared/types/api'
+import { analyzeWeightForecast } from '../../shared/utils/weight-forecast'
 import dayjs from 'dayjs'
 
 const { t } = useI18n()
@@ -20,6 +21,8 @@ const start = computed(() => {
 })
 const primary = computed(() => store.getAnalytics(metricCode.value, start.value))
 const secondary = computed(() => compareCode.value ? store.getAnalytics(compareCode.value, start.value) : null)
+const weightForecast = computed(() => analyzeWeightForecast(store.getAnalytics('weight')))
+const hasWeightProjection = computed(() => weightForecast.value.projections.some(item => item.value != null))
 const status = store.status
 const settings = store.settings
 const reportPeriod = ref<'week' | 'month'>('week')
@@ -64,6 +67,7 @@ function minutesLabel(minutes: number | null): string {
         <div class="flex flex-wrap gap-2">
           <label v-for="period in ([3, 7, 30, 90] as const)" :key="period" class="flex min-h-10 items-center gap-2 rounded-full border border-default bg-white px-4 py-2 text-sm font-medium hover:bg-primary/10"><input v-model="visibleMovingAverages" type="checkbox" :value="period" class="size-4 accent-emerald-600">{{ t('common.dayAverage', { count: period }) }}</label>
         </div>
+        <p class="mt-2 text-xs text-muted">{{ t('analysis.interpolationHint') }}</p>
       </div>
     </section>
 
@@ -88,6 +92,26 @@ function minutesLabel(minutes: number | null): string {
         <p class="mt-3 text-xs text-muted">{{ card.label }}</p>
         <strong class="app-value mt-1 block text-xl">{{ card.value }} <span v-if="card.showUnit" class="text-xs font-normal text-muted">{{ primary?.metric.unit }}</span></strong>
       </article>
+    </section>
+
+    <section class="app-card mt-5 rounded-3xl p-4 sm:p-6">
+      <div class="app-section-heading mb-4"><span class="app-icon-tile app-icon-tile--blue"><AppIcon name="chart" class="size-6" /></span><div><h2>{{ t('analysis.weightForecast') }}</h2><p>{{ t('analysis.weightForecastHint') }}</p></div></div>
+      <p v-if="hasWeightProjection && weightForecast.forecastDate" class="mb-4 text-sm text-muted">{{ t('analysis.forecastDate', { date: dayjs(weightForecast.forecastDate).format('YYYY-MM-DD') }) }}</p>
+      <p v-else class="mb-4 text-sm text-muted">{{ t(weightForecast.stale ? 'analysis.forecastStale' : 'analysis.forecastInsufficient') }}</p>
+      <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <article v-for="projection in weightForecast.projections" :key="projection.period" class="app-inner-card p-4">
+          <p class="text-sm font-medium text-muted">{{ t('common.dayAverage', { count: projection.period }) }}</p>
+          <strong class="app-value mt-2 block text-xl">{{ projection.value == null ? '—' : projection.value.toFixed(2) }} <span v-if="projection.value != null" class="text-xs font-normal text-muted">kg</span></strong>
+          <p class="mt-1 text-xs text-muted">{{ t(projection.direction ? `analysis.forecastDirection.${projection.direction}` : 'analysis.forecastNoData') }}</p>
+        </article>
+      </div>
+      <p class="mt-4 text-xs text-muted">{{ t('analysis.forecastMethod') }}</p>
+
+      <div class="mt-5 rounded-2xl border p-4" :class="weightForecast.fluctuation?.status === 'warning' ? 'border-error/30 bg-error/5' : 'border-default bg-elevated/40'">
+        <div class="flex flex-wrap items-center gap-2"><h3 class="font-semibold">{{ t('analysis.weightFluctuation') }}</h3><span v-if="weightForecast.fluctuation" class="rounded-full px-2.5 py-1 text-xs font-semibold" :class="weightForecast.fluctuation.status === 'warning' ? 'bg-error/10 text-error' : weightForecast.fluctuation.status === 'normal' ? 'bg-warning/10 text-warning' : 'bg-primary/10 text-primary'">{{ t(`analysis.fluctuationStatus.${weightForecast.fluctuation.status}`) }}</span></div>
+        <p v-if="weightForecast.fluctuation" class="mt-2 text-sm" :class="weightForecast.fluctuation.status === 'warning' ? 'text-error' : 'text-muted'">{{ t(`analysis.fluctuationDetail.${weightForecast.fluctuation.status}`, { latest: weightForecast.fluctuation.latest, previous: weightForecast.fluctuation.previous, change: `${weightForecast.fluctuation.changePercent > 0 ? '+' : ''}${weightForecast.fluctuation.changePercent}`, lower: weightForecast.fluctuation.lower.toFixed(2), upper: weightForecast.fluctuation.upper.toFixed(2) }) }}</p>
+        <p v-else class="mt-2 text-sm text-muted">{{ t('analysis.fluctuationInsufficient') }}</p>
+      </div>
     </section>
 
     <section class="app-card mt-5 rounded-3xl p-4 sm:p-6">

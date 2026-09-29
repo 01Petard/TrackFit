@@ -107,6 +107,19 @@ describe('前端数据业务', () => {
     expect(analytics?.points).toHaveLength(1)
     expect(analytics?.movingAverages[3]).toEqual([{ measuredAt: '2026-07-04T08:00:00.000Z', value: 78 }])
   })
+
+  it('筛选区间没有实测点时仍保留区间内的插值均线', () => {
+    const data = fixture()
+    for (const [day, value] of [[1, 80], [7, 68]] as const) {
+      saveMeasurement(data, {
+        measuredAt: new Date(Date.UTC(2026, 6, day, 8)).toISOString(),
+        values: [{ metricId: 1, value }],
+      })
+    }
+    const analytics = getAnalytics(data, 'weight', '2026-07-04T00:00:00.000Z', '2026-07-06T23:59:59.000Z')
+    expect(analytics?.points).toEqual([])
+    expect(analytics?.movingAverages[3].map(point => point.value)).toEqual([76, 74, 72])
+  })
 })
 
 function fixture(): TrackFitData {

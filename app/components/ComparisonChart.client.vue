@@ -94,6 +94,6 @@ const option = computed(() => {
 </script>
 
 <template>
-  <div v-if="primary.points.length" class="h-[420px] w-full"><VChart autoresize :option="option" /></div>
+  <div v-if="primary.points.length || visibleMovingAverages.some(period => primary.movingAverages[period].length)" class="h-[420px] w-full"><VChart autoresize :option="option" /></div>
   <div v-else class="grid h-[420px] place-items-center text-sm text-muted">{{ t('chart.noMatchingData') }}</div>
 </template>
