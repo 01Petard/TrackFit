@@ -114,7 +114,7 @@ async function save() {
             </div>
             <div>
               <p class="mb-2 flex items-center gap-2 text-sm font-medium"><AppIcon name="clock" class="size-4 text-primary" />{{ t('behaviorDialog.durationMinutes') }}</p>
-              <AppNumberField v-model.number="training.durationMinutes" :label="t('behaviorDialog.durationMinutes')" hide-label unit="min" required :min="1" :max="1440" duration-unit="minutes" :placeholder="t('behaviorDialog.durationPlaceholder')" :recent="props.item?.training?.durationMinutes" :suggestions="[20, 25, 30, 35, 45]" />
+              <AppNumberField v-model.number="training.durationMinutes" :label="t('behaviorDialog.durationMinutes')" hide-label unit="min" required :min="1" :max="1440" duration-unit="minutes" :placeholder="t('behaviorDialog.durationPlaceholder')" :recent="props.item?.training?.durationMinutes" :suggestions="[20, 25, 30, 35, 40]" />
             </div>
             <label class="block">
               <span class="mb-2 flex items-center gap-2 text-sm font-medium"><AppIcon name="file" class="size-4 text-primary" />{{ t('common.note') }} <span class="font-normal text-muted">{{ t('common.optional') }}</span></span>
