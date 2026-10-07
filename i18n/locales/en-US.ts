@@ -11,6 +11,8 @@ export default defineI18nLocale(() => ({
     saving: 'Saving…',
     saveRecord: 'Save record',
     note: 'Note',
+    addNote: 'Add a note',
+    editNote: 'Edit note',
     optional: 'Optional',
     minuteUnit: 'min',
     pointUnit: 'pts',

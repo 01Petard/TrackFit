@@ -143,6 +143,9 @@ button { transition: background-color 150ms ease, border-color 150ms ease, color
 .app-table tbody tr { transition: background-color 150ms ease; }
 .app-table tbody tr:hover { background: #f5faf7; }
 
+.app-note > summary { list-style: none; }
+.app-note > summary::-webkit-details-marker { display: none; }
+
 @media (min-width: 1280px) {
   .app-main-width { max-width: 1440px; }
 }

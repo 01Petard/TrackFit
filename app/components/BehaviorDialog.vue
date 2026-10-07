@@ -116,11 +116,14 @@ async function save() {
               <p class="mb-2 flex items-center gap-2 text-sm font-medium"><AppIcon name="clock" class="size-4 text-primary" />{{ t('behaviorDialog.durationMinutes') }}</p>
               <AppNumberField v-model.number="training.durationMinutes" :label="t('behaviorDialog.durationMinutes')" hide-label unit="min" required :min="1" :max="1440" duration-unit="minutes" :placeholder="t('behaviorDialog.durationPlaceholder')" :recent="props.item?.training?.durationMinutes" :suggestions="[20, 25, 30, 35, 40]" />
             </div>
-            <label class="block">
-              <span class="mb-2 flex items-center gap-2 text-sm font-medium"><AppIcon name="file" class="size-4 text-primary" />{{ t('common.note') }} <span class="font-normal text-muted">{{ t('common.optional') }}</span></span>
-              <textarea v-model="training.note" maxlength="200" rows="3" class="w-full resize-none rounded-xl border border-default bg-default px-4 py-3 outline-none focus:border-primary" :placeholder="t('behaviorDialog.notePlaceholder')" />
+            <details class="app-note group">
+              <summary class="flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-lg text-sm text-muted transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
+                <span class="flex items-center gap-2.5"><AppIcon name="file" class="size-4" /><span class="group-open:hidden">{{ t(training.note ? 'common.editNote' : 'common.addNote') }}</span><span class="hidden group-open:inline">{{ t('common.note') }}</span></span>
+                <AppIcon name="chevronRight" class="size-4 transition-transform group-open:rotate-90" />
+              </summary>
+              <textarea v-model="training.note" :aria-label="t('common.note')" maxlength="200" rows="3" class="mt-2 block w-full resize-y rounded-xl border border-default bg-slate-50/70 px-4 py-3 text-sm leading-6 outline-none focus:border-primary" :placeholder="t('behaviorDialog.notePlaceholder')" />
               <span class="mt-1 block text-right text-xs text-muted">{{ training.note.length }} / 200</span>
-            </label>
+            </details>
           </template>
 
           <template v-else>

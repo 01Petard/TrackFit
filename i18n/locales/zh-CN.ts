@@ -11,6 +11,8 @@ export default defineI18nLocale(() => ({
     saving: '保存中…',
     saveRecord: '保存记录',
     note: '备注',
+    addNote: '添加备注',
+    editNote: '编辑备注',
     optional: '可选',
     minuteUnit: '分钟',
     pointUnit: '分',
