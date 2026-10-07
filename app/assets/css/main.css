@@ -2,7 +2,8 @@
 @import "@nuxt/ui";
 
 :root {
-  color-scheme: light;
+  /* 禁止手机浏览器的自动暗色处理，保持页面和原生控件使用浅色。 */
+  color-scheme: only light;
   --app-bg: #eef7f7;
   --app-surface: #ffffff;
   --app-border: #e2edf0;
@@ -14,6 +15,8 @@
 html { background: var(--app-bg); }
 
 body {
+  /* body 显式声明，确保自动暗色处理下子元素仍继承 only light。 */
+  color-scheme: only light;
   min-width: 320px;
   min-height: 100vh;
   background: linear-gradient(rgb(240 249 249 / .2), rgb(239 247 249 / .5)), url('/images/health-background.webp') center top / cover fixed, var(--app-bg);
