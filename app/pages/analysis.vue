@@ -96,11 +96,16 @@ function minutesLabel(minutes: number | null): string {
       </ClientOnly>
     </section>
 
-    <section v-if="summaryCards.length" class="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
-      <article v-for="card in summaryCards" :key="card.label" class="app-card p-4">
-        <span class="app-icon-tile app-icon-tile--blue"><AppIcon :name="card.icon" class="size-5" /></span>
-        <p class="mt-3 text-xs text-muted">{{ card.label }}</p>
-        <strong class="app-value mt-1 block text-xl">{{ card.value }} <span v-if="card.showUnit" class="text-xs font-normal text-muted">{{ primary?.metric.unit }}</span></strong>
+    <section v-if="summaryCards.length" class="analysis-summary app-card grid grid-cols-2 overflow-hidden sm:grid-cols-3 xl:grid-cols-6">
+      <article v-for="(card, index) in summaryCards" :key="card.label" class="analysis-stat min-w-0 px-4 py-5 sm:px-5">
+        <div class="flex items-center gap-2.5">
+          <span class="analysis-stat-icon app-icon-tile" :class="index === 0 ? '' : index === 3 ? 'app-icon-tile--purple' : 'app-icon-tile--blue'"><AppIcon :name="card.icon" class="size-4" /></span>
+          <p class="text-xs font-medium text-muted">{{ card.label }}</p>
+        </div>
+        <strong class="app-value mt-4 flex flex-wrap items-baseline gap-x-1.5 gap-y-1 leading-none" :class="index === 4 ? 'text-lg sm:text-xl' : 'text-2xl'">
+          <span>{{ card.value }}</span>
+          <span v-if="card.showUnit" class="text-xs font-normal text-muted">{{ primary?.metric.unit }}</span>
+        </strong>
       </article>
     </section>
 
@@ -182,3 +187,28 @@ function minutesLabel(minutes: number | null): string {
     </section>
   </div>
 </template>
+
+<style scoped>
+.analysis-summary {
+  gap: 1px;
+  background: var(--app-border);
+}
+
+.analysis-stat {
+  background: var(--app-surface);
+}
+
+.analysis-stat:first-child {
+  background: #f2fbf6;
+}
+
+.analysis-stat:first-child .app-value {
+  color: #079f5b;
+}
+
+.analysis-stat-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}
+</style>

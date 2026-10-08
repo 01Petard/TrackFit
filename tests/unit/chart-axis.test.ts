@@ -3,7 +3,7 @@ import { init, use } from 'echarts/core'
 import { SVGRenderer } from 'echarts/renderers'
 import { LineChart } from 'echarts/charts'
 import { DataZoomComponent, GridComponent } from 'echarts/components'
-import { chartTimeAxis } from '../../app/utils/chart-axis'
+import { chartTimeAxis, toDailyChartPoints } from '../../app/utils/chart-axis'
 
 use([SVGRenderer, LineChart, DataZoomComponent, GridComponent])
 
@@ -44,10 +44,25 @@ describe('图表日期刻度', () => {
     expect(labels).toContain('2027')
   })
 
-  it('放大到同一天时保留小时刻度', () => {
-    const labels = renderedLabels(1100, new Date(2026, 7, 1, 8), new Date(2026, 7, 1, 16))
+  it('日内缩放不生成时分秒刻度', () => {
+    const labels = renderedLabels(1100, new Date(2026, 7, 1), new Date(2026, 7, 2))
     expect(labels).toContain('08-01')
-    expect(labels).toContain('08:00')
-    expect(labels).toContain('16:00')
+    expect(labels.some(label => /\d{2}:\d{2}/.test(label ?? ''))).toBe(false)
+  })
+
+  it('同一天的实测点和均线对齐当天零点，保留每条原始记录及数值', () => {
+    const points = [
+      { measuredAt: new Date(2026, 7, 19, 8, 2, 22).toISOString(), value: 75.29 },
+      { measuredAt: new Date(2026, 7, 19, 20, 15).toISOString(), value: 75.1 },
+      { measuredAt: new Date(2026, 7, 20, 7, 30).toISOString(), value: 75 },
+    ]
+    const original = structuredClone(points)
+    expect(toDailyChartPoints(points)).toEqual([
+      [new Date(2026, 7, 19).getTime(), 75.29],
+      [new Date(2026, 7, 19).getTime(), 75.1],
+      [new Date(2026, 7, 20).getTime(), 75],
+    ])
+    expect(points).toEqual(original)
+    expect(chartTimeAxis.axisPointer.label.formatter({ value: new Date(2026, 7, 19).getTime() })).toBe('08-19')
   })
 })

@@ -2,7 +2,7 @@
 import type { MovingAveragePeriod, MovingAveragePointDto } from '../../shared/types/api'
 import type { LineSeriesOption } from 'echarts/charts'
 import { resolveYAxisBounds } from '../../shared/utils/analytics'
-import { chartTimeAxis } from '../utils/chart-axis'
+import { chartTimeAxis, toDailyChartPoints } from '../utils/chart-axis'
 import { computed } from 'vue'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
@@ -50,7 +50,7 @@ const option = computed(() => {
     smoothMonotone: 'x',
     lineStyle: { width: 2, type: 'dashed', color: colors[period] },
     itemStyle: { color: colors[period] },
-    data: props.movingAverages[period].map(point => [point.measuredAt, point.value]),
+    data: toDailyChartPoints(props.movingAverages[period]),
   }))
   return {
     animationDuration: 450,
@@ -68,6 +68,7 @@ const option = computed(() => {
       itemWidth: 24,
       itemHeight: 12,
       itemGap: 16,
+      lineStyle: { type: 'solid', width: 2 },
       textStyle: { fontSize: 12, lineHeight: 18 },
       data: [t('chart.raw'), ...props.visibleMovingAverages.map(period => t(`common.movingAverage.${period}`))],
     },
@@ -96,7 +97,7 @@ const option = computed(() => {
         lineStyle: { width: 2, color: '#10b981' },
         itemStyle: { color: '#10b981', borderColor: '#ecfdf5', borderWidth: 2 },
         areaStyle: { color: 'rgba(16,185,129,.08)' },
-        data: props.points.map(point => [point.measuredAt, point.value]),
+        data: toDailyChartPoints(props.points),
       },
       ...averageSeries,
     ]),

@@ -2,7 +2,7 @@
 import type { AnalyticsDto, MovingAveragePeriod } from '../../shared/types/api'
 import type { LineSeriesOption } from 'echarts/charts'
 import { resolveYAxisBounds } from '../../shared/utils/analytics'
-import { chartTimeAxis } from '../utils/chart-axis'
+import { chartTimeAxis, toDailyChartPoints } from '../utils/chart-axis'
 import { computed } from 'vue'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
@@ -40,7 +40,7 @@ const option = computed(() => {
       symbolSize: 8,
       lineStyle: { width: 2, color: '#10b981' },
       itemStyle: { color: '#10b981' },
-      data: props.primary.points.map(point => [point.measuredAt, point.value]),
+      data: toDailyChartPoints(props.primary.points),
     },
     ...props.visibleMovingAverages.map((period): LineSeriesOption => ({
       name: `${metricName(props.primary.metric)} · ${t(`common.movingAverage.${period}`)}`,
@@ -51,7 +51,7 @@ const option = computed(() => {
       smoothMonotone: 'x',
       lineStyle: { width: 2, type: 'dashed', color: colors[period] },
       itemStyle: { color: colors[period] },
-      data: props.primary.movingAverages[period].map(point => [point.measuredAt, point.value]),
+      data: toDailyChartPoints(props.primary.movingAverages[period]),
     })),
     ...(secondary ? [{
       name: metricName(secondary.metric),
@@ -60,7 +60,7 @@ const option = computed(() => {
       symbolSize: 7,
       lineStyle: { width: 2, color: '#6366f1' },
       itemStyle: { color: '#6366f1' },
-      data: secondary.points.map(point => [point.measuredAt, point.value]),
+      data: toDailyChartPoints(secondary.points),
     }] : []),
   ]
 
@@ -77,6 +77,7 @@ const option = computed(() => {
       itemWidth: 24,
       itemHeight: 12,
       itemGap: 16,
+      lineStyle: { type: 'solid', width: 2 },
       textStyle: { fontSize: 12, lineHeight: 18 },
     },
     xAxis: chartTimeAxis,
