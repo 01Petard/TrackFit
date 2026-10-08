@@ -296,6 +296,9 @@ export default defineI18nLocale(() => ({
     forecastDirection: { up: 'Rising trend', down: 'Falling trend', stable: 'Stable trend' },
     forecastMethod: 'Moving averages include simulated values for missing days. Each line is then projected 7 days ahead from its recent change. These are trend estimates, not guaranteed values or medical advice.',
     weightFluctuation: 'Latest weight variation',
+    recentWeightChange: 'Weight change over the last 7 records',
+    recentWeightChangeDetail: 'Across the last 7 measurements, weight changed from {first} kg to {latest} kg. The percentage is relative to the earliest of these 7 measurements.',
+    recentWeightChangeInsufficient: 'At least 7 weight measurements are needed to calculate the percentage change over the last 7 records.',
     fluctuationStatus: { stable: 'Stable (≤0.5%)', normal: 'Normal variation (0.5%–1%)', warning: 'Over 1% · Warning' },
     fluctuationDetail: {
       stable: 'Latest {latest} kg versus previous {previous} kg: {change}%. This is stable; the ±1% reference range is {lower}–{upper} kg.',

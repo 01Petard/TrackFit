@@ -116,6 +116,15 @@ function minutesLabel(minutes: number | null): string {
       </div>
       <p class="mt-4 text-xs text-muted">{{ t('analysis.forecastMethod') }}</p>
 
+      <div class="mt-5 rounded-2xl border border-default bg-elevated/40 p-4">
+        <div class="flex flex-wrap items-center gap-2">
+          <h3 class="font-semibold">{{ t('analysis.recentWeightChange') }}</h3>
+          <span v-if="weightForecast.recentChange" class="rounded-full bg-elevated px-2.5 py-1 text-xs font-semibold text-highlighted tabular-nums">{{ `${weightForecast.recentChange.changePercent > 0 ? '+' : ''}${weightForecast.recentChange.changePercent.toFixed(2)}%` }}</span>
+        </div>
+        <p v-if="weightForecast.recentChange" class="mt-2 text-sm text-muted">{{ t('analysis.recentWeightChangeDetail', { first: weightForecast.recentChange.first, latest: weightForecast.recentChange.latest }) }}</p>
+        <p v-else class="mt-2 text-sm text-muted">{{ t('analysis.recentWeightChangeInsufficient') }}</p>
+      </div>
+
       <div class="mt-5 rounded-2xl border p-4" :class="weightForecast.fluctuation?.status === 'warning' ? 'border-error/30 bg-error/5' : 'border-default bg-elevated/40'">
         <div class="flex flex-wrap items-center gap-2"><h3 class="font-semibold">{{ t('analysis.weightFluctuation') }}</h3><span v-if="weightForecast.fluctuation" class="rounded-full px-2.5 py-1 text-xs font-semibold" :class="weightForecast.fluctuation.status === 'warning' ? 'bg-error/10 text-error' : weightForecast.fluctuation.status === 'normal' ? 'bg-warning/10 text-warning' : 'bg-primary/10 text-primary'">{{ t(`analysis.fluctuationStatus.${weightForecast.fluctuation.status}`) }}</span></div>
         <p v-if="weightForecast.fluctuation" class="mt-2 text-sm" :class="weightForecast.fluctuation.status === 'warning' ? 'text-error' : 'text-muted'">{{ t(`analysis.fluctuationDetail.${weightForecast.fluctuation.status}`, { latest: weightForecast.fluctuation.latest, previous: weightForecast.fluctuation.previous, change: `${weightForecast.fluctuation.changePercent > 0 ? '+' : ''}${weightForecast.fluctuation.changePercent}`, lower: weightForecast.fluctuation.lower.toFixed(2), upper: weightForecast.fluctuation.upper.toFixed(2) }) }}</p>

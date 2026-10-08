@@ -15,6 +15,26 @@ function weightAnalytics(values: number[]) {
 }
 
 describe('体重趋势预测', () => {
+  it('仅比较最近七次实测记录的首尾值，并保留两位小数', () => {
+    const result = analyzeWeightForecast(weightAnalytics([120, 80, 79, 78, 77, 76, 75, 74]))
+    expect(result.recentChange).toEqual({ first: 80, latest: 74, changePercent: -7.5 })
+    expect(analyzeWeightForecast(weightAnalytics([70, 71, 72, 73, 74, 75, 76])).recentChange?.changePercent).toBe(8.57)
+    expect(analyzeWeightForecast(weightAnalytics([70, 71, 72, 73, 72, 71, 70])).recentChange?.changePercent).toBe(0)
+  })
+
+  it('不足七次实测记录时不使用插值补足，且避免零基准除法', () => {
+    expect(analyzeWeightForecast(null).recentChange).toBeNull()
+    expect(analyzeWeightForecast(weightAnalytics([70, 71, 72, 73, 74, 75])).recentChange).toBeNull()
+    expect(analyzeWeightForecast(weightAnalytics([0, 71, 72, 73, 74, 75, 76])).recentChange).toBeNull()
+    const analytics = weightAnalytics([80, 73])
+    const sparse = { ...analytics, ...buildAnalytics([
+      { id: 1, measuredAt: '2026-09-01T08:00:00.000Z', value: 80 },
+      { id: 2, measuredAt: '2026-09-08T08:00:00.000Z', value: 73 },
+    ]) }
+    expect(sparse.movingAverages[7].length).toBeGreaterThan(0)
+    expect(analyzeWeightForecast(sparse).recentChange).toBeNull()
+  })
+
   it('四条均线分别外推未来七天，且只在累积足够天数后给出结果', () => {
     const values = Array.from({ length: 97 }, (_, index) => 80 - index * 0.1)
     const result = analyzeWeightForecast(weightAnalytics(values), new Date('2026-12-06T08:00:00.000Z'))

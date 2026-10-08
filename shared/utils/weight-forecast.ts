@@ -23,10 +23,19 @@ export function analyzeWeightForecast(analytics: AnalyticsDto | null, now = new 
   stale: boolean
   projections: WeightProjection[]
   fluctuation: WeightFluctuation | null
+  recentChange: { first: number, latest: number, changePercent: number } | null
 } {
   const points = analytics?.points ?? []
   const latest = points.at(-1)
   const previous = points.at(-2)
+  const firstOfSeven = points.at(-7)
+  const recentChange = latest && firstOfSeven && firstOfSeven.value > 0
+    ? {
+        first: firstOfSeven.value,
+        latest: latest.value,
+        changePercent: Math.round((latest.value / firstOfSeven.value - 1) * 10000) / 100,
+      }
+    : null
   const fluctuation = latest && previous && previous.value > 0
     ? {
         latest: latest.value,
@@ -62,5 +71,5 @@ export function analyzeWeightForecast(analytics: AnalyticsDto | null, now = new 
     }
   })
 
-  return { forecastDate, stale, projections, fluctuation }
+  return { forecastDate, stale, projections, fluctuation, recentChange }
 }
