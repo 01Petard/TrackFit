@@ -250,9 +250,9 @@ function trendSymbol(direction: 'up' | 'down' | 'stable' | 'insufficient'): stri
 
     <section class="grid gap-4 xl:h-[405px] xl:grid-cols-[minmax(0,1.65fr)_minmax(280px,.75fr)]">
       <article data-testid="weight-trend-card" class="app-card h-full overflow-hidden p-5 sm:p-6">
-        <div class="mb-5 flex items-start justify-between gap-3">
+        <div class="mb-5 flex flex-col items-start gap-3 sm:flex-row sm:justify-between">
           <div class="app-section-heading"><span class="app-icon-tile"><AppIcon name="chart" class="size-6" /></span><div><h2>{{ t('home.insights.title') }}</h2><p>{{ t('home.insights.description') }}</p></div></div>
-          <NuxtLink :to="localePath('/analysis')" class="shrink-0 text-sm font-semibold text-primary">{{ t('home.insights.open') }} →</NuxtLink>
+          <NuxtLink :to="localePath('/analysis')" class="app-btn app-btn--outline shrink-0">{{ t('home.insights.open') }}<AppIcon name="arrowRight" class="size-4" /></NuxtLink>
         </div>
         <div data-testid="smart-insights" class="grid gap-3 md:grid-cols-3">
           <article v-for="insight in featuredInsights" :key="insight.code" data-testid="smart-insight-card" class="app-inner-card min-w-0 p-4">
@@ -285,7 +285,7 @@ function trendSymbol(direction: 'up' | 'down' | 'stable' | 'insufficient'): stri
     </section>
 
     <section class="app-card mt-4 p-5 sm:p-6">
-      <div class="mb-4 flex flex-wrap items-center justify-between gap-3"><div class="app-section-heading"><span class="app-icon-tile app-icon-tile--blue"><AppIcon name="chart" class="size-6" /></span><div><h2>{{ t('home.weightTrend.chartTitle') }}</h2><p>{{ t('home.weightTrend.description') }}</p></div></div><NuxtLink :to="localePath('/analysis')" class="text-sm font-semibold text-primary hover:underline">{{ t('home.weightTrend.viewFullAnalysis') }} →</NuxtLink></div>
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-3"><div class="app-section-heading"><span class="app-icon-tile app-icon-tile--blue"><AppIcon name="chart" class="size-6" /></span><div><h2>{{ t('home.weightTrend.chartTitle') }}</h2><p>{{ t('home.weightTrend.description') }}</p></div></div><NuxtLink :to="localePath('/analysis')" class="app-btn app-btn--outline shrink-0">{{ t('home.weightTrend.viewFullAnalysis') }}<AppIcon name="arrowRight" class="size-4" /></NuxtLink></div>
       <div class="mb-2 flex flex-wrap gap-2"><label v-for="period in ([7, 30, 90] as const)" :key="period" class="flex items-center gap-2 rounded-lg border border-default px-2.5 py-1.5 text-xs"><input v-model="visibleMovingAverages" type="checkbox" :value="period" class="size-3.5 accent-emerald-500">{{ t(`common.movingAverage.${period}`) }}</label></div>
       <ClientOnly><MetricChart :points="analytics?.points ?? []" :moving-averages="analytics?.movingAverages" :visible-moving-averages="visibleMovingAverages" :target-minimum="settings.desiredWeightMinimum" :target-maximum="settings.desiredWeightMaximum" metric-code="weight" :unit="analytics?.metric.unit ?? 'kg'" height="340px" /><template #fallback><div class="grid h-[340px] place-items-center text-sm text-muted">{{ t('common.loadingChart') }}</div></template></ClientOnly>
     </section>

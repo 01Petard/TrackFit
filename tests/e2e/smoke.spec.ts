@@ -148,10 +148,10 @@ test('补记支持体重和训练自选日期，体重默认使用最近记录',
     })
     expect(seeded.ok()).toBe(true)
     await page.goto('/zh/')
-    await expect(page.getByRole('link', { name: '查看完整记录分析 →' })).toHaveAttribute('href', '/zh/analysis')
+    await expect(page.getByRole('link', { name: '查看完整记录分析' })).toHaveAttribute('href', '/zh/analysis')
     await expect(page.getByText('当前体重在目标区间内')).toHaveCount(0)
     await expect(page.getByText(/当前体重处于个人目标区间/)).toHaveCount(0)
-    await page.getByRole('link', { name: '查看完整记录分析 →' }).click()
+    await page.getByRole('link', { name: '查看完整记录分析' }).click()
     await expect(page.getByText('当前体重在目标区间内')).toBeVisible()
     await page.goto('/zh/')
 
