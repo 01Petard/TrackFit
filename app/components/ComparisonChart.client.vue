@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { AnalyticsDto, MovingAveragePeriod } from '../../shared/types/api'
+import type { LineSeriesOption } from 'echarts/charts'
 import { resolveYAxisBounds } from '../../shared/utils/analytics'
 import { chartTimeAxis } from '../utils/chart-axis'
 import { computed } from 'vue'
@@ -20,6 +21,7 @@ const props = defineProps<{
 }>()
 const { t } = useI18n()
 const { metricName } = useTrackFitI18n()
+const { focusSeries, onMouseOver, onMouseOut, onClick, onBlankClick } = useChartLineFocus()
 
 const colors: Record<MovingAveragePeriod, string> = {
   3: '#f59e0b',
@@ -30,7 +32,7 @@ const colors: Record<MovingAveragePeriod, string> = {
 
 const option = computed(() => {
   const secondary = props.secondary
-  const series = [
+  const series: LineSeriesOption[] = [
     {
       name: `${metricName(props.primary.metric)} · ${t('chart.rawShort')}`,
       type: 'line',
@@ -40,7 +42,7 @@ const option = computed(() => {
       itemStyle: { color: '#10b981' },
       data: props.primary.points.map(point => [point.measuredAt, point.value]),
     },
-    ...props.visibleMovingAverages.map(period => ({
+    ...props.visibleMovingAverages.map((period): LineSeriesOption => ({
       name: `${metricName(props.primary.metric)} · ${t(`common.movingAverage.${period}`)}`,
       type: 'line',
       yAxisIndex: 0,
@@ -48,11 +50,12 @@ const option = computed(() => {
       smooth: 0.35,
       smoothMonotone: 'x',
       lineStyle: { width: 2, type: 'dashed', color: colors[period] },
+      itemStyle: { color: colors[period] },
       data: props.primary.movingAverages[period].map(point => [point.measuredAt, point.value]),
     })),
     ...(secondary ? [{
       name: metricName(secondary.metric),
-      type: 'line',
+      type: 'line' as const,
       yAxisIndex: 1,
       symbolSize: 7,
       lineStyle: { width: 2, color: '#6366f1' },
@@ -65,7 +68,17 @@ const option = computed(() => {
     animationDuration: 450,
     grid: { left: 54, right: 78, top: 64, bottom: 76 },
     tooltip: { trigger: 'axis' },
-    legend: { type: 'scroll', top: 0, left: 'center', right: 48 },
+    axisPointer: { triggerEmphasis: false },
+    legend: {
+      type: 'scroll',
+      top: 0,
+      left: 'center',
+      right: 48,
+      itemWidth: 24,
+      itemHeight: 12,
+      itemGap: 16,
+      textStyle: { fontSize: 12, lineHeight: 18 },
+    },
     xAxis: chartTimeAxis,
     yAxis: [
       {
@@ -89,12 +102,12 @@ const option = computed(() => {
       { type: 'inside', yAxisIndex: secondary ? [0, 1] : 0, filterMode: 'none', zoomOnMouseWheel: 'shift' },
       { type: 'slider', yAxisIndex: secondary ? [0, 1] : 0, filterMode: 'none', orient: 'vertical', width: 18, right: 8 },
     ],
-    series,
+    series: focusSeries(series),
   }
 })
 </script>
 
 <template>
-  <div v-if="primary.points.length || visibleMovingAverages.some(period => primary.movingAverages[period].length)" class="h-[420px] w-full"><VChart autoresize :option="option" /></div>
+  <div v-if="primary.points.length || visibleMovingAverages.some(period => primary.movingAverages[period].length)" class="h-[420px] w-full"><VChart autoresize :option="option" @mouseover="onMouseOver" @mouseout="onMouseOut" @globalout="onMouseOut" @click="onClick" @zr:click="onBlankClick" /></div>
   <div v-else class="grid h-[420px] place-items-center text-sm text-muted">{{ t('chart.noMatchingData') }}</div>
 </template>
