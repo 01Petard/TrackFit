@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { MovingAveragePeriod, MovingAveragePointDto } from '../../shared/types/api'
 import { resolveYAxisBounds } from '../../shared/utils/analytics'
+import { chartTimeAxis } from '../utils/chart-axis'
 import { computed } from 'vue'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
@@ -39,7 +40,7 @@ const colors: Record<MovingAveragePeriod, string> = {
 const option = computed(() => {
   const yAxisBounds = resolveYAxisBounds(props.metricCode, props.points, props.targetMinimum, props.targetMaximum)
   const averageSeries = props.visibleMovingAverages.map(period => ({
-    name: t('common.dayAverage', { count: period }),
+    name: t(`common.movingAverage.${period}`),
     type: 'line',
     showSymbol: false,
     connectNulls: false,
@@ -60,13 +61,9 @@ const option = computed(() => {
       top: 0,
       left: 'center',
       right: 42,
-      data: [t('chart.raw'), ...props.visibleMovingAverages.map(period => t('common.dayAverage', { count: period }))],
+      data: [t('chart.raw'), ...props.visibleMovingAverages.map(period => t(`common.movingAverage.${period}`))],
     },
-    xAxis: {
-      type: 'time',
-      axisLabel: { color: '#94a3b8', hideOverlap: true, margin: 12 },
-      axisLine: { lineStyle: { color: '#cbd5e1' } },
-    },
+    xAxis: chartTimeAxis,
     yAxis: {
       type: 'value',
       scale: true,

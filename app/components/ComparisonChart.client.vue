@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { AnalyticsDto, MovingAveragePeriod } from '../../shared/types/api'
 import { resolveYAxisBounds } from '../../shared/utils/analytics'
+import { chartTimeAxis } from '../utils/chart-axis'
 import { computed } from 'vue'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
@@ -40,7 +41,7 @@ const option = computed(() => {
       data: props.primary.points.map(point => [point.measuredAt, point.value]),
     },
     ...props.visibleMovingAverages.map(period => ({
-      name: `${metricName(props.primary.metric)} · ${t('common.dayAverage', { count: period })}`,
+      name: `${metricName(props.primary.metric)} · ${t(`common.movingAverage.${period}`)}`,
       type: 'line',
       yAxisIndex: 0,
       showSymbol: false,
@@ -65,7 +66,7 @@ const option = computed(() => {
     grid: { left: 54, right: 78, top: 64, bottom: 76 },
     tooltip: { trigger: 'axis' },
     legend: { type: 'scroll', top: 0, left: 'center', right: 48 },
-    xAxis: { type: 'time', axisLabel: { color: '#94a3b8', hideOverlap: true, margin: 12 } },
+    xAxis: chartTimeAxis,
     yAxis: [
       {
         type: 'value',

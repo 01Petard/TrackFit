@@ -9,7 +9,7 @@ const ranges = computed(() => ['24h', '7d', '30d', '90d', 'all'].map(value => ({
 const range = ref('30d')
 const metricCode = ref('weight')
 const compareCode = ref('')
-const visibleMovingAverages = ref<MovingAveragePeriod[]>([3, 7, 30, 90])
+const visibleMovingAverages = ref<MovingAveragePeriod[]>([7, 30, 90])
 const store = useTrackFitData()
 await store.ensureLoaded()
 const metrics = store.metrics
@@ -22,7 +22,8 @@ const start = computed(() => {
 const primary = computed(() => store.getAnalytics(metricCode.value, start.value))
 const secondary = computed(() => compareCode.value ? store.getAnalytics(compareCode.value, start.value) : null)
 const weightForecast = computed(() => analyzeWeightForecast(store.getAnalytics('weight')))
-const hasWeightProjection = computed(() => weightForecast.value.projections.some(item => item.value != null))
+const weightProjections = computed(() => weightForecast.value.projections.filter(item => item.period !== 3))
+const hasWeightProjection = computed(() => weightProjections.value.some(item => item.value != null))
 const status = store.status
 const settings = store.settings
 const weightTargetStatus = computed(() => {
@@ -74,7 +75,7 @@ function minutesLabel(minutes: number | null): string {
       <div class="border-t border-default pt-4 sm:col-span-2 xl:col-span-3">
         <p class="mb-2 text-xs text-muted">{{ t('analysis.averages') }}</p>
         <div class="flex flex-wrap gap-2">
-          <label v-for="period in ([3, 7, 30, 90] as const)" :key="period" class="flex min-h-10 items-center gap-2 rounded-full border border-default bg-white px-4 py-2 text-sm font-medium hover:bg-primary/10"><input v-model="visibleMovingAverages" type="checkbox" :value="period" class="size-4 accent-emerald-600">{{ t('common.dayAverage', { count: period }) }}</label>
+          <label v-for="period in ([7, 30, 90] as const)" :key="period" class="flex min-h-10 items-center gap-2 rounded-full border border-default bg-white px-4 py-2 text-sm font-medium hover:bg-primary/10"><input v-model="visibleMovingAverages" type="checkbox" :value="period" class="size-4 accent-emerald-600">{{ t(`common.movingAverage.${period}`) }}</label>
         </div>
         <p class="mt-2 text-xs text-muted">{{ t('analysis.interpolationHint') }}</p>
       </div>
@@ -107,9 +108,9 @@ function minutesLabel(minutes: number | null): string {
       <div class="mb-4 flex flex-wrap items-center justify-between gap-3"><div class="app-section-heading"><span class="app-icon-tile app-icon-tile--blue"><AppIcon name="chart" class="size-6" /></span><div><h2>{{ t('analysis.weightForecast') }}</h2><p>{{ t('analysis.weightForecastHint') }}</p></div></div><p v-if="weightTargetStatus" class="text-xs font-medium" :class="weightTargetStatus.class">{{ weightTargetStatus.label }}</p></div>
       <p v-if="hasWeightProjection && weightForecast.forecastDate" class="mb-4 text-sm text-muted">{{ t('analysis.forecastDate', { date: dayjs(weightForecast.forecastDate).format('YYYY-MM-DD') }) }}</p>
       <p v-else class="mb-4 text-sm text-muted">{{ t(weightForecast.stale ? 'analysis.forecastStale' : 'analysis.forecastInsufficient') }}</p>
-      <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <article v-for="projection in weightForecast.projections" :key="projection.period" class="app-inner-card p-4">
-          <p class="text-sm font-medium text-muted">{{ t('common.dayAverage', { count: projection.period }) }}</p>
+      <div class="grid gap-3 sm:grid-cols-3">
+        <article v-for="projection in weightProjections" :key="projection.period" class="app-inner-card p-4">
+          <p class="text-sm font-medium text-muted">{{ t(`common.movingAverage.${projection.period}`) }}</p>
           <strong class="app-value mt-2 block text-xl">{{ projection.value == null ? '—' : projection.value.toFixed(2) }} <span v-if="projection.value != null" class="text-xs font-normal text-muted">kg</span></strong>
           <p class="mt-1 text-xs text-muted">{{ t(projection.direction ? `analysis.forecastDirection.${projection.direction}` : 'analysis.forecastNoData') }}</p>
         </article>
