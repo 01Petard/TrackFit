@@ -1,5 +1,5 @@
 import type { SleepWrite, TrackFitData, TrainingWrite } from '../schemas/trackfit'
-import type { BehaviorQuery, BehaviorTimelineItemDto, CorrelationDto, PeriodReportDto, SleepRecordDto } from '../types/api'
+import type { BehaviorQuery, BehaviorTimelineItemDto, CorrelationComparisonDto, CorrelationDto, PeriodReportDto, SleepRecordDto } from '../types/api'
 import { sleepWriteSchema, trainingWriteSchema } from '../schemas/trackfit'
 import { TrackFitDomainError } from './domain-error'
 
@@ -80,6 +80,41 @@ export function buildBehaviorCorrelations(data: TrackFitData): CorrelationDto[] 
       ].filter((item): item is CorrelationDto => item != null)
     )))
     .sort((a, b) => Math.abs(b.coefficient) - Math.abs(a.coefficient))
+}
+
+export function buildWeightCorrelationComparison(data: TrackFitData, now = new Date()): CorrelationComparisonDto {
+  const recentEnd = localDayKey(now)
+  const recentStart = shiftDay(recentEnd, -29)
+  const previousEnd = shiftDay(recentStart, -1)
+  const previousStart = shiftDay(recentStart, -30)
+  const metric = data.metrics.find(item => item.code === 'weight')
+  const measurementDays = buildMeasurementDays(data)
+  const behaviorDays = buildBehaviorDays(data)
+  const factors: CorrelationDto['factor'][] = ['sleepDuration', 'sleepQuality', 'trainingDuration']
+  return {
+    recentStart,
+    recentEnd,
+    previousStart,
+    previousEnd,
+    results: metric ? factors.flatMap(factor => correlationLags.map((lagDays) => {
+      const recent = correlation(metric, measurementDays, behaviorDays, factor, lagDays, { start: recentStart, end: recentEnd })
+      const previous = correlation(metric, measurementDays, behaviorDays, factor, lagDays, { start: previousStart, end: previousEnd })
+      let strengthChange: CorrelationComparisonDto['results'][number]['strengthChange'] = 'insufficient'
+      if (recent && previous) {
+        // Compare strength at the same lag; the 0.05 band describes small changes, not statistical significance.
+        const change = round(Math.abs(recent.coefficient) - Math.abs(previous.coefficient), 3)
+        strengthChange = change >= 0.05 ? 'stronger' : change <= -0.05 ? 'weaker' : 'stable'
+      }
+      return {
+        factor,
+        lagDays,
+        recent,
+        previous,
+        strengthChange,
+        directionChanged: !!recent && !!previous && recent.coefficient * previous.coefficient < 0,
+      }
+    })) : [],
+  }
 }
 
 export function buildPeriodReport(data: TrackFitData, period: 'week' | 'month', now = new Date()): PeriodReportDto {
@@ -192,8 +227,11 @@ function correlation(
   behaviorDays: Map<string, Record<CorrelationDto['factor'], number>>,
   factor: CorrelationDto['factor'],
   lagDays: CorrelationDto['lagDays'],
+  window?: { start: string, end: string },
 ): CorrelationDto | null {
   const pairs = [...(measurementDays.get(metric.id) ?? [])].flatMap(([day, value]) => {
+    // Window boundaries apply to measurement days; lagged behavior may precede the window.
+    if (window && (day < window.start || day > window.end)) return []
     const behavior = behaviorDays.get(shiftDay(day, -lagDays))?.[factor]
     return behavior == null || behavior === 0 ? [] : [[value, behavior] as const]
   })

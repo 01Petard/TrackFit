@@ -120,6 +120,21 @@ export interface CorrelationDto {
   sampleSize: number
 }
 
+export interface CorrelationComparisonDto {
+  recentStart: string
+  recentEnd: string
+  previousStart: string
+  previousEnd: string
+  results: Array<{
+    factor: CorrelationDto['factor']
+    lagDays: CorrelationDto['lagDays']
+    recent: CorrelationDto | null
+    previous: CorrelationDto | null
+    strengthChange: 'stronger' | 'weaker' | 'stable' | 'insufficient'
+    directionChanged: boolean
+  }>
+}
+
 export interface PeriodReportDto {
   period: 'week' | 'month'
   start: string

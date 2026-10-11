@@ -11,6 +11,7 @@ import { findLatestMissingDay, saveMakeupDay as saveMakeupDayInData, saveSingleM
 import {
   buildBehaviorCorrelations,
   buildPeriodReport,
+  buildWeightCorrelationComparison,
   createSleepCsv,
   createTrainingCsv,
   deleteSleep as deleteSleepInData,
@@ -166,6 +167,7 @@ export function useTrackFitData() {
     saveSleep: (input: SleepWrite | unknown, id?: number) => mutate(draft => saveSleepInData(draft, input, id)),
     deleteSleep: (id: number) => mutate(draft => deleteSleepInData(draft, id)),
     getBehaviorCorrelations: () => data.value ? buildBehaviorCorrelations(data.value) : [],
+    getWeightCorrelationComparison: (now?: Date) => data.value ? buildWeightCorrelationComparison(data.value, now) : null,
     getPeriodReport: (period: 'week' | 'month', now?: Date) => data.value ? buildPeriodReport(data.value, period, now) : null,
     restore: (input: unknown) => {
       const restored = backupSchema.parse(input)

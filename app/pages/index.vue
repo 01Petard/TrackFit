@@ -244,7 +244,18 @@ function trendSymbol(direction: 'up' | 'down' | 'stable' | 'insufficient'): stri
       <div class="grid gap-3 sm:grid-cols-3">
         <article class="app-inner-card flex items-start gap-3 p-4"><span class="app-icon-tile app-icon-tile--blue"><AppIcon name="run" class="size-6" /></span><div class="min-w-0"><p class="text-sm font-semibold text-[#526b8b]">{{ t('home.behavior.todayTraining') }}</p><strong class="app-value mt-1 block text-2xl font-extrabold">{{ t('common.minutes', { count: todayTraining }) }}</strong><p class="mt-1 text-xs text-[#8a9ab0]">{{ t('home.behavior.todayTrainingHint') }}</p><p v-if="latestSingleMissing.training" class="mt-2 text-xs text-muted">{{ t('makeup.singleMissing', { date: latestSingleMissing.training }) }}<button v-if="store.canWrite.value" type="button" class="ml-2 font-medium text-primary hover:underline" @click="openMakeup('training')">{{ t('makeup.singleAction') }}</button></p></div></article>
         <article class="app-inner-card flex items-start gap-3 p-4"><span class="app-icon-tile app-icon-tile--purple"><AppIcon name="moon" class="size-6" /></span><div class="min-w-0"><p class="text-sm font-semibold text-[#526b8b]">{{ t('home.behavior.latestSleep') }}</p><strong class="app-value mt-1 block text-2xl font-extrabold">{{ latestSleep ? durationLabel(latestSleep.durationMinutes) : t('common.noRecords') }}</strong><p class="mt-1 text-xs text-[#8a9ab0]">{{ t('home.behavior.sleepGoal', { hours: settings.sleepGoalHours }) }}</p><p v-if="latestSingleMissing.sleep" class="mt-2 text-xs text-muted">{{ t('makeup.singleMissing', { date: latestSingleMissing.sleep }) }}<button v-if="store.canWrite.value" type="button" class="ml-2 font-medium text-primary hover:underline" @click="openMakeup('sleep')">{{ t('makeup.singleAction') }}</button></p></div></article>
-        <article class="app-inner-card flex items-start gap-3 p-4"><span class="app-icon-tile"><AppIcon name="streak" class="size-6" /></span><div class="min-w-0"><p class="text-sm font-semibold text-[#526b8b]">{{ t('home.behavior.streak') }}</p><strong class="app-value mt-1 block text-2xl font-extrabold">{{ t('common.days', { count: recordingStreak }) }}</strong><p class="mt-1 text-xs text-[#8a9ab0]">{{ t('home.behavior.streakHint') }}</p><p v-if="latestMissingDay" class="mt-2 text-xs text-warning">{{ t('makeup.latestMissing', { date: latestMissingDay }) }}</p><button v-if="latestMissingDay && store.canWrite.value" type="button" class="mt-2 text-sm font-semibold text-primary hover:underline" @click="openMakeup('all')">{{ t('makeup.action') }}</button></div></article>
+        <article class="app-inner-card flex items-start gap-3 p-4">
+          <span class="app-icon-tile"><AppIcon name="streak" class="size-6" /></span>
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-semibold text-[#526b8b]">{{ t('home.behavior.streak') }}</p>
+            <strong class="app-value mt-1 block text-2xl font-extrabold">{{ t('common.days', { count: recordingStreak }) }}</strong>
+            <p class="mt-1 text-xs text-[#8a9ab0]">{{ t('home.behavior.streakHint') }}</p>
+            <div v-if="latestMissingDay" class="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              <p class="text-xs text-warning">{{ t('makeup.latestMissing', { date: latestMissingDay }) }}</p>
+              <button v-if="store.canWrite.value" type="button" class="shrink-0 whitespace-nowrap text-sm font-semibold text-primary hover:underline" @click="openMakeup('all')">{{ t('makeup.action') }}</button>
+            </div>
+          </div>
+        </article>
       </div>
     </section>
 

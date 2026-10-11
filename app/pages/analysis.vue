@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { MovingAveragePeriod } from '../../shared/types/api'
+import type { CorrelationDto, MovingAveragePeriod } from '../../shared/types/api'
 import { analyzeWeightForecast } from '../../shared/utils/weight-forecast'
 import dayjs from 'dayjs'
 
@@ -37,7 +37,39 @@ const weightTargetStatus = computed(() => {
 })
 const reportPeriod = ref<'week' | 'month'>('week')
 const report = computed(() => store.getPeriodReport(reportPeriod.value))
-const correlations = computed(() => store.getBehaviorCorrelations().slice(0, 8))
+const correlations = computed(() => store.getBehaviorCorrelations().filter(item => item.metricCode === 'weight'))
+const correlationComparison = computed(() => store.getWeightCorrelationComparison())
+const correlationDesktop = ref(false)
+onMounted(() => {
+  const query = window.matchMedia('(min-width: 1024px)')
+  const update = () => {
+    correlationDesktop.value = query.matches
+  }
+  update()
+  query.addEventListener('change', update)
+  onBeforeUnmount(() => query.removeEventListener('change', update))
+})
+const correlationPopoverPosition = computed(() => ({
+  side: correlationDesktop.value ? 'right' : 'bottom',
+  align: correlationDesktop.value ? 'center' : 'start',
+  collisionPadding: 12,
+} as const))
+const correlationLags = [0, 1, 3, 7] as const
+const correlationFactors: CorrelationDto['factor'][] = ['sleepDuration', 'sleepQuality', 'trainingDuration']
+const correlationRows = computed(() => correlationFactors.map((factor) => {
+  const results = correlations.value.filter(item => item.factor === factor)
+  const cells = correlationLags.map(lagDays => ({ lagDays, result: results.find(item => item.lagDays === lagDays) }))
+  let best: CorrelationDto | undefined
+  for (const { result } of cells) {
+    if (!result) continue
+    if (!best || result.coefficient < best.coefficient) best = result
+  }
+  return {
+    factor,
+    comparison: correlationComparison.value?.results.find(item => item.factor === factor && item.lagDays === (best?.lagDays ?? 0)),
+    cells: cells.map(cell => ({ ...cell, isBest: !!cell.result && cell.result === best })),
+  }
+}))
 const factorLabels = computed(() => ({
   trainingDuration: t('analysis.trainingDuration'),
   sleepDuration: t('analysis.sleepDuration'),
@@ -148,40 +180,135 @@ function minutesLabel(minutes: number | null): string {
     </section>
 
     <section class="app-card mt-5 rounded-3xl p-4 sm:p-6">
-      <div class="app-section-heading mb-4">
-        <span class="app-icon-tile app-icon-tile--blue"><AppIcon name="link" class="size-6" /></span>
-        <div class="flex items-center gap-1">
-          <h2>{{ t('analysis.correlations') }}</h2>
-          <UPopover mode="hover" enable-touch arrow :content="{ align: 'start', collisionPadding: 12 }" :ui="{ content: 'w-80 max-w-[calc(100vw-1.5rem)] max-h-[calc(100dvh-2rem)] overflow-y-auto p-4' }">
-            <button type="button" :aria-label="t('analysis.correlationsHelpTitle')" class="flex size-8 shrink-0 items-center justify-center rounded-full text-muted opacity-60 transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"><AppIcon name="info" class="size-4" /></button>
-            <template #content>
-              <div class="space-y-2 text-sm leading-relaxed text-muted">
-                <strong class="block text-highlighted">{{ t('analysis.correlationsHelpTitle') }}</strong>
-                <p>{{ t('analysis.correlationsDescription') }}</p>
-                <p>{{ t('analysis.correlationsCoefficientHelp') }}</p>
-                <p>{{ t('analysis.correlationsTimingHelp') }}</p>
-              </div>
-            </template>
-          </UPopover>
-        </div>
-      </div>
-      <div v-if="correlations.length" class="grid gap-3 sm:grid-cols-2">
-        <article v-for="item in correlations" :key="`${item.metricCode}-${item.factor}-${item.lagDays}`" class="flex items-center justify-between gap-4 rounded-2xl border border-default p-4">
-          <div class="min-w-0">
+      <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div class="app-section-heading min-w-0 flex-1 basis-48">
+          <span class="app-icon-tile app-icon-tile--blue"><AppIcon name="link" class="size-6" /></span>
+          <div>
             <div class="flex items-center gap-1">
-              <strong class="text-sm">{{ metricName({ code: item.metricCode, name: item.metricName }) }} × {{ factorLabels[item.factor] }}</strong>
-              <UPopover mode="hover" enable-touch arrow :content="{ align: 'start', collisionPadding: 12 }" :ui="{ content: 'w-72 max-w-[calc(100vw-1.5rem)] p-4' }">
-                <button type="button" :aria-label="t('analysis.correlationResultHelp', { metric: metricName({ code: item.metricCode, name: item.metricName }), factor: factorLabels[item.factor] })" class="flex size-8 shrink-0 items-center justify-center rounded-full text-muted opacity-60 transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"><AppIcon name="info" class="size-4" /></button>
+              <h2>{{ t('analysis.correlations') }}</h2>
+              <UPopover mode="hover" enable-touch arrow :content="correlationPopoverPosition" :ui="{ content: 'w-80 lg:w-96 max-w-[calc(100vw-1.5rem)] max-h-[min(calc(100dvh-2rem),var(--reka-hover-card-content-available-height))] overflow-y-auto p-4' }">
+                <button type="button" :aria-label="t('analysis.correlationsHelpTitle')" class="flex size-8 shrink-0 items-center justify-center rounded-full text-muted opacity-60 transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"><AppIcon name="info" class="size-4" /></button>
                 <template #content>
-                  <p class="text-sm leading-relaxed text-highlighted">{{ t(item.coefficient === 0 ? 'analysis.correlationNoPattern' : `analysis.correlationPattern.${item.factor}.${item.coefficient > 0 ? 'up' : 'down'}`, { metric: metricName({ code: item.metricCode, name: item.metricName }) }) }}</p>
-                  <p class="mt-2 text-xs leading-relaxed text-muted">{{ t('analysis.correlationsCaution') }}</p>
+                  <div class="space-y-2 text-sm leading-relaxed text-muted">
+                    <strong class="block text-highlighted">{{ t('analysis.correlationsHelpTitle') }}</strong>
+                    <p>{{ t('analysis.correlationsCoefficientHelp') }}</p>
+                    <p>{{ t('analysis.correlationsGoalHelp') }}</p>
+                    <p>{{ t('analysis.correlationPositiveWarning') }}</p>
+                    <p>{{ t('analysis.correlationsTimingHelp') }}</p>
+                    <p>{{ t('analysis.correlationsCaution') }}</p>
+                  </div>
                 </template>
               </UPopover>
             </div>
-            <p class="mt-1 text-xs text-muted">{{ t(item.lagDays === 0 ? 'analysis.sameDay' : 'analysis.daysAhead', { count: item.lagDays }) }} · {{ t('analysis.overlapDays', { count: item.sampleSize }) }}</p>
+            <p>{{ t('analysis.correlationsHint') }}</p>
           </div>
-          <span class="shrink-0 rounded-xl px-3 py-2 text-sm font-bold" :class="item.coefficient >= 0 ? 'bg-warning/10 text-warning' : 'bg-primary/10 text-primary'">{{ item.coefficient > 0 ? '+' : '' }}{{ item.coefficient }}</span>
-        </article>
+        </div>
+      </div>
+      <div v-if="correlations.length" class="overflow-x-auto [contain:paint]">
+        <table class="w-full min-w-[28rem] table-fixed border-collapse text-center">
+          <caption class="sr-only">{{ t('analysis.correlations') }} · {{ t('analysis.correlationsHint') }}</caption>
+          <thead>
+            <tr class="border-b border-default text-xs text-muted sm:text-sm">
+              <th scope="col" class="sticky left-0 z-10 w-44 bg-default pb-3 pr-3 text-left font-medium sm:w-64 sm:pr-5"><div class="flex items-center justify-between gap-2"><span>{{ t('analysis.correlationFactor') }}</span><span class="text-xs">{{ t('analysis.correlationRecentStrength') }}</span></div></th>
+              <th v-for="lag in correlationLags" :key="lag" scope="col" class="pb-3 font-medium">{{ t(lag === 0 ? 'analysis.correlationSameDay' : 'analysis.correlationDaysBefore', { count: lag }) }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in correlationRows" :key="row.factor" class="border-b border-default last:border-b-0">
+              <th scope="row" class="sticky left-0 z-10 bg-default py-4 pr-3 text-left text-xs font-semibold text-highlighted sm:pr-5 sm:text-sm">
+                <div class="flex items-center justify-between gap-2">
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-1">
+                      <span>{{ factorLabels[row.factor] }}</span>
+                      <UPopover mode="hover" enable-touch arrow :content="correlationPopoverPosition" :ui="{ content: 'w-80 lg:w-[36rem] max-w-[calc(100vw-1.5rem)] max-h-[min(calc(100dvh-2rem),var(--reka-hover-card-content-available-height))] overflow-y-auto p-4' }">
+                        <button type="button" :aria-label="t('analysis.correlationFactorHelp', { factor: factorLabels[row.factor] })" class="flex size-8 shrink-0 items-center justify-center rounded-full text-muted opacity-60 transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"><AppIcon name="info" class="size-4" /></button>
+                        <template #content>
+                          <div class="space-y-2 text-sm font-normal leading-relaxed text-muted">
+                            <strong class="block text-highlighted">{{ t('analysis.correlationFactorHelp', { factor: factorLabels[row.factor] }) }}</strong>
+                            <p>{{ t(`analysis.correlationFactorDescription.${row.factor}`) }}</p>
+                            <p>{{ t('analysis.correlationSamplesHelp') }}</p>
+                            <template v-if="row.comparison && correlationComparison">
+                              <div class="space-y-2 border-t border-default pt-2 tabular-nums">
+                                <p class="font-medium text-highlighted">{{ t('analysis.correlationComparisonLag', { lag: t(row.comparison.lagDays === 0 ? 'analysis.correlationSameDay' : 'analysis.correlationDaysBefore', { count: row.comparison.lagDays }) }) }}</p>
+                                <div class="grid grid-cols-2 gap-3">
+                                  <div
+                                    v-for="period in [
+                                      { label: 'analysis.correlationRecentPeriod', start: correlationComparison.recentStart, end: correlationComparison.recentEnd, result: row.comparison.recent },
+                                      { label: 'analysis.correlationPreviousPeriod', start: correlationComparison.previousStart, end: correlationComparison.previousEnd, result: row.comparison.previous },
+                                    ]"
+                                    :key="period.label"
+                                    class="min-w-0 space-y-1"
+                                  >
+                                    <p class="font-medium text-highlighted">{{ t(period.label) }}</p>
+                                    <p class="text-xs"><time :datetime="period.start" :aria-label="period.start">{{ dayjs(period.start).format('MM/DD') }}</time> – <time :datetime="period.end" :aria-label="period.end">{{ dayjs(period.end).format('MM/DD') }}</time></p>
+                                    <template v-if="period.result">
+                                      <p class="text-base font-semibold text-highlighted">{{ period.result.coefficient.toFixed(3) }}</p>
+                                      <p class="text-xs">{{ t('analysis.correlationSamples', { count: period.result.sampleSize }) }}</p>
+                                    </template>
+                                    <p v-else>{{ t('analysis.correlationComparisonUnavailable') }}</p>
+                                  </div>
+                                </div>
+                              </div>
+                              <p v-if="row.comparison.directionChanged" class="font-medium text-highlighted">{{ t('analysis.correlationDirectionChanged') }}</p>
+                            </template>
+                            <details class="border-y border-default py-2 font-normal">
+                              <summary class="cursor-pointer py-1 font-medium text-highlighted">{{ t('analysis.correlationFormulaTitle') }}</summary>
+                              <div class="mt-2 grid gap-3 lg:grid-cols-2 lg:gap-4">
+                                <div class="min-w-0 space-y-2">
+                                  <p>{{ t('analysis.correlationFormulaMethod') }}</p>
+                                  <div class="overflow-x-auto py-2 text-base text-highlighted">
+                                    <math display="block" :aria-label="t('analysis.correlationFormulaAccessible')">
+                                      <mi>r</mi><mo>=</mo>
+                                      <mfrac>
+                                        <mrow>
+                                          <mo>∑</mo>
+                                          <mo>(</mo><mi>x</mi><mo>−</mo><mover><mi>x</mi><mo>¯</mo></mover><mo>)</mo>
+                                          <mo>(</mo><mi>y</mi><mo>−</mo><mover><mi>y</mi><mo>¯</mo></mover><mo>)</mo>
+                                        </mrow>
+                                        <msqrt>
+                                          <mrow>
+                                            <mo>∑</mo><msup><mrow><mo>(</mo><mi>x</mi><mo>−</mo><mover><mi>x</mi><mo>¯</mo></mover><mo>)</mo></mrow><mn>2</mn></msup>
+                                            <mo>×</mo>
+                                            <mo>∑</mo><msup><mrow><mo>(</mo><mi>y</mi><mo>−</mo><mover><mi>y</mi><mo>¯</mo></mover><mo>)</mo></mrow><mn>2</mn></msup>
+                                          </mrow>
+                                        </msqrt>
+                                      </mfrac>
+                                    </math>
+                                  </div>
+                                  <p>{{ t('analysis.correlationFormulaVariables', { factor: factorLabels[row.factor] }) }}</p>
+                                  <p>{{ t('analysis.correlationFormulaMeaning') }}</p>
+                                </div>
+                                <div class="min-w-0 space-y-2">
+                                  <p>{{ t('analysis.correlationPairingHelp', { factor: factorLabels[row.factor] }) }}</p>
+                                  <p>{{ t(`analysis.correlationAggregation.${row.factor}`) }}</p>
+                                  <p>{{ t('analysis.correlationCalculationRules') }}</p>
+                                  <p v-if="row.comparison">{{ t('analysis.correlationStrengthHelp') }}</p>
+                                  <a href="https://www.itl.nist.gov/div898/software/dataplot/refman2/auxillar/correlat.htm" target="_blank" rel="noopener noreferrer" class="inline-block py-1 text-primary underline underline-offset-4">{{ t('analysis.correlationFormulaSource') }}</a>
+                                </div>
+                              </div>
+                            </details>
+                            <p>{{ t('analysis.correlationsCaution') }}</p>
+                          </div>
+                        </template>
+                      </UPopover>
+                    </div>
+                    <p class="mt-1 text-xs font-normal leading-relaxed text-muted">{{ t('analysis.correlationPreference') }}</p>
+                  </div>
+                  <span class="max-w-20 shrink-0 text-right text-xs font-medium leading-relaxed" :class="row.comparison?.strengthChange === 'stronger' ? 'text-blue-700' : 'text-muted'">{{ t(`analysis.correlationStrength.${row.comparison?.strengthChange ?? 'insufficient'}`) }}</span>
+                </div>
+              </th>
+              <td v-for="cell in row.cells" :key="cell.lagDays" class="px-0.5 py-3 sm:px-2">
+                <div v-if="cell.result" class="w-full rounded-xl px-0 py-3 tabular-nums sm:px-1" :class="cell.result.coefficient > 0 ? 'bg-yellow-50 text-yellow-800' : cell.isBest ? 'bg-blue-50 text-primary-700' : 'text-highlighted'">
+                  <strong class="block whitespace-nowrap text-xs font-semibold min-[360px]:text-sm sm:text-xl">{{ cell.result.coefficient > 0 ? '+' : '' }}{{ cell.result.coefficient.toFixed(3) }}</strong>
+                  <span class="mt-1 block text-xs" :class="cell.result.coefficient > 0 ? 'text-yellow-800' : 'text-muted'">{{ t('analysis.correlationSamples', { count: cell.result.sampleSize }) }}</span>
+                  <span v-if="cell.result.coefficient > 0" class="sr-only">{{ t('analysis.correlationPositiveWarning') }}</span>
+                  <span v-if="cell.isBest" class="sr-only">{{ t('analysis.correlationBest') }}</span>
+                </div>
+                <span v-else class="text-sm text-muted" :aria-label="t('analysis.correlationNoData')">—</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
       <div v-else class="rounded-2xl bg-elevated p-5 text-sm text-muted">{{ t('analysis.insufficientOverlap') }}</div>
     </section>
