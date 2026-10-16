@@ -1,25 +1,41 @@
-# TrackFit
+<div align="center">
+  <img src="public/favicon.svg" width="80" height="80" alt="TrackFit · 形轨 标志">
+  <h1>TrackFit · 形轨</h1>
+  <p><strong>记录身体变化，看见习惯的影响。</strong></p>
+  <p>个人身体数据与习惯记录工具，把测量、训练和睡眠放在一起，持续观察自己的变化。</p>
+  <p>
+    <img src="https://img.shields.io/badge/Nuxt-4-00dc82" alt="Nuxt 4">
+    <img src="https://img.shields.io/badge/Vue-3-42b883" alt="Vue 3">
+    <img src="https://img.shields.io/badge/charts-ECharts-aa344d" alt="ECharts">
+    <img src="https://img.shields.io/badge/storage-JSON-0ea5e9" alt="JSON 存储">
+  </p>
+  <p>
+    <a href="#你可以用它做什么">功能</a> ·
+    <a href="#快速开始">快速开始</a> ·
+    <a href="#使用-docker-compose">Docker</a> ·
+    <a href="#备份恢复与搬家">备份与迁移</a>
+  </p>
+</div>
 
-> 技术栈：Nuxt 4、Vue 3、TypeScript、Nuxt UI、ECharts、Zod、Vitest、Playwright、Vercel Blob
+## 你可以用它做什么
 
-TrackFit（形轨）是一个给个人使用的身体数据记录与趋势分析工具，用来持续记录身体测量、训练和睡眠，并观察习惯与身体变化之间的关系。
+- **持续记录身体指标**：体重、体脂率、腰围与自定义数值指标；一天可多次测量。
+- **把习惯也记下来**：记录训练类型、时长、睡眠时间与质量。
+- **观察长期变化**：指标趋势、区间统计、3 / 7 / 30 / 90 日均线和双指标对比。
+- **回顾一周或一个月**：查看训练、睡眠与身体指标摘要；数据足够时分析相关性。
+- **自己掌握数据**：JSON 完整备份与恢复，CSV 导出测量、训练和睡眠明细。
 
-它不是健身社区，也不是多人协作系统。项目没有数据库、注册系统和多租户设计：全部业务数据始终是一份 JSON。浏览器负责数据整理与分析，Nuxt 服务端只负责登录校验和 JSON 的读取、写入。
+| 体验 | 说明 |
+| --- | --- |
+| 个人使用 | 管理员维护数据，可配置只读访客 |
+| 多端访问 | 适配桌面和手机，统一浅色界面 |
+| 中英文 | `/zh/`、`/en/` 路由，首次按浏览器语言选择，可手动切换 |
+| 本地部署 | Docker + 一份 JSON，无需维护数据库 |
+| 云端部署 | Nuxt 服务端 + Vercel Private Blob |
 
-## 功能
+全部业务数据是一份 JSON。浏览器负责整理与分析，Nuxt 服务端负责登录校验和读写；项目没有注册、多租户或多人协作能力。
 
-- 记录体重、体脂率、腰围等身体指标，同一天可以记录多次
-- 增加自定义数值指标，停用暂时不需要的指标
-- 记录训练类型、时长，以及睡眠时间和睡眠质量
-- 查看指标趋势、区间统计、3/7/30/90 日均线和双指标对比
-- 生成本周、本月的训练、睡眠和身体指标摘要
-- 在数据足够时计算训练、睡眠与身体指标的相关性
-- 通过 JSON 完整备份和恢复，通过 CSV 导出测量、训练、睡眠明细
-- 提供管理员账号和可选的只读访客账号
-- 适配桌面端和移动端，使用浅色界面
-- 支持中英文路由（`/zh/`、`/en/`）与顶部快速切换，首次访问按浏览器语言选择
-
-相关性分析至少需要 14 个有效重叠日。所有分析只用于回顾个人趋势，不构成医疗建议。
+相关性分析至少需要 **14 个有效重叠日**，结果用于回顾个人趋势，不代表因果关系。
 
 ## 数据如何保存
 
@@ -28,14 +44,14 @@ TrackFit 不使用 MySQL、PostgreSQL、SQLite 或其他数据库。
 | 运行方式 | 数据位置 | 适合场景 |
 | --- | --- | --- |
 | 开发、调试 | `data/trackfit-data.json` | 个人开发 |
-| Docker本地部署 | 宿主机 `./data/trackfit-data.json` | 家庭服务器、NAS、云主机 |
+| Docker 本地部署 | 宿主机 `./data/trackfit-data.json` | 家庭服务器、NAS、云主机 |
 | Vercel | Vercel Private Blob 中的一份 JSON | 无需维护服务器的公网部署 |
 
 每次保存都会写回完整 JSON。服务端在落盘前使用 Zod 校验全部内容；文件模式使用临时文件加重命名完成原子替换，Blob 模式使用条件写入避免旧页面覆盖较新的数据。这只是保护同一个人在多个标签页或设备上操作时的数据，不代表项目面向多人并发。
 
-## 本地运行
+## 快速开始
 
-要求：Node.js 22+、pnpm 11。
+使用 **Node.js 22+、pnpm 11.5.2**。包管理器版本由项目固定，Docker 当前使用 Node 22。
 
 ### 1. 安装依赖
 
@@ -46,7 +62,7 @@ pnpm install
 ### 2. 准备环境变量
 
 ```bash
-cp .env.example .env
+[ -f .env ] || cp .env.example .env
 ```
 
 生成会话密钥：
@@ -69,7 +85,7 @@ TRACKFIT_ADMIN_USERNAME=admin
 TRACKFIT_ADMIN_PASSWORD_HASH=<pnpm auth:hash 的输出>
 ```
 
-`NUXT_SESSION_PASSWORD` 至少需要 32 个字符。密码哈希可以提交给服务端使用，但不要把原始密码或 `.env` 提交到 Git。
+`NUXT_SESSION_PASSWORD` 至少需要 32 个字符。将密码哈希配置到服务端环境中，不要把真实密码、哈希或 `.env` 提交到 Git。
 
 只读访客不是必需的。如需启用，再配置：
 
@@ -96,7 +112,7 @@ TRACKFIT_DATA_FILE=/absolute/path/trackfit-data.json
 
 ## 使用 Docker Compose
 
-先按“本地运行”的方式创建 `.env` 并配置管理员账号。当前 `compose.yaml` 还要求同时提供只读访客账号，因此 Docker 部署需要补充 `TRACKFIT_VIEWER_USERNAME` 和 `TRACKFIT_VIEWER_PASSWORD_HASH`，然后执行：
+先按“快速开始”的方式创建 `.env` 并配置管理员账号。当前 `compose.yaml` 还要求同时提供只读访客账号，因此 Docker 部署需要补充 `TRACKFIT_VIEWER_USERNAME` 和 `TRACKFIT_VIEWER_PASSWORD_HASH`，然后执行：
 
 ```bash
 docker compose up -d --build
@@ -130,6 +146,9 @@ sudo chown -R 1000:1000 data
 ## 部署到 Vercel
 
 Nuxt 可以直接部署到 Vercel，不需要 `vercel.json`。但 Vercel Functions 的项目文件不是持久化磁盘，因此 TrackFit 在 Vercel 上必须使用 Private Blob 保存 JSON，不能继续使用默认的文件模式。
+
+<details>
+<summary><strong>展开 Vercel 配置步骤</strong>：导入、Private Blob、环境变量与初始化</summary>
 
 ### 1. 导入项目
 
@@ -194,6 +213,8 @@ TRACKFIT_VIEWER_PASSWORD_HASH=<访客密码哈希>
 
 参考：[Vercel 的 Nuxt 部署文档](https://vercel.com/docs/frameworks/full-stack/nuxt)、[Vercel Private Blob 文档](https://vercel.com/docs/vercel-blob/private-storage)。
 
+</details>
+
 ## 备份、恢复与搬家
 
 这里没有数据库迁移。所谓“迁移”，只是移动或恢复一份 TrackFit JSON。
@@ -232,6 +253,9 @@ pnpm blob:restore --confirm
 
 ## 环境变量
 
+<details>
+<summary><strong>查看完整环境变量表</strong></summary>
+
 | 变量 | 是否必需 | 说明 |
 | --- | --- | --- |
 | `NUXT_SESSION_PASSWORD` | 是 | 会话加密密钥，至少 32 个字符 |
@@ -249,6 +273,8 @@ pnpm blob:restore --confirm
 | `TRACKFIT_BIND_ADDRESS` | Docker 可选 | 宿主机监听地址，默认 `0.0.0.0` |
 | `TRACKFIT_PORT` | Docker 可选 | 宿主机端口，默认 `3000` |
 
+</details>
+
 ## 开发命令
 
 ```bash
@@ -260,3 +286,9 @@ pnpm test:e2e
 pnpm build
 pnpm preview
 ```
+
+## 更新与反馈
+
+更新源码后，Docker 部署重新执行 `docker compose up -d --build`，Vercel 则重新构建部署。更新前建议先下载 JSON 全量备份；保留原有数据目录、Blob 路径和会话配置。
+
+欢迎通过 [Issues](https://github.com/01Petard/TrackFit/issues) 反馈，附上部署方式和复现步骤；示例数据请脱敏，不上传个人身体记录、登录凭据或 Blob Token。当前仓库未提供 `LICENSE` 文件。
