@@ -18,7 +18,7 @@ const { locale, t } = useI18n()
 const localePath = useLocalePath()
 const { formatDescriptor, metricName } = useTrackFitI18n()
 await store.ensureLoaded()
-const analytics = computed(() => store.getAnalytics('weight', weightStart))
+const analytics = computed(() => store.getAnalytics('weight'))
 const latestAnalytics = computed(() => new Map(
   ['weight', 'waist', 'body_fat'].map(code => [code, store.getAnalytics(code)]),
 ))
@@ -298,7 +298,7 @@ function trendSymbol(direction: 'up' | 'down' | 'stable' | 'insufficient'): stri
     <section class="app-card mt-4 p-5 sm:p-6">
       <div class="mb-4 flex flex-wrap items-center justify-between gap-3"><div class="app-section-heading"><span class="app-icon-tile app-icon-tile--blue"><AppIcon name="chart" class="size-6" /></span><div><h2>{{ t('home.weightTrend.chartTitle') }}</h2><p>{{ t('home.weightTrend.description') }}</p></div></div><NuxtLink :to="localePath('/analysis')" class="app-btn app-btn--outline shrink-0">{{ t('home.weightTrend.viewFullAnalysis') }}<AppIcon name="arrowRight" class="size-4" /></NuxtLink></div>
       <div class="mb-2 flex flex-wrap gap-2"><label v-for="period in ([7, 30, 90] as const)" :key="period" class="flex items-center gap-2 rounded-lg border border-default px-2.5 py-1.5 text-xs"><input v-model="visibleMovingAverages" type="checkbox" :value="period" class="size-3.5 accent-emerald-500">{{ t(`common.movingAverage.${period}`) }}</label></div>
-      <ClientOnly><MetricChart :points="analytics?.points ?? []" :moving-averages="analytics?.movingAverages" :visible-moving-averages="visibleMovingAverages" :target-minimum="settings.desiredWeightMinimum" :target-maximum="settings.desiredWeightMaximum" metric-code="weight" :unit="analytics?.metric.unit ?? 'kg'" height="340px" /><template #fallback><div class="grid h-[340px] place-items-center text-sm text-muted">{{ t('common.loadingChart') }}</div></template></ClientOnly>
+      <ClientOnly><MetricChart :points="analytics?.points ?? []" :moving-averages="analytics?.movingAverages" :visible-moving-averages="visibleMovingAverages" :start="weightStart" :target-minimum="settings.desiredWeightMinimum" :target-maximum="settings.desiredWeightMaximum" metric-code="weight" :unit="analytics?.metric.unit ?? 'kg'" height="340px" /><template #fallback><div class="grid h-[340px] place-items-center text-sm text-muted">{{ t('common.loadingChart') }}</div></template></ClientOnly>
     </section>
 
     <MeasurementDialog v-if="store.canWrite.value" v-model:open="dialogOpen" />

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { MovingAveragePeriod, MovingAveragePointDto } from '../../shared/types/api'
 import type { LineSeriesOption } from 'echarts/charts'
-import { resolveYAxisBounds } from '../../shared/utils/analytics'
 import { chartTimeAxis, toDailyChartPoints } from '../utils/chart-axis'
 import { computed } from 'vue'
 import VChart from 'vue-echarts'
@@ -21,6 +20,7 @@ const props = withDefaults(defineProps<{
   targetMinimum?: number | null
   targetMaximum?: number | null
   metricCode?: string
+  start?: string
   unit: string
   height?: string
 }>(), {
@@ -39,8 +39,15 @@ const colors: Record<MovingAveragePeriod, string> = {
   90: '#ec4899',
 }
 
+const { xAxisBounds, yAxisBounds, xZoom, yZoom, onDataZoom } = useChartViewport(() => ({
+  points: props.points,
+  metricCode: props.metricCode,
+  start: props.start,
+  targetMinimum: props.targetMinimum,
+  targetMaximum: props.targetMaximum,
+}))
+
 const option = computed(() => {
-  const yAxisBounds = resolveYAxisBounds(props.metricCode, props.points, props.targetMinimum, props.targetMaximum)
   const averageSeries: LineSeriesOption[] = props.visibleMovingAverages.map(period => ({
     name: t(`common.movingAverage.${period}`),
     type: 'line',
@@ -72,20 +79,20 @@ const option = computed(() => {
       textStyle: { fontSize: 12, lineHeight: 18 },
       data: [t('chart.raw'), ...props.visibleMovingAverages.map(period => t(`common.movingAverage.${period}`))],
     },
-    xAxis: chartTimeAxis,
+    xAxis: { ...chartTimeAxis, ...xAxisBounds.value },
     yAxis: {
       type: 'value',
       scale: true,
-      ...yAxisBounds,
+      ...yAxisBounds.value,
       name: props.unit,
       axisLabel: { color: '#94a3b8' },
       splitLine: { lineStyle: { color: 'rgba(148,163,184,.16)' } },
     },
     dataZoom: [
-      { type: 'inside', xAxisIndex: 0, filterMode: 'none' },
-      { type: 'slider', xAxisIndex: 0, filterMode: 'none', height: 18, bottom: 12 },
-      { type: 'inside', yAxisIndex: 0, filterMode: 'none', zoomOnMouseWheel: 'shift' },
-      { type: 'slider', yAxisIndex: 0, filterMode: 'none', orient: 'vertical', width: 18, right: 8 },
+      { id: 'x-inside', type: 'inside', xAxisIndex: 0, filterMode: 'none', ...xZoom.value },
+      { id: 'x-slider', type: 'slider', xAxisIndex: 0, filterMode: 'none', height: 18, bottom: 12, ...xZoom.value },
+      { id: 'y-inside', type: 'inside', yAxisIndex: 0, filterMode: 'none', zoomOnMouseWheel: 'shift', ...yZoom.value },
+      { id: 'y-slider', type: 'slider', yAxisIndex: 0, filterMode: 'none', orient: 'vertical', width: 18, right: 8, ...yZoom.value },
     ],
     series: focusSeries([
       {
@@ -107,7 +114,7 @@ const option = computed(() => {
 
 <template>
   <div v-if="points.length" class="w-full" :style="{ height }">
-    <VChart autoresize :option="option" @mouseover="onMouseOver" @mouseout="onMouseOut" @globalout="onMouseOut" @click="onClick" @zr:click="onBlankClick" />
+    <VChart autoresize :option="option" @datazoom="onDataZoom" @mouseover="onMouseOver" @mouseout="onMouseOut" @globalout="onMouseOut" @click="onClick" @zr:click="onBlankClick" />
   </div>
   <div v-else class="grid h-72 place-items-center rounded-2xl border border-dashed border-default text-sm text-muted">
     {{ t('chart.noData') }}

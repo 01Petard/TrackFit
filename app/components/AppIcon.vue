@@ -2,7 +2,7 @@
 defineProps<{
   name: 'home' | 'records' | 'analysis' | 'metrics' | 'settings' | 'plus' | 'edit' | 'save' | 'close' | 'calendar' | 'clock' | 'github'
     | 'weight' | 'bmi' | 'waist' | 'percent' | 'run' | 'moon' | 'target' | 'streak' | 'sparkles' | 'file' | 'dumbbell' | 'walk' | 'stretch'
-    | 'database' | 'download' | 'upload' | 'user' | 'heart' | 'trophy' | 'link' | 'shield' | 'refresh' | 'chevronRight' | 'arrowRight' | 'info' | 'eye' | 'filter' | 'expand' | 'chart' | 'barChart'
+    | 'database' | 'download' | 'upload' | 'user' | 'heart' | 'trophy' | 'link' | 'shield' | 'refresh' | 'chevronRight' | 'arrowRight' | 'info' | 'eye' | 'filter' | 'expand' | 'chart' | 'barChart' | 'check'
 }>()
 </script>
 
@@ -119,6 +119,7 @@ defineProps<{
       <path d="M20 11a8 8 0 0 0-14-5L4 8m0-5v5h5M4 13a8 8 0 0 0 14 5l2-2m0 5v-5h-5" />
     </template>
     <path v-else-if="name === 'chevronRight'" d="m9 5 7 7-7 7" />
+    <path v-else-if="name === 'check'" d="m5 12 4 4L19 6" />
     <path v-else-if="name === 'arrowRight'" d="M4 12h16m-6-6 6 6-6 6" />
     <template v-else-if="name === 'info'">
       <circle cx="12" cy="12" r="9" /><path d="M12 11v6m0-10h.01" />

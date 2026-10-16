@@ -18,6 +18,7 @@ const props = defineProps<{
   visibleMovingAverages: MovingAveragePeriod[]
   targetMinimum?: number | null
   targetMaximum?: number | null
+  start?: string
 }>()
 const { t } = useI18n()
 const { metricName } = useTrackFitI18n()
@@ -29,6 +30,15 @@ const colors: Record<MovingAveragePeriod, string> = {
   30: '#8b5cf6',
   90: '#ec4899',
 }
+
+const { xAxisBounds, yAxisBounds, xZoom, yZoom, onDataZoom } = useChartViewport(() => ({
+  points: props.primary.points,
+  timePoints: props.secondary ? [...props.primary.points, ...props.secondary.points] : props.primary.points,
+  metricCode: props.primary.metric.code,
+  start: props.start,
+  targetMinimum: props.targetMinimum,
+  targetMaximum: props.targetMaximum,
+}))
 
 const option = computed(() => {
   const secondary = props.secondary
@@ -80,12 +90,12 @@ const option = computed(() => {
       lineStyle: { type: 'solid', width: 2 },
       textStyle: { fontSize: 12, lineHeight: 18 },
     },
-    xAxis: chartTimeAxis,
+    xAxis: { ...chartTimeAxis, ...xAxisBounds.value },
     yAxis: [
       {
         type: 'value',
         scale: true,
-        ...resolveYAxisBounds(props.primary.metric.code, props.primary.points, props.targetMinimum, props.targetMaximum),
+        ...yAxisBounds.value,
         name: props.primary.metric.unit,
         splitLine: { lineStyle: { color: 'rgba(148,163,184,.16)' } },
       },
@@ -98,10 +108,10 @@ const option = computed(() => {
       }] : []),
     ],
     dataZoom: [
-      { type: 'inside', xAxisIndex: 0, filterMode: 'none' },
-      { type: 'slider', xAxisIndex: 0, filterMode: 'none', height: 18, bottom: 12 },
-      { type: 'inside', yAxisIndex: secondary ? [0, 1] : 0, filterMode: 'none', zoomOnMouseWheel: 'shift' },
-      { type: 'slider', yAxisIndex: secondary ? [0, 1] : 0, filterMode: 'none', orient: 'vertical', width: 18, right: 8 },
+      { id: 'x-inside', type: 'inside', xAxisIndex: 0, filterMode: 'none', ...xZoom.value },
+      { id: 'x-slider', type: 'slider', xAxisIndex: 0, filterMode: 'none', height: 18, bottom: 12, ...xZoom.value },
+      { id: 'y-inside', type: 'inside', yAxisIndex: secondary ? [0, 1] : 0, filterMode: 'none', zoomOnMouseWheel: 'shift', ...yZoom.value },
+      { id: 'y-slider', type: 'slider', yAxisIndex: secondary ? [0, 1] : 0, filterMode: 'none', orient: 'vertical', width: 18, right: 8, ...yZoom.value },
     ],
     series: focusSeries(series),
   }
@@ -109,6 +119,6 @@ const option = computed(() => {
 </script>
 
 <template>
-  <div v-if="primary.points.length || visibleMovingAverages.some(period => primary.movingAverages[period].length)" class="h-[420px] w-full"><VChart autoresize :option="option" @mouseover="onMouseOver" @mouseout="onMouseOut" @globalout="onMouseOut" @click="onClick" @zr:click="onBlankClick" /></div>
+  <div v-if="primary.points.length || secondary?.points.length || visibleMovingAverages.some(period => primary.movingAverages[period].length)" class="h-[420px] w-full"><VChart autoresize :option="option" @datazoom="onDataZoom" @mouseover="onMouseOver" @mouseout="onMouseOut" @globalout="onMouseOut" @click="onClick" @zr:click="onBlankClick" /></div>
   <div v-else class="grid h-[420px] place-items-center text-sm text-muted">{{ t('chart.noMatchingData') }}</div>
 </template>

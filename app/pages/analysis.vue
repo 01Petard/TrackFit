@@ -20,7 +20,17 @@ const start = computed(() => {
   return amount ? dayjs().subtract(amount[0], amount[1]).toISOString() : undefined
 })
 const primary = computed(() => store.getAnalytics(metricCode.value, start.value))
-const secondary = computed(() => compareCode.value ? store.getAnalytics(compareCode.value, start.value) : null)
+const chartPrimary = computed(() => store.getAnalytics(metricCode.value))
+const chartSecondary = computed(() => compareCode.value ? store.getAnalytics(compareCode.value) : null)
+const metricItems = computed(() => metrics.value.filter(item => item.enabled).map(item => ({ label: metricName(item), value: item.code })))
+const comparisonItems = computed(() => [{ label: t('analysis.noComparison'), value: '__none__' }, ...metricItems.value.filter(item => item.value !== metricCode.value)])
+const comparisonSelection = computed({
+  get: () => compareCode.value || '__none__',
+  set: (value: string) => { compareCode.value = value === '__none__' ? '' : value },
+})
+watch(metricCode, (value) => {
+  if (compareCode.value === value) compareCode.value = ''
+})
 const weightForecast = computed(() => analyzeWeightForecast(store.getAnalytics('weight')))
 const fluctuationScale = computed(() => {
   const fluctuation = weightForecast.value.fluctuation
@@ -99,8 +109,8 @@ const summaryCards = computed(() => {
     { label: t('analysis.sincePrevious'), icon: 'chart' as const, value: summary.previousChange == null ? '—' : `${summary.previousChange > 0 ? '+' : ''}${summary.previousChange}`, showUnit: true },
     { label: t('analysis.rangeChange'), icon: 'arrowRight' as const, value: `${summary.totalChange > 0 ? '+' : ''}${summary.totalChange}`, showUnit: true },
     { label: t('analysis.rangeAverage'), icon: 'barChart' as const, value: summary.average, showUnit: true },
-    { label: t('analysis.minimumMaximum'), icon: 'target' as const, value: `${summary.minimum} / ${summary.maximum}`, showUnit: false },
-    { label: t('analysis.recordCount'), icon: 'file' as const, value: summary.count, showUnit: false },
+    { label: t('analysis.minimumMaximum'), icon: 'target' as const, value: { minimum: summary.minimum, maximum: summary.maximum }, showUnit: true },
+    { label: t('analysis.recordCount'), icon: 'file' as const, value: summary.count, showUnit: true, unit: t('analysis.recordUnit') },
   ]
 })
 
@@ -115,9 +125,9 @@ function minutesLabel(minutes: number | null): string {
     <PageHeader :title="t('analysis.title')" :description="t('analysis.description')" />
 
     <section class="app-card mb-5 grid gap-4 p-5 sm:grid-cols-2 xl:grid-cols-3">
-      <label class="text-xs font-medium text-muted">{{ t('analysis.timeRange') }}<select v-model="range" class="app-select mt-1.5 w-full border border-default text-sm text-highlighted"><option v-for="item in ranges" :key="item.value" :value="item.value">{{ item.label }}</option></select></label>
-      <label class="text-xs font-medium text-muted">{{ t('analysis.primaryMetric') }}<select v-model="metricCode" class="app-select mt-1.5 w-full border border-default text-sm text-highlighted"><option v-for="metric in metrics.filter(item => item.enabled)" :key="metric.id" :value="metric.code">{{ metricName(metric) }}</option></select></label>
-      <label class="text-xs font-medium text-muted">{{ t('analysis.compareMetric') }}<select v-model="compareCode" class="app-select mt-1.5 w-full border border-default text-sm text-highlighted"><option value="">{{ t('analysis.noComparison') }}</option><option v-for="metric in metrics.filter(item => item.enabled && item.code !== metricCode)" :key="metric.id" :value="metric.code">{{ metricName(metric) }}</option></select></label>
+      <AppSelect v-model="range" :label="t('analysis.timeRange')" :items="ranges" />
+      <AppSelect v-model="metricCode" :label="t('analysis.primaryMetric')" :items="metricItems" />
+      <AppSelect v-model="comparisonSelection" :label="t('analysis.compareMetric')" :items="comparisonItems" />
       <div class="border-t border-default pt-4 sm:col-span-2 xl:col-span-3">
         <p class="mb-2 text-xs text-muted">{{ t('analysis.averages') }}</p>
         <div class="flex flex-wrap gap-2">
@@ -130,10 +140,11 @@ function minutesLabel(minutes: number | null): string {
     <section class="app-card mb-5 p-3 sm:p-6">
       <div class="app-section-heading mb-3 px-2"><span class="app-icon-tile"><AppIcon name="chart" class="size-6" /></span><div><h2>{{ primary ? `${metricName(primary.metric)} · ${t('analysis.title')}` : t('analysis.primaryMetric') }}</h2><p>{{ t('analysis.sliderHint') }}</p></div></div>
       <div v-if="status === 'pending'" class="grid h-[420px] place-items-center text-sm text-muted">{{ t('analysis.calculating') }}</div>
-      <ClientOnly v-else-if="primary">
+      <ClientOnly v-else-if="chartPrimary">
         <ComparisonChart
-          :primary="primary"
-          :secondary="compareCode ? secondary : null"
+          :primary="chartPrimary"
+          :secondary="chartSecondary"
+          :start="start"
           :visible-moving-averages="visibleMovingAverages"
           :target-minimum="settings.desiredWeightMinimum"
           :target-maximum="settings.desiredWeightMaximum"
@@ -143,15 +154,26 @@ function minutesLabel(minutes: number | null): string {
     </section>
 
     <section v-if="summaryCards.length" class="analysis-summary app-card grid grid-cols-2 overflow-hidden sm:grid-cols-3 xl:grid-cols-6">
-      <article v-for="(card, index) in summaryCards" :key="card.label" class="analysis-stat min-w-0 px-4 py-5 sm:px-5">
-        <div class="flex items-center gap-2.5">
+      <article v-for="(card, index) in summaryCards" :key="card.label" class="analysis-stat min-w-0 px-4 py-4 sm:px-5">
+        <div class="flex min-h-8 items-center gap-2.5">
           <span class="analysis-stat-icon app-icon-tile" :class="index === 0 ? '' : index === 3 ? 'app-icon-tile--purple' : 'app-icon-tile--blue'"><AppIcon :name="card.icon" class="size-4" /></span>
           <p class="text-xs font-medium text-muted">{{ card.label }}</p>
         </div>
-        <strong class="app-value mt-4 flex flex-wrap items-baseline gap-x-1.5 gap-y-1 leading-none" :class="index === 4 ? 'text-lg sm:text-xl' : 'text-2xl'">
-          <span>{{ card.value }}</span>
-          <span v-if="card.showUnit" class="text-xs font-normal text-muted">{{ primary?.metric.unit }}</span>
-        </strong>
+        <div class="mt-3 flex min-h-11 flex-col justify-center">
+          <dl v-if="typeof card.value === 'object'" class="grid gap-1">
+            <div v-for="(value, key) in card.value" :key="key" class="flex items-baseline justify-between gap-2">
+              <dt class="text-xs font-medium text-muted">{{ t(`analysis.${key}`) }}</dt>
+              <dd class="app-value inline-flex flex-wrap items-baseline justify-end gap-x-1 text-base font-semibold leading-5">
+                <span>{{ value }}</span>
+                <span class="text-xs font-normal text-muted">{{ primary?.metric.unit }}</span>
+              </dd>
+            </div>
+          </dl>
+          <strong v-else class="app-value flex flex-wrap items-baseline gap-x-1.5 gap-y-1 text-[22px] leading-none sm:text-2xl">
+            <span>{{ card.value }}</span>
+            <span v-if="card.showUnit" class="text-xs font-normal text-muted">{{ card.unit ?? primary?.metric.unit }}</span>
+          </strong>
+        </div>
       </article>
     </section>
 
@@ -159,17 +181,27 @@ function minutesLabel(minutes: number | null): string {
       <div class="mb-4 flex flex-wrap items-center justify-between gap-3"><div class="app-section-heading"><span class="app-icon-tile app-icon-tile--blue"><AppIcon name="chart" class="size-6" /></span><div><h2>{{ t('analysis.weightForecast') }}</h2><p>{{ t('analysis.weightForecastHint') }}</p></div></div><p v-if="weightTargetStatus" class="text-xs font-medium" :class="weightTargetStatus.class">{{ weightTargetStatus.label }}</p></div>
       <p v-if="hasWeightProjection && weightForecast.forecastDate" class="mb-4 text-sm text-muted">{{ t('analysis.forecastDate', { date: dayjs(weightForecast.forecastDate).format('YYYY-MM-DD') }) }}</p>
       <p v-else class="mb-4 text-sm text-muted">{{ t(weightForecast.stale ? 'analysis.forecastStale' : 'analysis.forecastInsufficient') }}</p>
-      <div class="grid gap-3 sm:grid-cols-3">
-        <article v-for="projection in weightProjections" :key="projection.period" class="app-inner-card p-4">
-          <p class="text-sm font-medium text-muted">{{ t(`common.movingAverage.${projection.period}`) }}</p>
-          <strong class="app-value mt-2 block text-xl">{{ projection.value == null ? '—' : projection.value.toFixed(2) }} <span v-if="projection.value != null" class="text-xs font-normal text-muted">kg</span></strong>
-          <p class="mt-1 text-xs text-muted">{{ t(projection.direction ? `analysis.forecastDirection.${projection.direction}` : 'analysis.forecastNoData') }}</p>
+      <div class="weight-projections grid gap-2 md:grid-cols-3 md:gap-3">
+        <article v-for="projection in weightProjections" :key="projection.period" class="weight-projection app-inner-card" :class="`weight-projection--${projection.period}`">
+          <h3 class="weight-projection-heading flex min-w-0 items-center gap-2 text-xs font-medium">
+            <span class="weight-projection-line shrink-0" aria-hidden="true" />
+            {{ t(`common.movingAverage.${projection.period}`) }}
+          </h3>
+          <strong class="weight-projection-value app-value flex items-baseline gap-1 text-xl font-semibold">
+            {{ projection.value == null ? '—' : projection.value.toFixed(2) }}
+            <span v-if="projection.value != null" class="text-xs font-normal text-muted">kg</span>
+          </strong>
+          <span v-if="projection.direction" class="weight-projection-direction inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium" :title="t(`analysis.forecastDirection.${projection.direction}`)">
+            <AppIcon name="arrowRight" class="size-3.5 shrink-0" :class="projection.direction === 'down' ? 'rotate-45' : projection.direction === 'up' ? '-rotate-45' : ''" />
+            {{ t(`analysis.forecastDirectionShort.${projection.direction}`) }}
+          </span>
+          <span v-else class="text-right text-xs text-muted" :title="t('analysis.forecastNoData')">{{ t('analysis.forecastNoDataShort') }}</span>
         </article>
       </div>
       <p class="mt-4 text-xs text-muted">{{ t('analysis.forecastMethod') }}</p>
 
-      <div class="weight-insights mt-4 grid border-t border-default md:grid-cols-2">
-        <article class="weight-insight min-w-0 py-3 md:pr-5">
+      <div class="weight-insights mt-4 grid gap-3 md:grid-cols-2">
+        <article class="weight-insight app-inner-card min-w-0 px-4 py-3">
           <h3 class="flex min-h-6 items-center text-sm font-semibold">{{ t('analysis.recentWeightChange') }}</h3>
           <template v-if="weightForecast.recentChange">
             <div class="my-3 flex items-center gap-2 text-blue-700">
@@ -191,7 +223,7 @@ function minutesLabel(minutes: number | null): string {
           <p v-else class="mt-4 text-sm text-muted">{{ t('analysis.recentWeightChangeInsufficient') }}</p>
         </article>
 
-        <article class="weight-insight min-w-0 border-t border-default py-3 md:border-t-0 md:border-l md:pl-5">
+        <article class="weight-insight app-inner-card min-w-0 px-4 py-3" :class="{ 'weight-insight--warning': weightForecast.fluctuation?.status === 'warning' }">
           <div class="flex flex-wrap items-center justify-between gap-2">
             <h3 class="text-sm font-semibold">{{ t('analysis.weightFluctuation') }}</h3>
             <span v-if="weightForecast.fluctuation" class="weight-fluctuation-status rounded-full px-2.5 py-1 text-xs font-medium" :class="`weight-fluctuation--${weightForecast.fluctuation.status}`" :title="t(`analysis.fluctuationStatus.${weightForecast.fluctuation.status}`)">{{ t(`analysis.fluctuationLabel.${weightForecast.fluctuation.status}`) }}</span>
@@ -375,11 +407,9 @@ function minutesLabel(minutes: number | null): string {
   background: var(--app-surface);
 }
 
-.analysis-stat:first-child {
-  background: #f2fbf6;
-}
-
-.analysis-stat:first-child .app-value {
+.analysis-stat:first-child p,
+.analysis-stat:first-child .app-value,
+.analysis-stat:first-child .app-value span {
   color: #079f5b;
 }
 
@@ -387,6 +417,61 @@ function minutesLabel(minutes: number | null): string {
   width: 32px;
   height: 32px;
   border-radius: 10px;
+}
+
+.weight-projection {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  background: var(--projection-surface);
+  border-color: var(--projection-border);
+}
+
+.weight-projection--7 {
+  --projection-color: #0369a1;
+  --projection-line: #0ea5e9;
+  --projection-surface: #f5fbff;
+  --projection-border: #daedf8;
+  --projection-badge: #e3f2fc;
+}
+
+.weight-projection--30 {
+  --projection-color: #6d28d9;
+  --projection-line: #8b5cf6;
+  --projection-surface: #faf7ff;
+  --projection-border: #eae1fa;
+  --projection-badge: #efe7fc;
+}
+
+.weight-projection--90 {
+  --projection-color: #be185d;
+  --projection-line: #ec4899;
+  --projection-surface: #fff7fb;
+  --projection-border: #f6dfeb;
+  --projection-badge: #fce7f1;
+}
+
+.weight-projection-heading, .weight-projection-direction {
+  color: var(--projection-color);
+}
+
+.weight-projection-line {
+  width: 12px;
+  border-top: 2px dashed var(--projection-line);
+}
+
+.weight-projection-value { white-space: nowrap; }
+.weight-projection-direction { background: var(--projection-badge); white-space: nowrap; }
+.weight-insight { background: #f9fbfd; }
+.weight-insight--warning { border-color: #f0ccd2; background: #fff9fa; }
+
+@media (min-width: 768px) {
+  .weight-projection { grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 14px 16px; }
+  .weight-projection-heading { grid-column: 1 / -1; }
+  .weight-projection-value { font-size: 24px; }
 }
 
 .weight-comparison dt {

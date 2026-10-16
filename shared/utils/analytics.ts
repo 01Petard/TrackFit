@@ -108,13 +108,18 @@ export function calculateWaistHipRatio(waist: number | undefined, hip: number | 
 
 export function resolveYAxisBounds(
   metricCode: string,
-  points: Array<{ value: number }>,
+  points: ReadonlyArray<{ value: number }>,
   targetMinimum?: number | null,
   targetMaximum?: number | null,
 ): { min?: number, max?: number } {
   if (metricCode !== 'weight') return {}
-  if (targetMinimum != null && targetMaximum != null) return { min: targetMinimum, max: targetMaximum }
   const values = points.map(point => point.value)
+  if (targetMinimum != null && targetMaximum != null) {
+    const min = Math.min(targetMinimum, ...values)
+    const max = Math.max(targetMaximum, ...values)
+    const padding = Math.max((max - min) * 0.05, 0.5)
+    return { min: min - padding, max: max + padding }
+  }
   return values.length ? { min: Math.min(...values), max: Math.max(...values) } : {}
 }
 

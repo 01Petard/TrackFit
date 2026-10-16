@@ -12,11 +12,17 @@ describe('身体指标计算', () => {
     expect(calculateWaistHipRatio(80, undefined)).toBeNull()
   })
 
-  it('体重图表优先使用用户上下限，否则使用数据极值', () => {
+  it('体重图表覆盖目标区间并保留余量，未设置目标时使用数据极值', () => {
     const points = [{ value: 68.5 }, { value: 72.3 }, { value: 70 }]
-    expect(resolveYAxisBounds('weight', points, 60, 75)).toEqual({ min: 60, max: 75 })
+    expect(resolveYAxisBounds('weight', points, 60, 75)).toEqual({ min: 59.25, max: 75.75 })
     expect(resolveYAxisBounds('weight', points)).toEqual({ min: 68.5, max: 72.3 })
     expect(resolveYAxisBounds('waist', points, 60, 75)).toEqual({})
+  })
+
+  it('体重图表允许查看目标区间外的历史数据', () => {
+    const bounds = resolveYAxisBounds('weight', [{ value: 50 }, { value: 90 }], 60, 75)
+    expect(bounds.min).toBeLessThan(50)
+    expect(bounds.max).toBeGreaterThan(90)
   })
 
   it('结合七天变化和目标体重生成友好评价', () => {
