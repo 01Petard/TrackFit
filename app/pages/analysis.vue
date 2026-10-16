@@ -22,6 +22,20 @@ const start = computed(() => {
 const primary = computed(() => store.getAnalytics(metricCode.value, start.value))
 const secondary = computed(() => compareCode.value ? store.getAnalytics(compareCode.value, start.value) : null)
 const weightForecast = computed(() => analyzeWeightForecast(store.getAnalytics('weight')))
+const fluctuationScale = computed(() => {
+  const fluctuation = weightForecast.value.fluctuation
+  if (!fluctuation) return {}
+  const padding = Math.max(fluctuation.previous * 0.005, Math.abs(fluctuation.latest - fluctuation.previous) * 0.15)
+  const minimum = Math.min(fluctuation.lower, fluctuation.latest) - padding
+  const maximum = Math.max(fluctuation.upper, fluctuation.latest) + padding
+  const position = (value: number) => `${(value - minimum) / (maximum - minimum) * 100}%`
+  return {
+    '--range-start': position(fluctuation.lower),
+    '--range-width': `${(fluctuation.upper - fluctuation.lower) / (maximum - minimum) * 100}%`,
+    '--baseline': position(fluctuation.previous),
+    '--marker': position(fluctuation.latest),
+  }
+})
 const weightProjections = computed(() => weightForecast.value.projections.filter(item => item.period !== 3))
 const hasWeightProjection = computed(() => weightProjections.value.some(item => item.value != null))
 const status = store.status
@@ -154,19 +168,55 @@ function minutesLabel(minutes: number | null): string {
       </div>
       <p class="mt-4 text-xs text-muted">{{ t('analysis.forecastMethod') }}</p>
 
-      <div class="mt-5 rounded-2xl border border-default bg-elevated/40 p-4">
-        <div class="flex flex-wrap items-center gap-2">
-          <h3 class="font-semibold">{{ t('analysis.recentWeightChange') }}</h3>
-          <span v-if="weightForecast.recentChange" class="rounded-full bg-elevated px-2.5 py-1 text-xs font-semibold text-highlighted tabular-nums">{{ `${weightForecast.recentChange.changePercent > 0 ? '+' : ''}${weightForecast.recentChange.changePercent.toFixed(2)}%` }}</span>
-        </div>
-        <p v-if="weightForecast.recentChange" class="mt-2 text-sm text-muted">{{ t('analysis.recentWeightChangeDetail', { first: weightForecast.recentChange.first, latest: weightForecast.recentChange.latest }) }}</p>
-        <p v-else class="mt-2 text-sm text-muted">{{ t('analysis.recentWeightChangeInsufficient') }}</p>
-      </div>
+      <div class="weight-insights mt-4 grid border-t border-default md:grid-cols-2">
+        <article class="weight-insight min-w-0 py-3 md:pr-5">
+          <h3 class="flex min-h-6 items-center text-sm font-semibold">{{ t('analysis.recentWeightChange') }}</h3>
+          <template v-if="weightForecast.recentChange">
+            <div class="my-3 flex items-center gap-2 text-blue-700">
+              <AppIcon name="arrowRight" class="size-5 shrink-0" :class="weightForecast.recentChange.changePercent < 0 ? 'rotate-45' : weightForecast.recentChange.changePercent > 0 ? '-rotate-45' : ''" />
+              <strong class="text-2xl font-semibold tracking-tight tabular-nums">{{ `${weightForecast.recentChange.changePercent > 0 ? '+' : ''}${weightForecast.recentChange.changePercent.toFixed(2)}%` }}</strong>
+            </div>
+            <dl class="weight-comparison flex items-center gap-4">
+              <div>
+                <dt>{{ t('analysis.firstOfSeven') }}</dt>
+                <dd>{{ weightForecast.recentChange.first.toFixed(2) }} <span>kg</span></dd>
+              </div>
+              <div class="weight-comparison-connector" aria-hidden="true"><AppIcon name="arrowRight" class="size-5" /></div>
+              <div>
+                <dt>{{ t('analysis.latest') }}</dt>
+                <dd>{{ weightForecast.recentChange.latest.toFixed(2) }} <span>kg</span></dd>
+              </div>
+            </dl>
+          </template>
+          <p v-else class="mt-4 text-sm text-muted">{{ t('analysis.recentWeightChangeInsufficient') }}</p>
+        </article>
 
-      <div class="mt-5 rounded-2xl border p-4" :class="weightForecast.fluctuation?.status === 'warning' ? 'border-error/30 bg-error/5' : 'border-default bg-elevated/40'">
-        <div class="flex flex-wrap items-center gap-2"><h3 class="font-semibold">{{ t('analysis.weightFluctuation') }}</h3><span v-if="weightForecast.fluctuation" class="rounded-full px-2.5 py-1 text-xs font-semibold" :class="weightForecast.fluctuation.status === 'warning' ? 'bg-error/10 text-error' : weightForecast.fluctuation.status === 'normal' ? 'bg-warning/10 text-warning' : 'bg-primary/10 text-primary'">{{ t(`analysis.fluctuationStatus.${weightForecast.fluctuation.status}`) }}</span></div>
-        <p v-if="weightForecast.fluctuation" class="mt-2 text-sm" :class="weightForecast.fluctuation.status === 'warning' ? 'text-error' : 'text-muted'">{{ t(`analysis.fluctuationDetail.${weightForecast.fluctuation.status}`, { latest: weightForecast.fluctuation.latest, previous: weightForecast.fluctuation.previous, change: `${weightForecast.fluctuation.changePercent > 0 ? '+' : ''}${weightForecast.fluctuation.changePercent}`, lower: weightForecast.fluctuation.lower.toFixed(2), upper: weightForecast.fluctuation.upper.toFixed(2) }) }}</p>
-        <p v-else class="mt-2 text-sm text-muted">{{ t('analysis.fluctuationInsufficient') }}</p>
+        <article class="weight-insight min-w-0 border-t border-default py-3 md:border-t-0 md:border-l md:pl-5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h3 class="text-sm font-semibold">{{ t('analysis.weightFluctuation') }}</h3>
+            <span v-if="weightForecast.fluctuation" class="weight-fluctuation-status rounded-full px-2.5 py-1 text-xs font-medium" :class="`weight-fluctuation--${weightForecast.fluctuation.status}`" :title="t(`analysis.fluctuationStatus.${weightForecast.fluctuation.status}`)">{{ t(`analysis.fluctuationLabel.${weightForecast.fluctuation.status}`) }}</span>
+          </div>
+          <template v-if="weightForecast.fluctuation">
+            <div class="my-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <strong class="weight-fluctuation-value text-2xl font-semibold tracking-tight tabular-nums" :class="`weight-fluctuation--${weightForecast.fluctuation.status}`">{{ `${weightForecast.fluctuation.changePercent > 0 ? '+' : ''}${weightForecast.fluctuation.changePercent.toFixed(2)}%` }}</strong>
+              <span class="text-xs text-muted">{{ t('analysis.previousWeight', { value: weightForecast.fluctuation.previous.toFixed(2) }) }}</span>
+            </div>
+            <div class="flex items-baseline justify-between gap-2 text-xs">
+              <span class="text-muted">{{ t('analysis.latest') }}</span>
+              <span class="font-semibold text-highlighted tabular-nums">{{ weightForecast.fluctuation.latest.toFixed(2) }} <span class="font-normal text-muted">kg</span></span>
+            </div>
+            <div class="weight-range my-2.5" :class="`weight-fluctuation--${weightForecast.fluctuation.status}`" :style="fluctuationScale" role="img" :aria-label="t(`analysis.fluctuationDetail.${weightForecast.fluctuation.status}`, { latest: weightForecast.fluctuation.latest, previous: weightForecast.fluctuation.previous, change: `${weightForecast.fluctuation.changePercent > 0 ? '+' : ''}${weightForecast.fluctuation.changePercent}`, lower: weightForecast.fluctuation.lower.toFixed(2), upper: weightForecast.fluctuation.upper.toFixed(2) })">
+              <span class="weight-range-band" />
+              <span class="weight-range-baseline" />
+              <span class="weight-range-marker" />
+            </div>
+            <div class="flex flex-wrap justify-between gap-x-3 gap-y-1 text-xs text-muted">
+              <span>{{ t('analysis.fluctuationReference') }}</span>
+              <span class="tabular-nums">{{ weightForecast.fluctuation.lower.toFixed(2) }}–{{ weightForecast.fluctuation.upper.toFixed(2) }} kg</span>
+            </div>
+          </template>
+          <p v-else class="mt-4 text-sm text-muted">{{ t('analysis.fluctuationInsufficient') }}</p>
+        </article>
       </div>
     </section>
 
@@ -337,5 +387,79 @@ function minutesLabel(minutes: number | null): string {
   width: 32px;
   height: 32px;
   border-radius: 10px;
+}
+
+.weight-comparison dt {
+  margin-bottom: 4px;
+  color: var(--app-muted);
+  font-size: 12px;
+}
+
+.weight-comparison dd {
+  color: var(--app-ink);
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.weight-comparison dd span {
+  color: var(--app-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.weight-comparison-connector {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  max-width: 80px;
+  padding-top: 20px;
+  color: #9baac0;
+}
+
+.weight-fluctuation--stable { --fluctuation-color: #087d50; --fluctuation-background: #eaf8f0; }
+.weight-fluctuation--normal { --fluctuation-color: #946100; --fluctuation-background: #fff6df; }
+.weight-fluctuation--warning { --fluctuation-color: #c03546; --fluctuation-background: #fff0f1; }
+.weight-fluctuation-value, .weight-fluctuation-status { color: var(--fluctuation-color); }
+.weight-fluctuation-status { background: var(--fluctuation-background); }
+
+.weight-range {
+  position: relative;
+  height: 6px;
+  border-radius: 4px;
+  background: #edf1f5;
+}
+
+.weight-range-band {
+  position: absolute;
+  inset-block: 0;
+  left: var(--range-start);
+  width: var(--range-width);
+  border-radius: inherit;
+  background: #b8e4cf;
+}
+
+.weight-range-baseline {
+  position: absolute;
+  top: -3px;
+  left: var(--baseline);
+  width: 1px;
+  height: 12px;
+  background: #648174;
+}
+
+.weight-range-marker {
+  position: absolute;
+  top: 50%;
+  left: var(--marker);
+  width: 12px;
+  height: 12px;
+  border: 3px solid white;
+  border-radius: 50%;
+  background: var(--fluctuation-color);
+  box-shadow: 0 1px 4px rgb(20 40 70 / .25);
+  transform: translate(-50%, -50%);
 }
 </style>
