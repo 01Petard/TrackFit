@@ -20,6 +20,33 @@ export type SingleMakeupInput
     | { kind: 'training', date: string, training: TrainingWrite, trainingAt: Date }
     | { kind: 'sleep', date: string, sleep: SleepWrite }
 
+export interface CalendarMakeupInput {
+  date: string
+  measurement?: MeasurementWrite
+  training?: TrainingWrite
+  trainingAt?: Date
+  sleep?: SleepWrite
+}
+
+export function saveCalendarMakeup(data: TrackFitData, input: CalendarMakeupInput): void {
+  const date = dayjs(input.date)
+  if (!date.isValid() || date.format('YYYY-MM-DD') !== input.date || (!input.measurement && !input.training && !input.sleep)) {
+    throw new TrackFitDomainError('makeup.dayUnavailable')
+  }
+  const measurement = input.measurement ? measurementWriteSchema.parse(input.measurement) : undefined
+  const training = input.training ? trainingWriteSchema.parse(input.training) : undefined
+  const sleep = input.sleep ? sleepWriteSchema.parse(input.sleep) : undefined
+  const trainingAt = input.trainingAt ? new Date(input.trainingAt) : undefined
+  if ((measurement && dayjs(measurement.measuredAt).format('YYYY-MM-DD') !== input.date)
+    || (training && (!trainingAt || !Number.isFinite(trainingAt.getTime()) || dayjs(trainingAt).format('YYYY-MM-DD') !== input.date))
+    || (sleep && dayjs(sleep.fellAsleepAt).add(sleep.durationMinutes, 'minute').format('YYYY-MM-DD') !== input.date)) {
+    throw new TrackFitDomainError('makeup.dateMismatch')
+  }
+  if (measurement) saveMeasurement(data, measurement)
+  if (training) saveTraining(data, training, undefined, trainingAt)
+  if (sleep) saveSleep(data, sleep)
+}
+
 export function findLatestMissingDay(data: TrackFitData, now = new Date(), kind: MakeupKind = 'all'): string | null {
   const bodyDays = data.bodyRecords.map(item => dayjs(item.measuredAt).format('YYYY-MM-DD'))
   const trainingDays = data.trainingRecords.map(item => dayjs(item.recordedAt).format('YYYY-MM-DD'))

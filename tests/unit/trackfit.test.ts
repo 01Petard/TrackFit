@@ -4,6 +4,14 @@ import { backupSchema } from '../../shared/schemas/trackfit'
 import { createMetric, deleteMeasurement, getAnalytics, listMeasurements, saveMeasurement, saveSettings } from '../../shared/utils/trackfit'
 
 describe('前端数据业务', () => {
+  it('旧设置默认每周健身五次，保存和备份恢复保留新目标', () => {
+    const data = backupSchema.parse(fixture())
+    expect(data.settings[0]!.weeklyTrainingGoalCount).toBe(5)
+    const settings = { ...data.settings[0]!, heightCm: 175, weeklyTrainingGoalCount: 4 }
+    saveSettings(data, settings)
+    expect(backupSchema.parse(JSON.parse(JSON.stringify(data))).settings[0]!.weeklyTrainingGoalCount).toBe(4)
+    expect(() => saveSettings(data, { ...settings, weeklyTrainingGoalCount: 0 })).toThrow()
+  })
   it('新增测量记录并完成分页、筛选和分析', () => {
     const data = fixture()
     const id = saveMeasurement(data, {

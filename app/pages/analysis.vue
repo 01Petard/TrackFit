@@ -1,36 +1,34 @@
 <script setup lang="ts">
 import type { CorrelationDto, MovingAveragePeriod } from '../../shared/types/api'
+import { getBehaviorAnalytics } from '../../shared/utils/behavior'
 import { analyzeWeightForecast } from '../../shared/utils/weight-forecast'
 import dayjs from 'dayjs'
 
 const { t } = useI18n()
 const { metricName } = useTrackFitI18n()
-const ranges = computed(() => ['24h', '7d', '30d', '90d', 'all'].map(value => ({ label: t(`range.${value}`), value })))
+const ranges = computed(() => ['30d', '90d', 'all'].map(value => ({ label: t(`range.${value}`), value })))
 const range = ref('30d')
-const metricCode = ref('weight')
-const compareCode = ref('')
-const visibleMovingAverages = ref<MovingAveragePeriod[]>([7, 30, 90])
+const indicator = ref<'weight' | 'sleep' | 'training'>('weight')
+const visibleMovingAverages: MovingAveragePeriod[] = [7, 30, 90]
 const store = useTrackFitData()
 await store.ensureLoaded()
-const metrics = store.metrics
-range.value = store.settings.value.defaultDateRange
+range.value = ranges.value.some(item => item.value === store.settings.value.defaultDateRange) ? store.settings.value.defaultDateRange : '30d'
 
 const start = computed(() => {
-  const amount = { '24h': [24, 'hour'], '7d': [7, 'day'], '30d': [30, 'day'], '90d': [90, 'day'] }[range.value] as [number, dayjs.ManipulateType] | undefined
+  const amount = { '30d': [30, 'day'], '90d': [90, 'day'] }[range.value] as [number, dayjs.ManipulateType] | undefined
   return amount ? dayjs().subtract(amount[0], amount[1]).toISOString() : undefined
 })
-const primary = computed(() => store.getAnalytics(metricCode.value, start.value))
-const chartPrimary = computed(() => store.getAnalytics(metricCode.value))
-const chartSecondary = computed(() => compareCode.value ? store.getAnalytics(compareCode.value) : null)
-const metricItems = computed(() => metrics.value.filter(item => item.enabled).map(item => ({ label: metricName(item), value: item.code })))
-const comparisonItems = computed(() => [{ label: t('analysis.noComparison'), value: '__none__' }, ...metricItems.value.filter(item => item.value !== metricCode.value)])
-const comparisonSelection = computed({
-  get: () => compareCode.value || '__none__',
-  set: (value: string) => { compareCode.value = value === '__none__' ? '' : value },
-})
-watch(metricCode, (value) => {
-  if (compareCode.value === value) compareCode.value = ''
-})
+const indicatorItems = computed(() => [
+  { value: 'weight' as const, label: t('metrics.weight'), icon: 'weight' as const },
+  { value: 'sleep' as const, label: t('common.sleep'), icon: 'moon' as const },
+  { value: 'training' as const, label: t('analysis.fitness'), icon: 'dumbbell' as const },
+])
+const primary = computed(() => indicator.value === 'weight'
+  ? store.getAnalytics('weight', start.value)
+  : store.data.value ? getBehaviorAnalytics(store.data.value, indicator.value, start.value) : null)
+const chartPrimary = computed(() => indicator.value === 'weight'
+  ? store.getAnalytics('weight')
+  : store.data.value ? getBehaviorAnalytics(store.data.value, indicator.value) : null)
 const weightForecast = computed(() => analyzeWeightForecast(store.getAnalytics('weight')))
 const fluctuationScale = computed(() => {
   const fluctuation = weightForecast.value.fluctuation
@@ -124,33 +122,52 @@ function minutesLabel(minutes: number | null): string {
   <div>
     <PageHeader :title="t('analysis.title')" :description="t('analysis.description')" />
 
-    <section class="app-card mb-5 grid gap-4 p-5 sm:grid-cols-2 xl:grid-cols-3">
-      <AppSelect v-model="range" :label="t('analysis.timeRange')" :items="ranges" />
-      <AppSelect v-model="metricCode" :label="t('analysis.primaryMetric')" :items="metricItems" />
-      <AppSelect v-model="comparisonSelection" :label="t('analysis.compareMetric')" :items="comparisonItems" />
-      <div class="border-t border-default pt-4 sm:col-span-2 xl:col-span-3">
-        <p class="mb-2 text-xs text-muted">{{ t('analysis.averages') }}</p>
-        <div class="flex flex-wrap gap-2">
-          <label v-for="period in ([7, 30, 90] as const)" :key="period" class="flex min-h-10 items-center gap-2 rounded-full border border-default bg-white px-4 py-2 text-sm font-medium hover:bg-primary/10"><input v-model="visibleMovingAverages" type="checkbox" :value="period" class="size-4 accent-emerald-600">{{ t(`common.movingAverage.${period}`) }}</label>
+    <section class="app-card mb-5 p-4 sm:p-6" data-testid="indicator-trend">
+      <div class="mb-5 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+        <div class="app-section-heading min-w-0" data-testid="indicator-heading"><span class="app-icon-tile" :class="indicator === 'sleep' ? 'app-icon-tile--purple' : indicator === 'training' ? 'app-icon-tile--orange' : ''"><AppIcon :name="indicator === 'sleep' ? 'moon' : indicator === 'training' ? 'dumbbell' : 'chart'" class="size-6" /></span><div><h2>{{ t('analysis.keyTrends') }}</h2><p>{{ t('analysis.sliderHint') }}</p></div></div>
+        <div class="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end xl:min-w-[38rem] xl:shrink-0">
+          <fieldset class="min-w-0">
+            <legend class="mb-1.5 text-xs text-muted">{{ t('analysis.timeRange') }}</legend>
+            <div class="grid grid-cols-3 gap-1 rounded-xl border border-default bg-elevated/40 p-1">
+              <label v-for="item in ranges" :key="item.value" class="relative flex min-h-10 cursor-pointer items-center justify-center whitespace-nowrap rounded-lg px-1 text-xs font-medium has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-primary sm:px-2 sm:text-sm" :class="range === item.value ? 'bg-white text-primary shadow-sm ring-1 ring-primary/40' : 'text-muted hover:bg-white/70'">
+                <input v-model="range" type="radio" name="time-range" :value="item.value" class="sr-only">
+                {{ item.label }}
+              </label>
+            </div>
+          </fieldset>
+          <fieldset class="min-w-0">
+            <legend class="mb-1.5 text-xs text-muted">{{ t('analysis.primaryMetric') }}</legend>
+            <div class="grid grid-cols-3 gap-1 rounded-xl border border-default bg-elevated/40 p-1">
+              <label v-for="item in indicatorItems" :key="item.value" class="relative flex min-h-10 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-3 text-sm font-medium has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-primary" :class="indicator === item.value ? 'bg-white text-primary shadow-sm ring-1 ring-primary/40' : 'text-muted hover:bg-white/70'">
+                <input v-model="indicator" type="radio" name="indicator" :value="item.value" class="sr-only">
+                <AppIcon :name="item.icon" class="size-4 shrink-0" />{{ item.label }}
+              </label>
+            </div>
+          </fieldset>
         </div>
-        <p class="mt-2 text-xs text-muted">{{ t('analysis.interpolationHint') }}</p>
       </div>
-    </section>
-
-    <section class="app-card mb-5 p-3 sm:p-6">
-      <div class="app-section-heading mb-3 px-2"><span class="app-icon-tile"><AppIcon name="chart" class="size-6" /></span><div><h2>{{ primary ? `${metricName(primary.metric)} · ${t('analysis.title')}` : t('analysis.primaryMetric') }}</h2><p>{{ t('analysis.sliderHint') }}</p></div></div>
+      <h3 class="mb-3 text-sm font-medium text-muted" data-testid="indicator-chart-title">{{ primary ? `${metricName(primary.metric)} (${primary.metric.unit})` : t('analysis.primaryMetric') }}</h3>
       <div v-if="status === 'pending'" class="grid h-[420px] place-items-center text-sm text-muted">{{ t('analysis.calculating') }}</div>
       <ClientOnly v-else-if="chartPrimary">
-        <ComparisonChart
-          :primary="chartPrimary"
-          :secondary="chartSecondary"
+        <MetricChart
+          :key="indicator"
+          :points="chartPrimary.points"
+          :moving-averages="chartPrimary.movingAverages"
+          :metric-code="chartPrimary.metric.code"
+          :unit="chartPrimary.metric.unit"
+          :color="indicator === 'sleep' ? '#7f22fe' : indicator === 'training' ? '#e79d81' : '#00cb57'"
+          :chart-type="indicator === 'weight' ? 'line' : 'bar'"
+          fixed-legend
+          height="420px"
           :start="start"
           :visible-moving-averages="visibleMovingAverages"
-          :target-minimum="settings.desiredWeightMinimum"
-          :target-maximum="settings.desiredWeightMaximum"
+          :target-minimum="indicator === 'weight' ? settings.desiredWeightMinimum : null"
+          :target-maximum="indicator === 'weight' ? settings.desiredWeightMaximum : null"
+          :target-value="indicator === 'sleep' ? settings.sleepGoalHours : indicator === 'training' ? settings.weeklyTrainingGoalMinutes / settings.weeklyTrainingGoalCount : null"
         />
         <template #fallback><div class="grid h-[420px] place-items-center text-sm text-muted">{{ t('common.loadingChart') }}</div></template>
       </ClientOnly>
+      <p class="mt-2 text-xs leading-relaxed text-muted">{{ t('analysis.interpolationHint') }}</p>
     </section>
 
     <section v-if="summaryCards.length" class="analysis-summary app-card grid grid-cols-2 overflow-hidden sm:grid-cols-3 xl:grid-cols-6">
@@ -177,7 +194,7 @@ function minutesLabel(minutes: number | null): string {
       </article>
     </section>
 
-    <section class="app-card mt-5 rounded-3xl p-4 sm:p-6">
+    <section v-if="indicator === 'weight'" class="app-card mt-5 rounded-3xl p-4 sm:p-6">
       <div class="mb-4 flex flex-wrap items-center justify-between gap-3"><div class="app-section-heading"><span class="app-icon-tile app-icon-tile--blue"><AppIcon name="chart" class="size-6" /></span><div><h2>{{ t('analysis.weightForecast') }}</h2><p>{{ t('analysis.weightForecastHint') }}</p></div></div><p v-if="weightTargetStatus" class="text-xs font-medium" :class="weightTargetStatus.class">{{ weightTargetStatus.label }}</p></div>
       <p v-if="hasWeightProjection && weightForecast.forecastDate" class="mb-4 text-sm text-muted">{{ t('analysis.forecastDate', { date: dayjs(weightForecast.forecastDate).format('YYYY-MM-DD') }) }}</p>
       <p v-else class="mb-4 text-sm text-muted">{{ t(weightForecast.stale ? 'analysis.forecastStale' : 'analysis.forecastInsufficient') }}</p>
@@ -261,7 +278,7 @@ function minutesLabel(minutes: number | null): string {
       </div>
     </section>
 
-    <section class="app-card mt-5 rounded-3xl p-4 sm:p-6">
+    <section v-if="indicator === 'weight'" class="app-card mt-5 rounded-3xl p-4 sm:p-6">
       <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div class="app-section-heading min-w-0 flex-1 basis-48">
           <span class="app-icon-tile app-icon-tile--blue"><AppIcon name="link" class="size-6" /></span>

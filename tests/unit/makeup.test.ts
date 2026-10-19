@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { backupSchema } from '../../shared/schemas/trackfit'
 import { saveSleep, saveTraining } from '../../shared/utils/behavior'
-import { findLatestMissingDay, saveMakeupDay, saveSingleMakeupDay } from '../../shared/utils/makeup'
+import { findLatestMissingDay, saveCalendarMakeup, saveMakeupDay, saveSingleMakeupDay } from '../../shared/utils/makeup'
 import { saveMeasurement } from '../../shared/utils/trackfit'
 
 function fixture() {
@@ -18,6 +18,41 @@ function fixture() {
 
 describe('连续记录补卡', () => {
   const now = new Date(2026, 8, 29, 12)
+
+  it('日历补记不依赖已有记录或最近缺卡日，可选择一项或同时新增三项', () => {
+    const data = fixture()
+    saveCalendarMakeup(data, {
+      date: '2026-09-10',
+      measurement: { measuredAt: new Date(2026, 8, 10, 8), values: [{ metricId: 1, value: 70 }] },
+      training: { type: 'strength', durationMinutes: 45 },
+      trainingAt: new Date(2026, 8, 10, 18),
+      sleep: { fellAsleepAt: new Date(2026, 8, 9, 23), durationMinutes: 480, quality: 80 },
+    })
+    expect(data.bodyRecords).toHaveLength(1)
+    expect(data.trainingRecords).toHaveLength(1)
+    expect(data.sleepRecords).toHaveLength(1)
+    expect(new Date(data.sleepRecords[0]!.wokeUpAt)).toEqual(new Date(2026, 8, 10, 7))
+    saveCalendarMakeup(data, { date: '2026-09-12', training: { type: 'cardio', durationMinutes: 30 }, trainingAt: new Date(2026, 8, 12, 15, 30) })
+    expect(new Date(data.trainingRecords[1]!.recordedAt)).toEqual(new Date(2026, 8, 12, 15, 30))
+    expect(data.bodyRecords).toHaveLength(1)
+    expect(data.sleepRecords).toHaveLength(1)
+  })
+
+  it('日历补记的日期或任一项目无效时，不写入其他项目', () => {
+    const data = fixture()
+    const input = {
+      date: '2026-09-10',
+      measurement: { measuredAt: new Date(2026, 8, 10, 8), values: [{ metricId: 1, value: 70 }] },
+      sleep: { fellAsleepAt: new Date(2026, 8, 10, 23), durationMinutes: 480, quality: 80 },
+    }
+    expect(() => saveCalendarMakeup(data, input)).toThrow('makeup.dateMismatch')
+    expect(() => saveCalendarMakeup(data, { date: '2026-09-10' })).toThrow('makeup.dayUnavailable')
+    expect(() => saveCalendarMakeup(data, { ...input, date: '2026-02-31' })).toThrow('makeup.dayUnavailable')
+    expect(() => saveCalendarMakeup(data, { date: '2026-09-10', training: { type: 'cardio', durationMinutes: 30 } })).toThrow('makeup.dateMismatch')
+    expect(data.bodyRecords).toHaveLength(0)
+    expect(data.trainingRecords).toHaveLength(0)
+    expect(data.sleepRecords).toHaveLength(0)
+  })
 
   it('只提示首次记录之后、昨天之前最近的缺失自然日', () => {
     const data = fixture()

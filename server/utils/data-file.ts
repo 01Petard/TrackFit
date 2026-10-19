@@ -99,6 +99,7 @@ function createDefaultData(): TrackFitData {
       defaultDateRange: '30d',
       sleepGoalHours: 8,
       weeklyTrainingGoalMinutes: 150,
+      weeklyTrainingGoalCount: 5,
       theme: 'light',
       dataVersion: 1,
     }],

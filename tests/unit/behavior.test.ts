@@ -7,6 +7,7 @@ import {
   buildWeightCorrelationComparison,
   deleteSleep,
   deleteTraining,
+  getBehaviorAnalytics,
   listBehaviorTimeline,
   saveSleep,
   saveTraining,
@@ -14,6 +15,24 @@ import {
 import { saveMeasurement } from '../../shared/utils/trackfit'
 
 describe('训练与睡眠业务', () => {
+  it('睡眠按起床日累计小时，健身按记录日累计分钟，日期筛选保留完整历史均线', () => {
+    const data = fixture()
+    for (let day = 1; day <= 10; day++) {
+      saveTraining(data, { type: 'strength', durationMinutes: 30 }, undefined, new Date(2026, 7, day, 9))
+      saveTraining(data, { type: 'cardio', durationMinutes: 15 }, undefined, new Date(2026, 7, day, 18))
+      saveSleep(data, { fellAsleepAt: new Date(2026, 7, day - 1, 23), durationMinutes: 480, quality: 80 })
+    }
+    const training = getBehaviorAnalytics(data, 'training', new Date(2026, 7, 10).toISOString())
+    expect(training.points).toHaveLength(1)
+    expect(training.summary?.latest).toBe(45)
+    expect(training.movingAverages[7]).toHaveLength(1)
+    expect(training.metric.unit).toBe('min')
+    const sleep = getBehaviorAnalytics(data, 'sleep')
+    expect(sleep.points).toHaveLength(10)
+    expect(sleep.summary?.average).toBe(8)
+    expect(sleep.metric.unit).toBe('h')
+    expect(getBehaviorAnalytics(fixture(), 'sleep').summary).toBeNull()
+  })
   it('保存、编辑和删除行为记录', () => {
     const data = fixture()
     const trainingId = saveTraining(data, { type: 'strength', durationMinutes: 45 }, undefined, new Date('2026-08-03T10:00:00+08:00'))

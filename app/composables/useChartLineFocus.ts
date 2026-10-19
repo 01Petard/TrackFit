@@ -1,4 +1,4 @@
-import type { LineSeriesOption } from 'echarts/charts'
+import type { BarSeriesOption, LineSeriesOption } from 'echarts/charts'
 import { ref } from 'vue'
 
 interface LineEvent {
@@ -30,19 +30,20 @@ export function useChartLineFocus() {
     }
   }
 
-  function focusSeries(series: LineSeriesOption[]): LineSeriesOption[] {
+  function focusSeries<T extends LineSeriesOption | BarSeriesOption>(series: T[]): T[] {
     const focused = hovered.value ?? selected.value
     const hasFocus = series.some(item => item.name === focused)
     return series.map((item) => {
       const active = hasFocus && item.name === focused
       const opacity = hasFocus && !active ? 0.15 : 1
+      if (item.type === 'bar') return { ...item, emphasis: { disabled: true }, itemStyle: { ...item.itemStyle, opacity } }
       return {
         ...item,
         triggerEvent: 'line',
         emphasis: { disabled: true },
-        lineStyle: { ...item.lineStyle, opacity },
+        lineStyle: { ...('lineStyle' in item ? item.lineStyle : {}), opacity },
         itemStyle: { ...item.itemStyle, opacity },
-        ...(item.areaStyle ? { areaStyle: { ...item.areaStyle, opacity: hasFocus && !active ? 0.1 : item.areaStyle.opacity ?? 0.7 } } : {}),
+        ...('areaStyle' in item && item.areaStyle ? { areaStyle: { ...item.areaStyle, opacity: hasFocus && !active ? 0.1 : item.areaStyle.opacity ?? 0.7 } } : {}),
       }
     })
   }

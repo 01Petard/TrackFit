@@ -69,6 +69,7 @@ function renderCopy(copy: LocalizedDescriptor | { text: string }): string {
               <span class="app-icon-tile !size-10 !rounded-xl" :class="item.kind === 'sleep' ? 'app-icon-tile--purple' : ''"><AppIcon :name="kindIcons[item.kind]" class="size-5" /></span>
               <div class="min-w-0 flex-1"><div class="flex flex-wrap items-center gap-x-2 gap-y-1"><strong class="text-sm">{{ renderCopy(item.title) }}</strong><span class="rounded-lg px-2 py-0.5 text-[11px] font-medium" :class="kindClasses[item.kind]">{{ kindLabels[item.kind] }}</span></div><p class="mt-1 truncate text-xs text-muted">{{ renderCopy(item.description) }}</p></div>
               <div class="flex flex-wrap gap-1 sm:max-w-[40%] sm:justify-end"><span v-for="(detail, index) in item.details" :key="`${detail.key}-${index}`" class="rounded-lg bg-elevated px-2 py-1 text-[11px] font-medium text-highlighted">{{ renderCopy(detail) }}</span></div>
+              <slot name="actions" :item="item" />
             </div>
           </article>
         </div>

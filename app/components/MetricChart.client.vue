@@ -1,17 +1,18 @@
 <script setup lang="ts">
 import type { MovingAveragePeriod, MovingAveragePointDto } from '../../shared/types/api'
-import type { LineSeriesOption } from 'echarts/charts'
+import type { BarSeriesOption, LineSeriesOption } from 'echarts/charts'
 import { chartTimeAxis, toDailyChartPoints } from '../utils/chart-axis'
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import { LineChart } from 'echarts/charts'
-import { DataZoomComponent, GridComponent, LegendComponent, TooltipComponent } from 'echarts/components'
+import { BarChart, LineChart } from 'echarts/charts'
+import { DataZoomComponent, GridComponent, LegendComponent, MarkLineComponent, TooltipComponent } from 'echarts/components'
 
-use([CanvasRenderer, LineChart, DataZoomComponent, GridComponent, LegendComponent, TooltipComponent])
+use([CanvasRenderer, LineChart, BarChart, DataZoomComponent, GridComponent, LegendComponent, MarkLineComponent, TooltipComponent])
 const { t } = useI18n()
 const { focusSeries, onMouseOver, onMouseOut, onClick, onBlankClick } = useChartLineFocus()
+const rendered = ref(false)
 
 const props = withDefaults(defineProps<{
   points: Array<{ measuredAt: string, value: number }>
@@ -19,17 +20,25 @@ const props = withDefaults(defineProps<{
   visibleMovingAverages?: MovingAveragePeriod[]
   targetMinimum?: number | null
   targetMaximum?: number | null
+  targetValue?: number | null
   metricCode?: string
   start?: string
   unit: string
   height?: string
+  color?: string
+  fixedLegend?: boolean
+  chartType?: 'line' | 'bar'
 }>(), {
   movingAverages: () => ({ 3: [], 7: [], 30: [], 90: [] }),
   visibleMovingAverages: () => [7],
   targetMinimum: null,
   targetMaximum: null,
+  targetValue: null,
   metricCode: 'weight',
   height: '360px',
+  color: '#10b981',
+  fixedLegend: false,
+  chartType: 'line',
 })
 
 const colors: Record<MovingAveragePeriod, string> = {
@@ -45,6 +54,8 @@ const { xAxisBounds, yAxisBounds, xZoom, yZoom, onDataZoom } = useChartViewport(
   start: props.start,
   targetMinimum: props.targetMinimum,
   targetMaximum: props.targetMaximum,
+  targetValue: props.targetValue,
+  dayPadding: props.chartType === 'bar' ? 0.5 : 0,
 }))
 
 const option = computed(() => {
@@ -59,6 +70,28 @@ const option = computed(() => {
     itemStyle: { color: colors[period] },
     data: toDailyChartPoints(props.movingAverages[period]),
   }))
+  const rawSeries: LineSeriesOption | BarSeriesOption = {
+    name: t('chart.raw'),
+    data: toDailyChartPoints(props.points),
+    ...(props.chartType === 'bar'
+      ? { type: 'bar', barMaxWidth: 28, itemStyle: { color: props.color, borderRadius: [4, 4, 0, 0] } }
+      : { type: 'line', showSymbol: true, symbolSize: 8, connectNulls: false, lineStyle: { width: 2, color: props.color }, itemStyle: { color: props.color, borderColor: '#fff', borderWidth: 2 }, areaStyle: { color: props.color, opacity: 0.06 } }),
+    markLine: {
+      silent: true,
+      animation: false,
+      symbol: ['none', 'none'],
+      lineStyle: { color: '#d97706', type: 'dashed', width: 1.5 },
+      label: {
+        position: 'insideEndTop',
+        color: '#b45309',
+        backgroundColor: 'rgba(255,255,255,.94)',
+        padding: [3, 6],
+        borderRadius: 4,
+        formatter: t('chart.target', { value: Number(props.targetValue?.toFixed(2) ?? 0), unit: props.unit }),
+      },
+      data: props.targetValue == null ? [] : [{ yAxis: props.targetValue }],
+    },
+  }
   return {
     animationDuration: 450,
     axisPointer: { triggerEmphasis: false },
@@ -68,6 +101,7 @@ const option = computed(() => {
       valueFormatter: (value: unknown) => `${value} ${props.unit}`,
     },
     legend: {
+      selectedMode: !props.fixedLegend,
       type: 'scroll',
       top: 0,
       left: 'center',
@@ -84,6 +118,7 @@ const option = computed(() => {
       type: 'value',
       scale: true,
       ...yAxisBounds.value,
+      ...(props.chartType === 'bar' ? { min: 0 } : {}),
       name: props.unit,
       axisLabel: { color: '#94a3b8' },
       splitLine: { lineStyle: { color: 'rgba(148,163,184,.16)' } },
@@ -94,27 +129,17 @@ const option = computed(() => {
       { id: 'y-inside', type: 'inside', yAxisIndex: 0, filterMode: 'none', zoomOnMouseWheel: 'shift', ...yZoom.value },
       { id: 'y-slider', type: 'slider', yAxisIndex: 0, filterMode: 'none', orient: 'vertical', width: 18, right: 8, ...yZoom.value },
     ],
-    series: focusSeries([
-      {
-        name: t('chart.raw'),
-        type: 'line',
-        showSymbol: true,
-        symbolSize: 8,
-        connectNulls: false,
-        lineStyle: { width: 2, color: '#10b981' },
-        itemStyle: { color: '#10b981', borderColor: '#ecfdf5', borderWidth: 2 },
-        areaStyle: { color: 'rgba(16,185,129,.08)' },
-        data: toDailyChartPoints(props.points),
-      },
-      ...averageSeries,
-    ]),
+    series: focusSeries([rawSeries, ...averageSeries]),
   }
+})
+watch(option, () => {
+  rendered.value = false
 })
 </script>
 
 <template>
-  <div v-if="points.length" class="w-full" :style="{ height }">
-    <VChart autoresize :option="option" @datazoom="onDataZoom" @mouseover="onMouseOver" @mouseout="onMouseOut" @globalout="onMouseOut" @click="onClick" @zr:click="onBlankClick" />
+  <div v-if="points.length" data-testid="metric-chart" class="w-full" :style="{ height }" :aria-busy="!rendered">
+    <VChart autoresize :option="option" @finished="rendered = true" @datazoom="onDataZoom" @mouseover="onMouseOver" @mouseout="onMouseOut" @globalout="onMouseOut" @click="onClick" @zr:click="onBlankClick" />
   </div>
   <div v-else class="grid h-72 place-items-center rounded-2xl border border-dashed border-default text-sm text-muted">
     {{ t('chart.noData') }}

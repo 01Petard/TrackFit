@@ -23,9 +23,9 @@ const latestAnalytics = computed(() => new Map(
   ['weight', 'waist', 'body_fat'].map(code => [code, store.getAnalytics(code)]),
 ))
 const weightMetricId = computed(() => store.metrics.value.find(metric => metric.code === 'weight')?.id)
-const latestWeightRecord = computed(() => weightMetricId.value == null
-  ? undefined
-  : store.listMeasurements({ page: 1, pageSize: 1, metricId: weightMetricId.value }).items[0])
+const recentWeightRecords = computed(() => weightMetricId.value == null
+  ? []
+  : store.listMeasurements({ page: 1, pageSize: 7, metricId: weightMetricId.value }).items)
 const settings = store.settings
 const visibleMovingAverages = ref<MovingAveragePeriod[]>([7, 30, 90])
 
@@ -73,12 +73,16 @@ const latestSingleMissing = computed(() => ({
   training: store.getLatestMissingDay('training'),
 }))
 const makeupDate = computed(() => makeupKind.value === 'all' ? latestMissingDay.value : latestSingleMissing.value[makeupKind.value])
-const cards = computed(() => [
-  { label: t('metrics.weight'), icon: 'weight' as const, value: latestAnalytics.value.get('weight')?.summary?.latest, unit: 'kg', change: latestAnalytics.value.get('weight')?.summary?.previousChange, measuredAt: latestAnalytics.value.get('weight')?.points.at(-1)?.measuredAt, color: '#19a974', values: latestAnalytics.value.get('weight')?.points.slice(-7).map(point => point.value) ?? [] },
-  { label: 'BMI', icon: 'bmi' as const, value: latestWeightRecord.value?.bmi, unit: '', change: null, measuredAt: latestWeightRecord.value?.measuredAt, color: '#4a92c7', values: store.listMeasurements({ page: 1, pageSize: 7, metricId: weightMetricId.value }).items.slice().reverse().flatMap(record => record.bmi == null ? [] : [record.bmi]) },
-  { label: t('metrics.waist'), icon: 'waist' as const, value: latestAnalytics.value.get('waist')?.summary?.latest, unit: 'cm', change: latestAnalytics.value.get('waist')?.summary?.previousChange, measuredAt: latestAnalytics.value.get('waist')?.points.at(-1)?.measuredAt, color: '#5e8fbe', values: latestAnalytics.value.get('waist')?.points.slice(-7).map(point => point.value) ?? [] },
-  { label: t('metrics.bodyFat'), icon: 'percent' as const, value: latestAnalytics.value.get('body_fat')?.summary?.latest, unit: '%', change: latestAnalytics.value.get('body_fat')?.summary?.previousChange, measuredAt: latestAnalytics.value.get('body_fat')?.points.at(-1)?.measuredAt, color: '#9276bd', values: latestAnalytics.value.get('body_fat')?.points.slice(-7).map(point => point.value) ?? [] },
-])
+const cards = computed(() => {
+  const bmiRecords = recentWeightRecords.value.filter(record => record.bmi != null)
+  const bmiChange = bmiRecords.length > 1 ? Number((bmiRecords[0]!.bmi! - bmiRecords[1]!.bmi!).toFixed(2)) : null
+  return [
+    { code: 'weight', label: t('metrics.weight'), icon: 'weight' as const, value: latestAnalytics.value.get('weight')?.summary?.latest, unit: 'kg', change: latestAnalytics.value.get('weight')?.summary?.previousChange, measuredAt: latestAnalytics.value.get('weight')?.points.at(-1)?.measuredAt, color: '#19a974', values: latestAnalytics.value.get('weight')?.points.slice(-7).map(point => point.value) ?? [] },
+    { code: 'bmi', label: 'BMI', icon: 'bmi' as const, value: bmiRecords[0]?.bmi, unit: '', change: bmiChange, measuredAt: bmiRecords[0]?.measuredAt, color: '#4a92c7', values: bmiRecords.slice().reverse().map(record => record.bmi!) },
+    { code: 'waist', label: t('metrics.waist'), icon: 'waist' as const, value: latestAnalytics.value.get('waist')?.summary?.latest, unit: 'cm', change: latestAnalytics.value.get('waist')?.summary?.previousChange, measuredAt: latestAnalytics.value.get('waist')?.points.at(-1)?.measuredAt, color: '#5e8fbe', values: latestAnalytics.value.get('waist')?.points.slice(-7).map(point => point.value) ?? [] },
+    { code: 'body_fat', label: t('metrics.bodyFat'), icon: 'percent' as const, value: latestAnalytics.value.get('body_fat')?.summary?.latest, unit: '%', change: latestAnalytics.value.get('body_fat')?.summary?.previousChange, measuredAt: latestAnalytics.value.get('body_fat')?.points.at(-1)?.measuredAt, color: '#9276bd', values: latestAnalytics.value.get('body_fat')?.points.slice(-7).map(point => point.value) ?? [] },
+  ]
+})
 const insightColors = ['#10b981', '#0ea5e9', '#8b5cf6', '#f59e0b', '#ef4444', '#14b8a6', '#6366f1', '#ec4899']
 const fixedInsightColors: Record<string, string> = { weight: '#10b981', waist: '#0ea5e9', body_fat: '#8b5cf6' }
 const smartInsights = computed(() => store.metrics.value.filter(metric => metric.enabled).flatMap((metric, index) => {
@@ -214,10 +218,10 @@ function trendSymbol(direction: 'up' | 'down' | 'stable' | 'insufficient'): stri
     </NuxtLink>
 
     <section class="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      <article v-for="card in cards" :key="card.label" class="app-card min-w-0 p-5">
+      <article v-for="card in cards" :key="card.code" data-testid="overview-card" :data-metric-code="card.code" class="app-card min-w-0 p-5">
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-3"><span class="app-icon-tile"><AppIcon :name="card.icon" class="size-6" /></span><span class="text-sm font-bold text-[#253d59]">{{ card.label }}</span></div>
-          <span v-if="card.change != null" class="app-pill">{{ card.change > 0 ? '↗' : '↘' }} {{ Math.abs(card.change) }} {{ card.unit }}</span>
+          <span data-testid="overview-change" class="app-pill shrink-0 whitespace-nowrap" :class="card.change == null ? '!bg-elevated !text-muted' : ''" :title="t(card.change == null ? 'home.insights.noComparableChange' : 'home.sincePrevious')"><template v-if="card.change != null">{{ card.change > 0 ? '↗' : card.change < 0 ? '↘' : '→' }} {{ Math.abs(card.change) }} {{ card.unit }}</template><template v-else>— {{ t('home.noPreviousRecord') }}</template></span>
         </div>
         <div class="mt-2 grid grid-cols-[minmax(0,1fr)_95px] items-end gap-2">
           <div class="min-w-0">
@@ -238,7 +242,7 @@ function trendSymbol(direction: 'up' | 'down' | 'stable' | 'insufficient'): stri
         <div class="flex flex-wrap items-center gap-2">
           <button v-if="store.canWrite.value" class="app-btn app-btn--primary" :aria-label="`＋ ${t('common.sleep')}`" @click="openBehaviorDialog('sleep')"><AppIcon name="plus" class="size-4" />{{ t('common.sleep') }}</button>
           <button v-if="store.canWrite.value" class="app-btn app-btn--primary" :aria-label="`＋ ${t('common.training')}`" @click="openBehaviorDialog('training')"><AppIcon name="plus" class="size-4" />{{ t('common.training') }}</button>
-          <NuxtLink :to="localePath('/behavior')" class="app-btn app-btn--outline">{{ t('home.behavior.open') }}<AppIcon name="arrowRight" class="size-4" /></NuxtLink>
+          <NuxtLink :to="localePath('/history')" class="app-btn app-btn--outline">{{ t('home.behavior.open') }}<AppIcon name="arrowRight" class="size-4" /></NuxtLink>
         </div>
       </div>
       <div class="grid gap-3 sm:grid-cols-3">

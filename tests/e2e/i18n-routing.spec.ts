@@ -54,6 +54,9 @@ test('英文首页和测量弹窗显示英文系统文案', async ({ page }) => 
   await page.goto('/en/')
 
   await expect(page.getByRole('heading', { name: 'Body overview' })).toBeVisible()
+  const navigation = page.locator('nav:visible')
+  await expect(navigation.getByRole('link', { name: 'Trends', exact: true })).toHaveAttribute('href', '/en/analysis')
+  await expect(navigation.getByRole('link', { name: 'Review', exact: true })).toHaveAttribute('href', '/en/history')
   await page.getByRole('button', { name: 'Quick record' }).click()
   const dialog = page.getByRole('dialog')
   await expect(dialog.getByRole('heading', { name: 'Record body data' })).toBeVisible()
@@ -69,14 +72,21 @@ test('英文页面显示本地化登录错误', async ({ page }) => {
   await expect(page.getByRole('alert')).toHaveText('Incorrect username or password')
 })
 
-test('英文分析、行为和历史页使用英文标题', async ({ page }) => {
+test('英文分析、行为和历史页使用英文标题', async ({ page }, testInfo) => {
   await loginAsAdmin(page)
   for (const [path, heading] of [
     ['/en/analysis', 'Trend Analysis'],
-    ['/en/behavior', 'Behavior records'],
-    ['/en/history', 'History'],
+    ['/en/behavior', 'Records'],
+    ['/en/history', 'Records'],
   ] as const) {
     await page.goto(path)
     await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible()
+    if (path === '/en/analysis') {
+      const timeRange = page.getByRole('group', { name: 'Time range', exact: true })
+      await expect(timeRange.getByRole('radio')).toHaveCount(3)
+      await expect(timeRange.getByRole('radio', { name: '30 days', exact: true })).toBeChecked()
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+      await page.getByTestId('indicator-heading').locator('..').screenshot({ path: testInfo.outputPath('analysis-controls-en.png') })
+    }
   }
 })

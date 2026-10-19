@@ -1,9 +1,35 @@
 import type { SleepWrite, TrackFitData, TrainingWrite } from '../schemas/trackfit'
-import type { BehaviorQuery, BehaviorTimelineItemDto, CorrelationComparisonDto, CorrelationDto, PeriodReportDto, SleepRecordDto } from '../types/api'
+import type { AnalyticsDto, BehaviorQuery, BehaviorTimelineItemDto, CorrelationComparisonDto, CorrelationDto, PeriodReportDto, SleepRecordDto } from '../types/api'
 import { sleepWriteSchema, trainingWriteSchema } from '../schemas/trackfit'
 import { TrackFitDomainError } from './domain-error'
+import { buildAnalytics } from './analytics'
 
 const correlationLags = [0, 1, 3, 7] as const
+
+export function getBehaviorAnalytics(data: {
+  trainingRecords: ReadonlyArray<TrackFitData['trainingRecords'][number]>
+  sleepRecords: ReadonlyArray<TrackFitData['sleepRecords'][number]>
+}, kind: 'sleep' | 'training', start?: string, end?: string): AnalyticsDto {
+  const days = new Map<string, number>()
+  for (const record of kind === 'training' ? data.trainingRecords : data.sleepRecords) {
+    const date = localDayKey('recordedAt' in record ? record.recordedAt : record.wokeUpAt)
+    const minutes = 'durationMinutes' in record ? record.durationMinutes : (new Date(record.wokeUpAt).getTime() - new Date(record.fellAsleepAt).getTime()) / 60_000
+    days.set(date, (days.get(date) ?? 0) + minutes)
+  }
+  const allPoints = [...days].sort(([a], [b]) => a.localeCompare(b)).map(([date, minutes], index) => ({
+    id: index + 1,
+    measuredAt: new Date(`${date}T12:00:00`).toISOString(),
+    value: kind === 'sleep' ? round(minutes / 60, 2) : minutes,
+  }))
+  const inWindow = (point: { measuredAt: string }) => (!start || point.measuredAt >= start) && (!end || point.measuredAt <= end)
+  const analytics = buildAnalytics(allPoints.filter(inWindow))
+  const full = buildAnalytics(allPoints).movingAverages
+  analytics.movingAverages = { 3: full[3].filter(inWindow), 7: full[7].filter(inWindow), 30: full[30].filter(inWindow), 90: full[90].filter(inWindow) }
+  return {
+    metric: { id: kind === 'sleep' ? -1 : -2, code: kind === 'sleep' ? 'sleep_duration' : 'training_duration', name: kind === 'sleep' ? '睡眠时长' : '健身时长', unit: kind === 'sleep' ? 'h' : 'min', decimalPlaces: 2, minimumValue: 0, maximumValue: null, metricType: 'core', enabled: true, sortOrder: 0 },
+    ...analytics,
+  }
+}
 
 export function listBehaviorTimeline(data: TrackFitData, query: BehaviorQuery = {}): BehaviorTimelineItemDto[] {
   const start = query.start ? new Date(query.start).getTime() : Number.NEGATIVE_INFINITY

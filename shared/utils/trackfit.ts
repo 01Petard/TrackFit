@@ -16,7 +16,7 @@ export function getMetrics(data: TrackFitData): MetricDefinitionDto[] {
   return [...data.metrics].sort((a, b) => a.sortOrder - b.sortOrder || a.id - b.id)
 }
 
-export function getSettings(data: TrackFitData): AppSettingsDto {
+export function getSettings(data: { settings: readonly AppSettingsDto[] }): AppSettingsDto {
   return data.settings[0] ?? {
     heightCm: null,
     desiredWeightMinimum: null,
@@ -24,6 +24,7 @@ export function getSettings(data: TrackFitData): AppSettingsDto {
     defaultDateRange: '30d',
     sleepGoalHours: 8,
     weeklyTrainingGoalMinutes: 150,
+    weeklyTrainingGoalCount: 5,
     theme: 'light',
     dataVersion: 1,
   }

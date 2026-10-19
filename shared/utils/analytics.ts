@@ -111,9 +111,16 @@ export function resolveYAxisBounds(
   points: ReadonlyArray<{ value: number }>,
   targetMinimum?: number | null,
   targetMaximum?: number | null,
+  targetValue?: number | null,
 ): { min?: number, max?: number } {
-  if (metricCode !== 'weight') return {}
   const values = points.map(point => point.value)
+  if (metricCode !== 'weight') {
+    if (targetValue == null) return {}
+    const min = Math.min(targetValue, ...values)
+    const max = Math.max(targetValue, ...values)
+    const padding = Math.max((max - min) * 0.05, 0.5)
+    return { min: Math.max(0, min - padding), max: max + padding }
+  }
   if (targetMinimum != null && targetMaximum != null) {
     const min = Math.min(targetMinimum, ...values)
     const max = Math.max(targetMaximum, ...values)

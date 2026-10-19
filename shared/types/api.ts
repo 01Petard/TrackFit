@@ -75,6 +75,7 @@ export interface AppSettingsDto {
   defaultDateRange: '24h' | '7d' | '30d' | '90d' | 'all'
   sleepGoalHours: number
   weeklyTrainingGoalMinutes: number
+  weeklyTrainingGoalCount: number
   theme: 'system' | 'light' | 'dark'
   dataVersion: number
 }

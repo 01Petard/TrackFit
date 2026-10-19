@@ -6,7 +6,6 @@ const localePath = useLocalePath()
 const navigation = computed(() => [
   { to: localePath('/'), label: t('nav.home'), icon: 'home' as const },
   { to: localePath('/analysis'), label: t('nav.analysis'), icon: 'analysis' as const },
-  { to: localePath('/behavior'), label: t('nav.behavior'), icon: 'file' as const },
   { to: localePath('/history'), label: t('nav.history'), icon: 'calendar' as const },
   { to: localePath('/settings'), label: t('nav.settings'), icon: 'settings' as const },
 ])
@@ -87,7 +86,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', syncHeaderVisibility)
       </div>
     </main>
 
-    <nav class="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-default bg-default/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden" :aria-label="t('nav.mobile')">
+    <nav class="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-default bg-default/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden" :aria-label="t('nav.mobile')">
       <NuxtLink
         v-for="item in navigation"
         :key="item.to"

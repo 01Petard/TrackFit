@@ -2,6 +2,7 @@ import type { TrackFitData } from '../schemas/trackfit'
 import type { LocalizedDescriptor } from './analytics'
 import { listBehaviorTimeline } from './behavior'
 import { listMeasurements } from './trackfit'
+import dayjs from 'dayjs'
 
 export type HistoryRecordKind = 'body' | 'training' | 'sleep'
 
@@ -19,6 +20,79 @@ export interface HistoryRecordItem {
   title: LocalizedDescriptor
   details: LocalizedDescriptor[]
   description: LocalizedDescriptor | { text: string }
+}
+
+export interface HistoryWeek {
+  key: string
+  days: { date: string, items: HistoryRecordItem[] }[]
+}
+
+export interface HistoryDayGroup {
+  kind: HistoryRecordKind
+  records: HistoryRecordItem[]
+  summaries: { key: string, title?: LocalizedDescriptor, detail: LocalizedDescriptor }[]
+}
+
+export function summarizeHistoryDay(items: HistoryRecordItem[]): HistoryDayGroup[] {
+  return (['body', 'sleep', 'training'] as const).flatMap((kind): HistoryDayGroup[] => {
+    const records = items.filter(item => item.kind === kind)
+    if (!records.length) return []
+
+    const summaries: HistoryDayGroup['summaries'] = []
+    if (kind === 'training') {
+      const types = new Map<string, { title: LocalizedDescriptor, minutes: number }>()
+      for (const record of records) {
+        const total = types.get(record.title.key) ?? { title: record.title, minutes: 0 }
+        total.minutes += Number(record.details[0]?.values?.minutes ?? 0)
+        types.set(record.title.key, total)
+      }
+      for (const [key, total] of types) {
+        summaries.push({ key, title: total.title, detail: { key: 'history.trainingDuration', values: { minutes: total.minutes } } })
+      }
+    } else if (kind === 'sleep') {
+      const minutes = records.reduce((sum, record) => sum + Number(record.details[0]?.values?.minutes ?? 0), 0)
+      summaries.push({ key: kind, detail: { key: 'history.sleepDuration', values: { minutes } } })
+    } else {
+      for (const record of records) {
+        if (record.details[0]) summaries.push({ key: record.key, detail: record.details[0] })
+      }
+    }
+    return [{ kind, records, summaries }]
+  })
+}
+
+export function getHistoryWindow(records: HistoryRecordItem[], page = 1, now = new Date()) {
+  const today = dayjs(now).startOf('day')
+  const monday = today.subtract((today.day() + 6) % 7, 'day')
+  const oldest = records.reduce((date, item) => item.occurredAt < date ? item.occurredAt : date, today.toISOString())
+  const totalPages = Math.max(1, Math.ceil((monday.diff(dayjs(oldest).startOf('day'), 'day') + 7) / 28))
+  const currentPage = Math.min(Math.max(1, page), totalPages)
+  const end = monday.add(6, 'day').subtract((currentPage - 1) * 28, 'day')
+  const start = end.subtract(27, 'day')
+  const grouped = new Map(groupHistoryByWeek(records).map(week => [week.key, week]))
+  const weeks = Array.from({ length: 4 }, (_, index) => {
+    const beginning = end.subtract(6 + index * 7, 'day')
+    const key = beginning.format('YYYY-MM-DD')
+    return grouped.get(key) ?? { key, days: Array.from({ length: 7 }, (_, day) => ({ date: beginning.add(day, 'day').format('YYYY-MM-DD'), items: [] as HistoryRecordItem[] })) }
+  })
+  return { weeks, page: currentPage, totalPages, start: start.format('YYYY-MM-DD'), end: end.format('YYYY-MM-DD') }
+}
+
+// Keep every day's records together when paginating, with Monday as the first column.
+export function groupHistoryByWeek(records: HistoryRecordItem[]): HistoryWeek[] {
+  const weeks = new Map<string, HistoryWeek>()
+  for (const item of records) {
+    const date = dayjs(item.occurredAt)
+    const monday = date.startOf('day').subtract((date.day() + 6) % 7, 'day')
+    const key = monday.format('YYYY-MM-DD')
+    let week = weeks.get(key)
+    if (!week) {
+      week = { key, days: Array.from({ length: 7 }, (_, index) => ({ date: monday.add(index, 'day').format('YYYY-MM-DD'), items: [] })) }
+      weeks.set(key, week)
+    }
+    week.days[(date.day() + 6) % 7]!.items.push(item)
+  }
+  return [...weeks.values()].sort((a, b) => b.key.localeCompare(a.key))
 }
 
 const trainingTypeKeys = { strength: 'training.strength', cardio: 'training.cardio', mobility: 'training.mobility', other: 'training.other' } as const

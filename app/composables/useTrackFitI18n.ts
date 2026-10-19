@@ -7,6 +7,8 @@ const coreMetricKeys: Record<string, string> = {
   body_fat: 'metrics.bodyFat',
   waist: 'metrics.waist',
   hip: 'metrics.hip',
+  sleep_duration: 'analysis.sleepDuration',
+  training_duration: 'analysis.trainingDuration',
 }
 
 export function useTrackFitI18n() {

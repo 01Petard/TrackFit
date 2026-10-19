@@ -12,6 +12,7 @@ const desiredWeightMaximum = ref<number | ''>(store.settings.value.desiredWeight
 const defaultDateRange = ref<AppSettingsDto['defaultDateRange']>(store.settings.value.defaultDateRange)
 const sleepGoalMinutes = ref(Math.round(store.settings.value.sleepGoalHours * 60))
 const weeklyTrainingGoalMinutes = ref(store.settings.value.weeklyTrainingGoalMinutes)
+const weeklyTrainingGoalCount = ref(store.settings.value.weeklyTrainingGoalCount)
 const saving = ref(false)
 const message = ref('')
 const restoreInput = ref<HTMLInputElement>()
@@ -45,6 +46,7 @@ async function save() {
       defaultDateRange: defaultDateRange.value,
       sleepGoalHours: sleepGoalMinutes.value / 60,
       weeklyTrainingGoalMinutes: weeklyTrainingGoalMinutes.value,
+      weeklyTrainingGoalCount: weeklyTrainingGoalCount.value,
       theme: 'light',
     })
     message.value = t('settings.saved')
@@ -129,6 +131,7 @@ function updateSleepGoalMinutes(minutes: number) {
                 </div>
               </div>
               <AppNumberField v-model.number="weeklyTrainingGoalMinutes" :label="t('settings.weeklyTraining')" unit="min" required :min="0" :max="10080" :step="5" duration-unit="minutes" :disabled="!store.canWrite.value" :suggestions="[30, 60, 90, 120, 150]" />
+              <AppNumberField v-model.number="weeklyTrainingGoalCount" :label="t('settings.weeklyTrainingCount')" required :min="1" :step="1" :disabled="!store.canWrite.value" :suggestions="[3, 4, 5, 6, 7]" />
             </div>
           </fieldset>
           <label class="block text-sm">{{ t('settings.defaultRange') }}<select v-model="defaultDateRange" :disabled="!store.canWrite.value" class="app-select mt-2 w-full border border-default text-sm disabled:opacity-60"><option value="24h">{{ t('range.24h') }}</option><option value="7d">{{ t('range.7d') }}</option><option value="30d">{{ t('range.30d') }}</option><option value="90d">{{ t('range.90d') }}</option><option value="all">{{ t('range.all') }}</option></select></label>

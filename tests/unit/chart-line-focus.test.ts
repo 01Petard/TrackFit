@@ -1,4 +1,4 @@
-import type { LineSeriesOption } from 'echarts/charts'
+import type { BarSeriesOption, LineSeriesOption } from 'echarts/charts'
 import { describe, expect, it } from 'vitest'
 import { useChartLineFocus } from '../../app/composables/useChartLineFocus'
 
@@ -9,6 +9,16 @@ const series: LineSeriesOption[] = [
 ]
 
 describe('图表曲线聚焦', () => {
+  it('柱状图与均线共同聚焦，保留柱体颜色和圆角', () => {
+    const focus = useChartLineFocus()
+    const mixed: (BarSeriesOption | LineSeriesOption)[] = [{ name: '睡眠', type: 'bar', itemStyle: { color: '#7f22fe', borderRadius: [4, 4, 0, 0] } }, series[1]!]
+    focus.onClick({ componentType: 'series', seriesName: '周均线' })
+    expect(focus.focusSeries(mixed)[0]!.itemStyle).toMatchObject({ color: '#7f22fe', borderRadius: [4, 4, 0, 0], opacity: 0.15 })
+    focus.onMouseOver({ componentType: 'series', seriesName: '睡眠' })
+    expect(focus.focusSeries(mixed)[0]!.itemStyle?.opacity).toBe(1)
+    expect(focus.focusSeries(mixed)[1]!.itemStyle?.opacity).toBe(0.15)
+  })
+
   it.each(['原始数据', '周均线'])('悬停%s时高亮该线并淡化其他曲线，移开后恢复', (name) => {
     const focus = useChartLineFocus()
     focus.onMouseOver({ componentType: 'series', seriesName: name })
