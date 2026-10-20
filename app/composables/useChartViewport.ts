@@ -5,6 +5,7 @@ import { resolveYAxisBounds } from '../../shared/utils/analytics'
 interface ChartViewportSource {
   points: ReadonlyArray<{ measuredAt: string, value: number }>
   timePoints?: ReadonlyArray<{ measuredAt: string }>
+  yAxisPoints?: ReadonlyArray<{ value: number }>
   metricCode: string
   start?: string
   targetMinimum?: number | null
@@ -25,7 +26,17 @@ export function useChartViewport(source: () => ChartViewportSource) {
   const today = dayjs().startOf('day').valueOf()
   const xZoom = ref({ start: 0, end: 100 })
   const yZoom = ref({ start: 0, end: 100 })
-  const yAxisBounds = computed(() => resolveYAxisBounds(config.value.metricCode, config.value.points, config.value.targetMinimum, config.value.targetMaximum, config.value.targetValue))
+  const yAxisBounds = computed(() => {
+    const input = config.value
+    if (!input.yAxisPoints) return resolveYAxisBounds(input.metricCode, input.points, input.targetMinimum, input.targetMaximum, input.targetValue)
+
+    const values = input.yAxisPoints.map(point => point.value)
+    if (!values.length) return {}
+    const minimum = Math.min(...values)
+    const maximum = Math.max(...values)
+    const padding = Math.max((maximum - minimum) * 0.05, 0.5)
+    return { min: input.metricCode === 'weight' ? minimum - padding : Math.max(0, minimum - padding), max: maximum + padding }
+  })
   const xAxisBounds = computed(() => {
     const input = config.value
     const times = (input.timePoints ?? input.points).map(point => dayjs(point.measuredAt).startOf('day').valueOf())
@@ -43,8 +54,8 @@ export function useChartViewport(source: () => ChartViewportSource) {
     xZoom.value = input.start && timeBounds.min != null && timeBounds.max != null
       ? { start: percent(dayjs(input.start).startOf('day').valueOf() - padding, timeBounds.min, timeBounds.max), end: percent(today + padding, timeBounds.min, timeBounds.max) }
       : { start: 0, end: 100 }
-    // 目标区间仅决定初始视野，完整坐标轴仍覆盖区间外的实测记录。
-    yZoom.value = input.metricCode === 'weight' && input.targetMinimum != null && input.targetMaximum != null && valueBounds.min != null && valueBounds.max != null
+    // 未提供时间范围数据时，体重目标区间仅决定初始视野，坐标轴仍覆盖目标区间外的实测记录。
+    yZoom.value = !input.yAxisPoints && input.metricCode === 'weight' && input.targetMinimum != null && input.targetMaximum != null && valueBounds.min != null && valueBounds.max != null
       ? { start: percent(input.targetMinimum, valueBounds.min, valueBounds.max), end: percent(input.targetMaximum, valueBounds.min, valueBounds.max) }
       : { start: 0, end: 100 }
   }, { immediate: true })

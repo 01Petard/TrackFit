@@ -16,6 +16,7 @@ const rendered = ref(false)
 
 const props = withDefaults(defineProps<{
   points: Array<{ measuredAt: string, value: number }>
+  yAxisPoints?: Array<{ value: number }>
   movingAverages?: Record<MovingAveragePeriod, MovingAveragePointDto[]>
   visibleMovingAverages?: MovingAveragePeriod[]
   targetMinimum?: number | null
@@ -50,6 +51,7 @@ const colors: Record<MovingAveragePeriod, string> = {
 
 const { xAxisBounds, yAxisBounds, xZoom, yZoom, onDataZoom } = useChartViewport(() => ({
   points: props.points,
+  yAxisPoints: props.yAxisPoints,
   metricCode: props.metricCode,
   start: props.start,
   targetMinimum: props.targetMinimum,

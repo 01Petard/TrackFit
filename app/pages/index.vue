@@ -254,10 +254,7 @@ function trendSymbol(direction: 'up' | 'down' | 'stable' | 'insufficient'): stri
             <p class="text-sm font-semibold text-[#526b8b]">{{ t('home.behavior.streak') }}</p>
             <strong class="app-value mt-1 block text-2xl font-extrabold">{{ t('common.days', { count: recordingStreak }) }}</strong>
             <p class="mt-1 text-xs text-[#8a9ab0]">{{ t('home.behavior.streakHint') }}</p>
-            <div v-if="latestMissingDay" class="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-              <p class="text-xs text-warning">{{ t('makeup.latestMissing', { date: latestMissingDay }) }}</p>
-              <button v-if="store.canWrite.value" type="button" class="shrink-0 whitespace-nowrap text-sm font-semibold text-primary hover:underline" @click="openMakeup('all')">{{ t('makeup.action') }}</button>
-            </div>
+            <p v-if="latestMissingDay" class="mt-2 text-xs text-muted">{{ t('makeup.singleMissing', { date: latestMissingDay }) }}<button v-if="store.canWrite.value" type="button" class="ml-2 font-medium text-primary hover:underline" @click="openMakeup('all')">{{ t('makeup.singleAction') }}</button></p>
           </div>
         </article>
       </div>

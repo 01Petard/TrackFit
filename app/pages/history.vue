@@ -10,10 +10,10 @@ const { formatError } = useTrackFitI18n()
 await store.ensureLoaded()
 const kind = ref<'all' | HistoryRecordKind>('all')
 const kinds = computed(() => [
-  { value: 'all' as const, label: t('historyPage.all') },
-  { value: 'body' as const, label: t('history.body') },
-  { value: 'sleep' as const, label: t('common.sleep') },
-  { value: 'training' as const, label: t('common.training') },
+  { value: 'all' as const, label: t('historyPage.all'), icon: 'records' as const },
+  { value: 'body' as const, label: t('history.body'), icon: 'weight' as const },
+  { value: 'sleep' as const, label: t('common.sleep'), icon: 'moon' as const },
+  { value: 'training' as const, label: t('common.training'), icon: 'dumbbell' as const },
 ])
 const start = ref('')
 const end = ref('')
@@ -126,15 +126,12 @@ function thisWeek() {
         <div class="app-section-heading"><span class="app-icon-tile !size-9 !rounded-lg"><AppIcon name="calendar" class="size-5" /></span><div><h2>{{ t('historyPage.calendar') }}</h2><p>{{ t('historyPage.calendarDescription') }}</p></div></div>
         <div class="flex w-full flex-wrap items-center gap-2 xl:w-auto">
           <fieldset data-testid="history-kind-filter" class="w-full min-w-0 sm:w-auto sm:flex-1 xl:flex-none">
-            <legend class="sr-only">{{ t('historyPage.kind') }}</legend>
-            <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
-              <span aria-hidden="true" class="shrink-0 text-xs text-muted">{{ t('historyPage.kind') }}</span>
-              <div class="flex items-center gap-3">
-                <label v-for="item in kinds" :key="item.value" class="flex min-h-10 cursor-pointer items-center gap-1.5 whitespace-nowrap text-xs font-medium" :class="kind === item.value ? 'text-primary' : 'text-muted hover:text-highlighted'">
-                  <input v-model="kind" type="radio" name="history-kind" :value="item.value" class="size-3.5 shrink-0 accent-emerald-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
-                  {{ item.label }}
-                </label>
-              </div>
+            <legend class="mb-1.5 text-xs text-muted">{{ t('historyPage.kind') }}</legend>
+            <div class="grid grid-cols-2 gap-1 rounded-xl border border-default bg-elevated/40 p-1 sm:grid-cols-4">
+              <label v-for="item in kinds" :key="item.value" class="relative flex min-h-10 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 text-xs font-medium has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-primary sm:text-sm" :class="kind === item.value ? 'bg-white text-primary shadow-sm ring-1 ring-primary/40' : 'text-muted hover:bg-white/70'">
+                <input v-model="kind" type="radio" name="history-kind" :value="item.value" class="sr-only">
+                <AppIcon :name="item.icon" class="size-4 shrink-0" />{{ item.label }}
+              </label>
             </div>
           </fieldset>
           <div class="flex w-full min-w-0 items-center gap-2 sm:w-auto sm:flex-1 xl:flex-none">

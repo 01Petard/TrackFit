@@ -152,6 +152,7 @@ function minutesLabel(minutes: number | null): string {
         <MetricChart
           :key="indicator"
           :points="chartPrimary.points"
+          :y-axis-points="primary?.points ?? []"
           :moving-averages="chartPrimary.movingAverages"
           :metric-code="chartPrimary.metric.code"
           :unit="chartPrimary.metric.unit"
@@ -194,7 +195,7 @@ function minutesLabel(minutes: number | null): string {
       </article>
     </section>
 
-    <section v-if="indicator === 'weight'" class="app-card mt-5 rounded-3xl p-4 sm:p-6">
+    <section class="app-card mt-5 rounded-3xl p-4 sm:p-6">
       <div class="mb-4 flex flex-wrap items-center justify-between gap-3"><div class="app-section-heading"><span class="app-icon-tile app-icon-tile--blue"><AppIcon name="chart" class="size-6" /></span><div><h2>{{ t('analysis.weightForecast') }}</h2><p>{{ t('analysis.weightForecastHint') }}</p></div></div><p v-if="weightTargetStatus" class="text-xs font-medium" :class="weightTargetStatus.class">{{ weightTargetStatus.label }}</p></div>
       <p v-if="hasWeightProjection && weightForecast.forecastDate" class="mb-4 text-sm text-muted">{{ t('analysis.forecastDate', { date: dayjs(weightForecast.forecastDate).format('YYYY-MM-DD') }) }}</p>
       <p v-else class="mb-4 text-sm text-muted">{{ t(weightForecast.stale ? 'analysis.forecastStale' : 'analysis.forecastInsufficient') }}</p>
@@ -278,7 +279,7 @@ function minutesLabel(minutes: number | null): string {
       </div>
     </section>
 
-    <section v-if="indicator === 'weight'" class="app-card mt-5 rounded-3xl p-4 sm:p-6">
+    <section class="app-card mt-5 rounded-3xl p-4 sm:p-6">
       <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div class="app-section-heading min-w-0 flex-1 basis-48">
           <span class="app-icon-tile app-icon-tile--blue"><AppIcon name="link" class="size-6" /></span>
