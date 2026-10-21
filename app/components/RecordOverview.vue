@@ -55,7 +55,7 @@ function heatColor(percent: number) {
     <div class="grid gap-3 lg:grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)]">
       <section class="app-card min-w-0 p-4 sm:p-5" data-testid="record-heatmap">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3"><div class="app-section-heading"><span class="app-icon-tile !size-8 !rounded-lg"><AppIcon name="barChart" class="size-4" /></span><h2>{{ t('behavior.heatmapTitle') }}</h2></div><div class="flex items-center gap-1 text-[10px] text-muted"><span>0%</span><span v-for="level in [0, 25, 50, 75, 100]" :key="level" class="size-2.5 rounded-sm" :style="{ backgroundColor: heatColor(level) }" /><span>100%</span></div></div>
-        <div class="overflow-x-auto pb-1">
+        <div class="scrollbar-hidden overflow-x-auto pb-1">
           <div class="min-w-[280px]">
             <div v-for="row in rows" :key="row.kind" data-testid="heatmap-row" class="mb-1 grid grid-cols-[2rem_minmax(0,1fr)] items-center gap-2">
               <span class="text-[11px] text-muted">{{ row.label }}</span><div class="grid grid-cols-[repeat(28,minmax(0,1fr))] gap-1"><span v-for="day in overview.days" :key="day.date" data-testid="heatmap-cell" :data-kind="row.kind" :data-date="day.date" :data-percent="day[row.kind]" class="aspect-square rounded-sm" :style="{ backgroundColor: heatColor(day[row.kind]) }" role="img" :aria-label="`${day.date} · ${row.label} · ${day[row.kind]}%`" :title="`${day.date} · ${row.label} · ${day[row.kind]}%`" /></div>
