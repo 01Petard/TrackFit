@@ -374,7 +374,7 @@ export default defineI18nLocale(() => ({
       trainingDuration: '体重取日均值；训练分钟数按日累加。',
     },
     correlationCalculationRules: '显示门槛为 14 个配对日，两组数值均需有变化，否则显示“—”；结果保留三位小数。',
-    correlationFormulaSource: 'NIST 公式来源（新窗口）',
+    correlationFormulaSource: 'NIST 公式来源',
     correlationNoData: '暂无数据',
     correlationsHelpTitle: '这些结果怎么看？',
     correlationFactorHelp: '{factor}与体重的关系',

@@ -374,7 +374,7 @@ export default defineI18nLocale(() => ({
       trainingDuration: 'Weight: daily mean. Training minutes: daily total.',
     },
     correlationCalculationRules: 'Display rule: 14+ pairs and variation in both values; otherwise “—”. Round r to 3 decimals.',
-    correlationFormulaSource: 'NIST formula source (new window)',
+    correlationFormulaSource: 'NIST formula source',
     correlationNoData: 'No data available',
     correlationsHelpTitle: 'How to read these results',
     correlationFactorHelp: '{factor} and weight',
