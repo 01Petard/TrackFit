@@ -3,7 +3,7 @@ import { backupSchema } from '../../shared/schemas/trackfit'
 import { getHistoryWindow, groupHistoryByWeek, listHistoryRecords, summarizeHistoryDay } from '../../shared/utils/history'
 
 describe('统一历史记录', () => {
-  it('每日同类记录只展示一个分组，同项目训练及睡眠累加，身体保留每次测量值', () => {
+  it('每日同类记录只展示一个分组，同项目训练及睡眠累加，体重取最低值', () => {
     const [sleep, training, body] = listHistoryRecords(backupSchema.parse(historyFixture()))
     const records = [
       training!,
@@ -23,10 +23,26 @@ describe('统一历史记录', () => {
       { key: 'training.strength', title: { key: 'training.strength' }, detail: { key: 'history.trainingDuration', values: { minutes: 45 } } },
       { key: 'training.cardio', title: { key: 'training.cardio' }, detail: { key: 'history.trainingDuration', values: { minutes: 35 } } },
     ])
-    expect(groups[0]!.summaries.map(summary => summary.detail.values?.value)).toEqual([70, 71])
+    expect(groups[0]!.summaries.map(summary => summary.detail.values?.value)).toEqual([70])
     expect(groups[1]!.summaries).toEqual([{ key: 'sleep', detail: { key: 'history.sleepDuration', values: { minutes: 510 } } }])
     expect(records).toEqual(original)
     expect(summarizeHistoryDay([])).toEqual([])
+  })
+
+  it('每日体重摘要从全部测量指标中取最低值，不受记录顺序影响且保留其他摘要', () => {
+    const body = listHistoryRecords(backupSchema.parse(historyFixture())).find(item => item.kind === 'body')!
+    const weight = (value: number) => ({ key: 'history.metricValue', values: { metricCode: 'weight', metricName: '体重', value, unit: 'kg' } })
+    const waist = { key: 'history.metricValue', values: { metricCode: 'waist', metricName: '腰围', value: 80, unit: 'cm' } }
+    const records = [
+      { ...body, key: 'high', details: [weight(72)] },
+      { ...body, key: 'low', details: [waist, weight(69)] },
+      { ...body, key: 'middle', details: [weight(71)] },
+    ]
+    for (const items of [records, [...records].reverse()]) {
+      const group = summarizeHistoryDay(items)[0]!
+      expect(group.summaries.map(item => item.detail)).toEqual([weight(69), waist])
+      expect(group.records).toHaveLength(3)
+    }
   })
 
   it('每页固定连续四周，包含空周，并从本周向前翻页', () => {

@@ -14,7 +14,7 @@ defineEmits<{
 }>()
 
 const { t, locale } = useI18n()
-const { formatDescriptor, formatDateTime } = useTrackFitI18n()
+const { metricName, formatDescriptor, formatDateTime } = useTrackFitI18n()
 const kinds = computed(() => ({
   body: { label: t('history.body'), icon: 'weight' as const, color: 'text-primary' },
   training: { label: t('common.training'), icon: 'dumbbell' as const, color: 'text-orange-700' },
@@ -29,9 +29,15 @@ const calendarWeeks = computed(() => props.weeks.map(week => ({
 
 function renderCopy(copy: LocalizedDescriptor | { text: string }): string {
   if ('text' in copy) return copy.text
+  if (copy.key === 'history.metricValue') {
+    const values = copy.values ?? {}
+    const name = metricName({ code: String(values.metricCode ?? ''), name: String(values.metricName ?? '') })
+    return `${name} · ${values.value} ${values.unit ?? ''}`.trim()
+  }
+  if (copy.key === 'history.trainingDuration') return t('common.minutes', { count: Number(copy.values?.minutes ?? 0) })
   if (copy.key === 'history.sleepDuration') {
     const minutes = Number(copy.values?.minutes ?? 0)
-    return t(copy.key, { duration: t('common.hoursMinutes', { hours: Math.floor(minutes / 60), minutes: minutes % 60 }) })
+    return `${t('common.sleep')} · ${t('historyPage.compactSleepDuration', { hours: Math.floor(minutes / 60), minutes: minutes % 60 })}`
   }
   if (copy.key === 'history.sleepWindow') return t(copy.key, {
     bedtime: formatDateTime(String(copy.values?.fellAsleepAt)),
@@ -61,9 +67,10 @@ function renderCopy(copy: LocalizedDescriptor | { text: string }): string {
                 <span v-if="group.records.length > 1" class="text-[10px] tabular-nums text-muted">{{ t('records.total', { count: group.records.length }) }}</span>
               </span>
               <span class="mt-1.5 block space-y-2 pl-5">
-                <span v-for="summary in group.summaries" :key="summary.key" class="block text-xs leading-relaxed text-highlighted">
-                  <span v-if="summary.title" class="block break-words">{{ renderCopy(summary.title) }}</span>
-                  <span class="block break-words tabular-nums">{{ renderCopy(summary.detail) }}</span>
+                <span v-for="summary in group.summaries" :key="summary.key" class="flex min-w-0 items-baseline gap-1 text-xs leading-relaxed text-highlighted" :title="[summary.title ? renderCopy(summary.title) : '', renderCopy(summary.detail)].filter(Boolean).join(' · ')">
+                  <span v-if="summary.title" class="min-w-0 truncate">{{ renderCopy(summary.title) }}</span>
+                  <span v-if="summary.title" class="shrink-0 text-muted" aria-hidden="true">·</span>
+                  <span class="min-w-0 truncate whitespace-nowrap tabular-nums" :class="{ 'shrink-0': summary.title }">{{ renderCopy(summary.detail) }}</span>
                 </span>
               </span>
             </span>

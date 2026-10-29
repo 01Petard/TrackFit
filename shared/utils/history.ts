@@ -53,8 +53,15 @@ export function summarizeHistoryDay(items: HistoryRecordItem[]): HistoryDayGroup
       const minutes = records.reduce((sum, record) => sum + Number(record.details[0]?.values?.minutes ?? 0), 0)
       summaries.push({ key: kind, detail: { key: 'history.sleepDuration', values: { minutes } } })
     } else {
+      const weights = records.flatMap(record => record.details
+        .filter(detail => detail.values?.metricCode === 'weight')
+        .map(detail => ({ key: record.key, detail })))
+      const minimumWeight = weights.reduce<(typeof weights)[number] | undefined>((minimum, item) =>
+        !minimum || Number(item.detail.values?.value) < Number(minimum.detail.values?.value) ? item : minimum, undefined)
+      if (minimumWeight) summaries.push(minimumWeight)
       for (const record of records) {
-        if (record.details[0]) summaries.push({ key: record.key, detail: record.details[0] })
+        const detail = record.details[0]
+        if (detail && detail.values?.metricCode !== 'weight') summaries.push({ key: record.key, detail })
       }
     }
     return [{ kind, records, summaries }]

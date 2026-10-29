@@ -48,5 +48,10 @@ export function useChartLineFocus() {
     })
   }
 
-  return { focusSeries, onMouseOver, onMouseOut, onClick, onBlankClick }
+  function onLegendClick(name: string) {
+    hovered.value = null
+    selected.value = selected.value === name ? null : name
+  }
+
+  return { selected, onLegendClick, focusSeries, onMouseOver, onMouseOut, onClick, onBlankClick }
 }

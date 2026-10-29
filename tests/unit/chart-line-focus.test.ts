@@ -9,6 +9,17 @@ const series: LineSeriesOption[] = [
 ]
 
 describe('图表曲线聚焦', () => {
+  it('图例点击切换高亮，再次点击清除高亮及悬停状态', () => {
+    const focus = useChartLineFocus()
+    focus.onMouseOver({ componentType: 'series', seriesName: '原始数据' })
+    focus.onLegendClick('周均线')
+    expect(focus.focusSeries(series)[0]?.lineStyle?.opacity).toBe(0.15)
+    focus.onLegendClick('月均线')
+    expect(focus.focusSeries(series)[1]?.lineStyle?.opacity).toBe(0.15)
+    focus.onLegendClick('月均线')
+    expect(focus.focusSeries(series).every(item => item.lineStyle?.opacity === 1)).toBe(true)
+  })
+
   it('柱状图与均线共同聚焦，保留柱体颜色和圆角', () => {
     const focus = useChartLineFocus()
     const mixed: (BarSeriesOption | LineSeriesOption)[] = [{ name: '睡眠', type: 'bar', itemStyle: { color: '#7f22fe', borderRadius: [4, 4, 0, 0] } }, series[1]!]

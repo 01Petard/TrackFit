@@ -136,6 +136,7 @@ export default defineI18nLocale(() => ({
     durationRequired: 'Sleep duration must be at least 1 minute',
   },
   chart: {
+    lineFocus: 'Click a legend to highlight; click again to reset',
     raw: 'Raw records',
     rawShort: 'Raw',
     noData: 'No data available for analysis',
@@ -196,6 +197,7 @@ export default defineI18nLocale(() => ({
     sleepWindow: 'Bedtime {bedtime} · Wake time {wakeTime}',
   },
   historyPage: {
+    compactSleepDuration: '{hours} hr {minutes} min',
     title: 'Records',
     description: 'Body, training, and sleep together. See how each day adds up.',
     calendar: 'Daily records',
@@ -328,7 +330,7 @@ export default defineI18nLocale(() => ({
     forecastMethod: 'Moving averages include simulated values for missing days. Each line is then projected 7 days ahead from its recent change. These are trend estimates, not guaranteed values or medical advice.',
     weightFluctuation: 'Latest weight variation',
     recentWeightChange: 'Weight change over the last 7 records',
-    firstOfSeven: 'First · baseline',
+    firstOfSeven: 'Starting weight',
     previousWeight: 'vs. previous {value} kg',
     fluctuationReference: '±1% reference range',
     fluctuationLabel: { stable: 'Stable', normal: 'Normal variation', warning: 'Variation alert' },

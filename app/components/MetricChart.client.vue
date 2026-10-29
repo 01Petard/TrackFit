@@ -11,7 +11,7 @@ import { DataZoomComponent, GridComponent, LegendComponent, MarkLineComponent, T
 
 use([CanvasRenderer, LineChart, BarChart, DataZoomComponent, GridComponent, LegendComponent, MarkLineComponent, TooltipComponent])
 const { t } = useI18n()
-const { focusSeries, onMouseOver, onMouseOut, onClick, onBlankClick } = useChartLineFocus()
+const { selected, onLegendClick, focusSeries, onMouseOver, onMouseOut, onClick, onBlankClick } = useChartLineFocus()
 const rendered = ref(false)
 
 const props = withDefaults(defineProps<{
@@ -45,7 +45,7 @@ const props = withDefaults(defineProps<{
 const colors: Record<MovingAveragePeriod, string> = {
   3: '#f59e0b',
   7: '#0ea5e9',
-  30: '#8b5cf6',
+  30: '#8a8172',
   90: '#ec4899',
 }
 
@@ -77,7 +77,7 @@ const option = computed(() => {
     data: toDailyChartPoints(props.points),
     ...(props.chartType === 'bar'
       ? { type: 'bar', barMaxWidth: 28, itemStyle: { color: props.color, borderRadius: [4, 4, 0, 0] } }
-      : { type: 'line', showSymbol: true, symbolSize: 8, connectNulls: false, lineStyle: { width: 2, color: props.color }, itemStyle: { color: props.color, borderColor: '#fff', borderWidth: 2 }, areaStyle: { color: props.color, opacity: 0.06 } }),
+      : { type: 'line', showSymbol: props.metricCode !== 'weight', symbolSize: 8, connectNulls: false, lineStyle: { width: props.metricCode === 'weight' ? 3 : 2, color: props.color }, itemStyle: { color: props.color, borderColor: '#fff', borderWidth: 2 }, areaStyle: { color: props.color, opacity: 0.06 } }),
     markLine: {
       silent: true,
       animation: false,
@@ -103,6 +103,7 @@ const option = computed(() => {
       valueFormatter: (value: unknown) => `${value} ${props.unit}`,
     },
     legend: {
+      show: !props.fixedLegend,
       selectedMode: !props.fixedLegend,
       type: 'scroll',
       top: 0,
@@ -140,7 +141,12 @@ watch(option, () => {
 </script>
 
 <template>
-  <div v-if="points.length" data-testid="metric-chart" class="w-full" :style="{ height }" :aria-busy="!rendered">
+  <div v-if="points.length" data-testid="metric-chart" class="relative w-full" :style="{ height }" :aria-busy="!rendered">
+    <div v-if="fixedLegend" class="absolute inset-x-0 top-0 z-10 flex gap-2 overflow-x-auto px-2 sm:justify-center" role="group" :aria-label="t('chart.lineFocus')">
+      <button v-for="item in [{ name: t('chart.raw'), color }, ...visibleMovingAverages.map(period => ({ name: t(`common.movingAverage.${period}`), color: colors[period] }))]" :key="item.name" type="button" class="flex shrink-0 items-center gap-2 rounded-lg px-2 py-1 text-xs transition-colors focus-visible:outline-2" :class="selected === item.name ? 'bg-elevated font-semibold text-highlighted ring-1 ring-default' : 'text-muted hover:bg-elevated'" :title="t('chart.lineFocus')" :aria-pressed="selected === item.name" @click="onLegendClick(item.name)">
+        <span class="w-6 border-t-2" :style="{ borderColor: item.color, borderStyle: item.name === t('chart.raw') ? 'solid' : 'dashed' }" aria-hidden="true" />{{ item.name }}
+      </button>
+    </div>
     <VChart autoresize :option="option" @finished="rendered = true" @datazoom="onDataZoom" @mouseover="onMouseOver" @mouseout="onMouseOut" @globalout="onMouseOut" @click="onClick" @zr:click="onBlankClick" />
   </div>
   <div v-else class="grid h-72 place-items-center rounded-2xl border border-dashed border-default text-sm text-muted">

@@ -237,6 +237,7 @@ function minutesLabel(minutes: number | null): string {
                 <dd>{{ weightForecast.recentChange.latest.toFixed(2) }} <span>kg</span></dd>
               </div>
             </dl>
+            <p class="mt-3 text-xs text-muted">{{ t('analysis.recentWeightChangeDetail', { first: weightForecast.recentChange.first.toFixed(2), latest: weightForecast.recentChange.latest.toFixed(2) }) }}</p>
           </template>
           <p v-else class="mt-4 text-sm text-muted">{{ t('analysis.recentWeightChangeInsufficient') }}</p>
         </article>

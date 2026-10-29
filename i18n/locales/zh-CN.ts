@@ -136,6 +136,7 @@ export default defineI18nLocale(() => ({
     durationRequired: '睡眠时长至少为 1 分钟',
   },
   chart: {
+    lineFocus: '点击图例高亮曲线，再次点击恢复',
     raw: '原始记录',
     rawShort: '原始',
     noData: '暂无可分析的数据',
@@ -196,6 +197,7 @@ export default defineI18nLocale(() => ({
     sleepWindow: '就寝 {bedtime} · 起床 {wakeTime}',
   },
   historyPage: {
+    compactSleepDuration: '{hours}时{minutes}分',
     title: '记录中心',
     description: '将身体、训练与睡眠放在同一周里，回顾每一天的积累',
     calendar: '每日记录',
@@ -328,7 +330,7 @@ export default defineI18nLocale(() => ({
     forecastMethod: '均线包含缺失日期的插值模拟数据，再按最近 7 天的变化速度线性外推 7 天；这只是趋势参考，不是保证值或医学判断。',
     weightFluctuation: '最新体重波动',
     recentWeightChange: '最近 7 次体重变化',
-    firstOfSeven: '第 1 次 · 基准',
+    firstOfSeven: '起始体重',
     previousWeight: '较上次 {value} kg',
     fluctuationReference: '±1% 参考区间',
     fluctuationLabel: { stable: '稳定', normal: '正常波动', warning: '波动预警' },
