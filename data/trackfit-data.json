@@ -1,0 +1,2781 @@
+{
+  "version": 6,
+  "exportedAt": "2026-11-10T07:25:04.864Z",
+  "settings": [
+    {
+      "heightCm": 172,
+      "desiredWeightMinimum": 70,
+      "desiredWeightMaximum": 80,
+      "defaultDateRange": "90d",
+      "sleepGoalHours": 8,
+      "weeklyTrainingGoalMinutes": 300,
+      "weeklyTrainingGoalCount": 5,
+      "theme": "light",
+      "id": 1,
+      "dataVersion": 1
+    }
+  ],
+  "metrics": [
+    {
+      "id": 1,
+      "code": "weight",
+      "name": "体重",
+      "unit": "kg",
+      "decimalPlaces": 2,
+      "minimumValue": 20,
+      "maximumValue": 400,
+      "metricType": "core",
+      "enabled": true,
+      "sortOrder": 10
+    },
+    {
+      "id": 2,
+      "code": "body_fat",
+      "name": "体脂率",
+      "unit": "%",
+      "decimalPlaces": 1,
+      "minimumValue": 1,
+      "maximumValue": 75,
+      "metricType": "core",
+      "enabled": true,
+      "sortOrder": 100
+    },
+    {
+      "id": 3,
+      "code": "waist",
+      "name": "腰围",
+      "unit": "cm",
+      "decimalPlaces": 1,
+      "minimumValue": 30,
+      "maximumValue": 300,
+      "metricType": "core",
+      "enabled": true,
+      "sortOrder": 100
+    },
+    {
+      "id": 4,
+      "code": "hip",
+      "name": "臀围",
+      "unit": "cm",
+      "decimalPlaces": 1,
+      "minimumValue": 30,
+      "maximumValue": 300,
+      "metricType": "core",
+      "enabled": false,
+      "sortOrder": 100
+    },
+    {
+      "id": 5,
+      "code": "chest",
+      "name": "胸围",
+      "unit": "cm",
+      "decimalPlaces": 1,
+      "minimumValue": 30,
+      "maximumValue": 300,
+      "metricType": "core",
+      "enabled": false,
+      "sortOrder": 100
+    },
+    {
+      "id": 6,
+      "code": "upper_arm",
+      "name": "上臂围",
+      "unit": "cm",
+      "decimalPlaces": 1,
+      "minimumValue": 10,
+      "maximumValue": 150,
+      "metricType": "core",
+      "enabled": false,
+      "sortOrder": 100
+    },
+    {
+      "id": 7,
+      "code": "thigh",
+      "name": "大腿围",
+      "unit": "cm",
+      "decimalPlaces": 1,
+      "minimumValue": 10,
+      "maximumValue": 200,
+      "metricType": "core",
+      "enabled": false,
+      "sortOrder": 100
+    },
+    {
+      "id": 8,
+      "code": "calf",
+      "name": "小腿围",
+      "unit": "cm",
+      "decimalPlaces": 1,
+      "minimumValue": 10,
+      "maximumValue": 150,
+      "metricType": "core",
+      "enabled": false,
+      "sortOrder": 100
+    }
+  ],
+  "bodyRecords": [
+    {
+      "id": 1,
+      "measuredAt": "2026-07-31T15:40:53.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 75.67
+        },
+        {
+          "metricId": 3,
+          "value": 92
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "measuredAt": "2026-08-01T08:27:13.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 75.61
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "measuredAt": "2026-06-23T14:47:44.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 76.72
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "measuredAt": "2026-06-23T23:31:12.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 75.68
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "measuredAt": "2026-06-24T23:44:30.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 75.7
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "measuredAt": "2026-06-25T23:42:45.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 75.98
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "measuredAt": "2026-06-29T23:41:05.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 76.1
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "measuredAt": "2026-07-11T08:29:19.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 75.42
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "measuredAt": "2026-07-12T23:39:31.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 75.25
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "measuredAt": "2026-07-14T23:47:47.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 75.41
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "measuredAt": "2026-05-19T08:33:06.000Z",
+      "note": "大概的重量，不太记得了",
+      "values": [
+        {
+          "metricId": 1,
+          "value": 78
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "measuredAt": "2026-04-01T08:33:48.000Z",
+      "note": "得病前的体重",
+      "values": [
+        {
+          "metricId": 1,
+          "value": 84
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "measuredAt": "2026-06-19T09:37:50.000Z",
+      "note": "第一次健身的时候",
+      "values": [
+        {
+          "metricId": 1,
+          "value": 77
+        },
+        {
+          "metricId": 2,
+          "value": 26
+        },
+        {
+          "metricId": 3,
+          "value": 96
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "measuredAt": "2026-08-01T14:40:14.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 75.21
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "measuredAt": "2026-08-02T01:39:21.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 74.69
+        },
+        {
+          "metricId": 3,
+          "value": 88
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "measuredAt": "2026-02-19T01:40:28.000Z",
+      "note": "大概是年初过年的时候",
+      "values": [
+        {
+          "metricId": 1,
+          "value": 87
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "measuredAt": "2026-08-02T05:10:41.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 74.45
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "measuredAt": "2026-08-02T08:55:17.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 74.46
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "measuredAt": "2026-08-02T13:07:59.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 75.83
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "measuredAt": "2026-08-02T14:30:34.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 75.82
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "measuredAt": "2026-08-03T00:37:22.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 75.19
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "measuredAt": "2026-08-03T14:17:38.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 75.39
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "measuredAt": "2026-08-04T01:05:07.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 74.67
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "measuredAt": "2026-08-05T00:27:13.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 74.37
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "measuredAt": "2026-08-06T01:15:26.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 74.51
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "measuredAt": "2026-08-07T00:26:50.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 75.23
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "measuredAt": "2026-08-08T00:50:59.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 74.9
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "measuredAt": "2026-08-09T02:46:33.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 74.34
+        }
+      ]
+    },
+    {
+      "id": 29,
+      "measuredAt": "2026-08-09T23:25:31.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 75.02
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "measuredAt": "2026-08-10T23:51:43.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 74.24
+        }
+      ]
+    },
+    {
+      "id": 31,
+      "measuredAt": "2026-08-12T00:02:47.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 74.57
+        }
+      ]
+    },
+    {
+      "id": 32,
+      "measuredAt": "2026-08-12T23:58:00.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 74.06
+        }
+      ]
+    },
+    {
+      "id": 33,
+      "measuredAt": "2026-08-14T08:39:04.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 74.58
+        }
+      ]
+    },
+    {
+      "id": 34,
+      "measuredAt": "2026-08-16T04:58:05.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 74.63
+        }
+      ]
+    },
+    {
+      "id": 35,
+      "measuredAt": "2026-08-18T00:36:47.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 75.28
+        }
+      ]
+    },
+    {
+      "id": 36,
+      "measuredAt": "2026-08-19T00:02:22.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 75.29
+        }
+      ]
+    },
+    {
+      "id": 37,
+      "measuredAt": "2026-08-20T14:50:04.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 75.69
+        }
+      ]
+    },
+    {
+      "id": 38,
+      "measuredAt": "2026-08-22T02:31:39.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 75
+        }
+      ]
+    },
+    {
+      "id": 39,
+      "measuredAt": "2026-08-23T02:41:20.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 74.86
+        }
+      ]
+    },
+    {
+      "id": 40,
+      "measuredAt": "2026-08-23T23:58:47.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 74.61
+        }
+      ]
+    },
+    {
+      "id": 41,
+      "measuredAt": "2026-08-24T23:52:20.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 74.81
+        }
+      ]
+    },
+    {
+      "id": 42,
+      "measuredAt": "2026-08-26T03:18:45.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 74.92
+        }
+      ]
+    },
+    {
+      "id": 43,
+      "measuredAt": "2026-08-29T02:51:30.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 74.19
+        },
+        {
+          "metricId": 3,
+          "value": 82
+        }
+      ]
+    },
+    {
+      "id": 44,
+      "measuredAt": "2026-08-30T04:02:56.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 73.45
+        }
+      ]
+    },
+    {
+      "id": 45,
+      "measuredAt": "2026-08-31T03:43:44.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 73.32
+        }
+      ]
+    },
+    {
+      "id": 46,
+      "measuredAt": "2026-08-31T23:57:34.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 73.52
+        }
+      ]
+    },
+    {
+      "id": 47,
+      "measuredAt": "2026-09-02T00:10:05.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 73.4
+        }
+      ]
+    },
+    {
+      "id": 48,
+      "measuredAt": "2026-09-03T23:44:59.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 74.01
+        }
+      ]
+    },
+    {
+      "id": 49,
+      "measuredAt": "2026-09-06T08:38:03.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 72.47
+        }
+      ]
+    },
+    {
+      "id": 50,
+      "measuredAt": "2026-09-07T00:13:26.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 73.06
+        }
+      ]
+    },
+    {
+      "id": 51,
+      "measuredAt": "2026-09-08T00:21:44.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 73.22
+        }
+      ]
+    },
+    {
+      "id": 52,
+      "measuredAt": "2026-09-10T00:17:26.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 73.02
+        }
+      ]
+    },
+    {
+      "id": 53,
+      "measuredAt": "2026-09-12T02:51:03.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 72.67
+        }
+      ]
+    },
+    {
+      "id": 54,
+      "measuredAt": "2026-09-14T02:39:36.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 73.13
+        }
+      ]
+    },
+    {
+      "id": 55,
+      "measuredAt": "2026-09-16T05:23:07.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 73.04
+        }
+      ]
+    },
+    {
+      "id": 56,
+      "measuredAt": "2026-09-19T01:31:08.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 72.88
+        }
+      ]
+    },
+    {
+      "id": 57,
+      "measuredAt": "2026-09-20T03:33:35.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 72.87
+        }
+      ]
+    },
+    {
+      "id": 58,
+      "measuredAt": "2026-09-23T00:43:54.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 73.33
+        }
+      ]
+    },
+    {
+      "id": 59,
+      "measuredAt": "2026-09-25T04:22:42.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 72.75
+        }
+      ]
+    },
+    {
+      "id": 60,
+      "measuredAt": "2026-09-26T05:14:56.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 72.67
+        }
+      ]
+    },
+    {
+      "id": 61,
+      "measuredAt": "2026-09-26T07:41:35.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 72.44
+        }
+      ]
+    },
+    {
+      "id": 62,
+      "measuredAt": "2026-09-28T00:11:56.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 73.18
+        }
+      ]
+    },
+    {
+      "id": 63,
+      "measuredAt": "2026-09-29T06:20:54.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 72.67
+        }
+      ]
+    },
+    {
+      "id": 64,
+      "measuredAt": "2026-09-30T01:19:11.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 72.97
+        }
+      ]
+    },
+    {
+      "id": 65,
+      "measuredAt": "2026-10-01T05:08:05.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 72.28
+        },
+        {
+          "metricId": 3,
+          "value": 82
+        }
+      ]
+    },
+    {
+      "id": 66,
+      "measuredAt": "2026-10-02T03:26:27.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 72.43
+        },
+        {
+          "metricId": 3,
+          "value": 81
+        }
+      ]
+    },
+    {
+      "id": 67,
+      "measuredAt": "2026-10-07T03:48:43.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 73.05
+        }
+      ]
+    },
+    {
+      "id": 68,
+      "measuredAt": "2026-10-07T23:53:20.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 72.22
+        }
+      ]
+    },
+    {
+      "id": 69,
+      "measuredAt": "2026-10-09T00:28:07.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 72.58
+        }
+      ]
+    },
+    {
+      "id": 70,
+      "measuredAt": "2026-10-10T00:16:56.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 72.23
+        }
+      ]
+    },
+    {
+      "id": 71,
+      "measuredAt": "2026-10-11T03:47:03.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 71.93
+        }
+      ]
+    },
+    {
+      "id": 72,
+      "measuredAt": "2026-10-12T23:44:10.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 72.3
+        }
+      ]
+    },
+    {
+      "id": 73,
+      "measuredAt": "2026-10-14T00:19:40.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 72.07
+        }
+      ]
+    },
+    {
+      "id": 74,
+      "measuredAt": "2026-10-16T00:08:26.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 71.6
+        }
+      ]
+    },
+    {
+      "id": 75,
+      "measuredAt": "2026-10-16T15:43:33.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 72.44
+        }
+      ]
+    },
+    {
+      "id": 76,
+      "measuredAt": "2026-10-17T03:28:38.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 71.79
+        }
+      ]
+    },
+    {
+      "id": 77,
+      "measuredAt": "2026-10-18T02:35:40.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 71.4
+        }
+      ]
+    },
+    {
+      "id": 78,
+      "measuredAt": "2026-10-18T15:28:28.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 71.85
+        }
+      ]
+    },
+    {
+      "id": 79,
+      "measuredAt": "2026-10-19T00:00:00.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 71.78
+        }
+      ]
+    },
+    {
+      "id": 80,
+      "measuredAt": "2026-10-20T00:07:27.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 71.17
+        }
+      ]
+    },
+    {
+      "id": 81,
+      "measuredAt": "2026-10-20T23:56:00.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 71.58
+        }
+      ]
+    },
+    {
+      "id": 82,
+      "measuredAt": "2026-10-21T23:56:29.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 72.47
+        }
+      ]
+    },
+    {
+      "id": 83,
+      "measuredAt": "2026-10-23T00:17:34.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 71.46
+        }
+      ]
+    },
+    {
+      "id": 84,
+      "measuredAt": "2026-10-24T05:17:26.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 71.23
+        }
+      ]
+    },
+    {
+      "id": 85,
+      "measuredAt": "2026-10-25T07:36:53.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 70.51
+        }
+      ]
+    },
+    {
+      "id": 86,
+      "measuredAt": "2026-10-26T23:47:36.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 71.72
+        }
+      ]
+    },
+    {
+      "id": 87,
+      "measuredAt": "2026-10-28T01:33:41.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 71.59
+        }
+      ]
+    },
+    {
+      "id": 88,
+      "measuredAt": "2026-10-29T01:08:00.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 71.21
+        }
+      ]
+    },
+    {
+      "id": 89,
+      "measuredAt": "2026-10-30T00:30:30.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 71.32
+        }
+      ]
+    },
+    {
+      "id": 90,
+      "measuredAt": "2026-11-01T08:08:49.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 72.7
+        }
+      ]
+    },
+    {
+      "id": 91,
+      "measuredAt": "2026-11-02T00:23:00.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 73.3
+        }
+      ]
+    },
+    {
+      "id": 92,
+      "measuredAt": "2026-11-02T23:56:32.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 72.31
+        }
+      ]
+    },
+    {
+      "id": 93,
+      "measuredAt": "2026-11-06T00:05:47.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 72.62
+        }
+      ]
+    },
+    {
+      "id": 94,
+      "measuredAt": "2026-11-07T01:44:31.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 72.71
+        }
+      ]
+    },
+    {
+      "id": 95,
+      "measuredAt": "2026-11-08T04:57:07.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 71.59
+        }
+      ]
+    },
+    {
+      "id": 96,
+      "measuredAt": "2026-11-10T06:19:22.000Z",
+      "note": null,
+      "values": [
+        {
+          "metricId": 1,
+          "value": 72.26
+        }
+      ]
+    }
+  ],
+  "trainingRecords": [
+    {
+      "id": 1,
+      "recordedAt": "2026-08-03T10:03:12.000Z",
+      "type": "strength",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 2,
+      "recordedAt": "2026-08-03T10:35:36.000Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 3,
+      "recordedAt": "2026-08-05T12:21:04.000Z",
+      "type": "strength",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 4,
+      "recordedAt": "2026-08-05T12:21:17.000Z",
+      "type": "mobility",
+      "durationMinutes": 15,
+      "note": null
+    },
+    {
+      "id": 5,
+      "recordedAt": "2026-08-05T12:21:37.000Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 6,
+      "recordedAt": "2026-08-06T10:28:00.000Z",
+      "type": "strength",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 7,
+      "recordedAt": "2026-08-06T10:48:00.000Z",
+      "type": "cardio",
+      "durationMinutes": 35,
+      "note": null
+    },
+    {
+      "id": 8,
+      "recordedAt": "2026-08-09T07:56:59.000Z",
+      "type": "strength",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 9,
+      "recordedAt": "2026-08-09T07:45:13.000Z",
+      "type": "cardio",
+      "durationMinutes": 40,
+      "note": null
+    },
+    {
+      "id": 10,
+      "recordedAt": "2026-08-10T10:49:37.000Z",
+      "type": "strength",
+      "durationMinutes": 15,
+      "note": null
+    },
+    {
+      "id": 11,
+      "recordedAt": "2026-08-10T10:50:18.000Z",
+      "type": "cardio",
+      "durationMinutes": 36,
+      "note": null
+    },
+    {
+      "id": 12,
+      "recordedAt": "2026-08-11T10:28:30.285Z",
+      "type": "strength",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 13,
+      "recordedAt": "2026-08-11T10:28:44.430Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 14,
+      "recordedAt": "2026-08-12T10:39:16.918Z",
+      "type": "strength",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 15,
+      "recordedAt": "2026-08-12T10:39:23.100Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 16,
+      "recordedAt": "2026-08-13T12:04:20.860Z",
+      "type": "strength",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 17,
+      "recordedAt": "2026-08-13T12:04:25.879Z",
+      "type": "cardio",
+      "durationMinutes": 35,
+      "note": null
+    },
+    {
+      "id": 18,
+      "recordedAt": "2026-08-14T10:38:06.061Z",
+      "type": "strength",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 19,
+      "recordedAt": "2026-08-14T10:38:13.355Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 20,
+      "recordedAt": "2026-08-15T08:36:20.625Z",
+      "type": "strength",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 21,
+      "recordedAt": "2026-08-15T08:36:29.487Z",
+      "type": "cardio",
+      "durationMinutes": 40,
+      "note": null
+    },
+    {
+      "id": 22,
+      "recordedAt": "2026-08-18T00:37:19.688Z",
+      "type": "strength",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 23,
+      "recordedAt": "2026-08-18T10:30:08.796Z",
+      "type": "strength",
+      "durationMinutes": 15,
+      "note": null
+    },
+    {
+      "id": 24,
+      "recordedAt": "2026-08-18T10:30:19.978Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 25,
+      "recordedAt": "2026-08-19T10:15:15.558Z",
+      "type": "strength",
+      "durationMinutes": 25,
+      "note": null
+    },
+    {
+      "id": 26,
+      "recordedAt": "2026-08-19T10:39:15.814Z",
+      "type": "cardio",
+      "durationMinutes": 35,
+      "note": null
+    },
+    {
+      "id": 27,
+      "recordedAt": "2026-08-20T10:45:50.550Z",
+      "type": "strength",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 28,
+      "recordedAt": "2026-08-20T10:46:00.094Z",
+      "type": "cardio",
+      "durationMinutes": 35,
+      "note": null
+    },
+    {
+      "id": 29,
+      "recordedAt": "2026-08-22T08:16:33.449Z",
+      "type": "strength",
+      "durationMinutes": 45,
+      "note": null
+    },
+    {
+      "id": 30,
+      "recordedAt": "2026-08-22T08:51:31.393Z",
+      "type": "cardio",
+      "durationMinutes": 40,
+      "note": null
+    },
+    {
+      "id": 31,
+      "recordedAt": "2026-08-23T09:02:54.784Z",
+      "type": "strength",
+      "durationMinutes": 40,
+      "note": null
+    },
+    {
+      "id": 32,
+      "recordedAt": "2026-08-23T09:21:57.150Z",
+      "type": "cardio",
+      "durationMinutes": 40,
+      "note": null
+    },
+    {
+      "id": 33,
+      "recordedAt": "2026-08-25T10:22:32.711Z",
+      "type": "strength",
+      "durationMinutes": 15,
+      "note": null
+    },
+    {
+      "id": 34,
+      "recordedAt": "2026-08-25T10:40:00.810Z",
+      "type": "cardio",
+      "durationMinutes": 35,
+      "note": null
+    },
+    {
+      "id": 35,
+      "recordedAt": "2026-08-26T10:12:56.080Z",
+      "type": "strength",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 36,
+      "recordedAt": "2026-08-26T10:13:07.175Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 37,
+      "recordedAt": "2026-08-27T10:07:59.180Z",
+      "type": "strength",
+      "durationMinutes": 15,
+      "note": null
+    },
+    {
+      "id": 38,
+      "recordedAt": "2026-08-27T10:36:15.548Z",
+      "type": "cardio",
+      "durationMinutes": 35,
+      "note": null
+    },
+    {
+      "id": 39,
+      "recordedAt": "2026-08-28T10:29:36.177Z",
+      "type": "strength",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 40,
+      "recordedAt": "2026-08-28T10:29:42.374Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 41,
+      "recordedAt": "2026-08-29T10:46:37.949Z",
+      "type": "strength",
+      "durationMinutes": 45,
+      "note": null
+    },
+    {
+      "id": 42,
+      "recordedAt": "2026-08-29T10:46:46.124Z",
+      "type": "cardio",
+      "durationMinutes": 40,
+      "note": null
+    },
+    {
+      "id": 43,
+      "recordedAt": "2026-08-30T10:13:43.653Z",
+      "type": "strength",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 44,
+      "recordedAt": "2026-08-30T10:13:51.084Z",
+      "type": "cardio",
+      "durationMinutes": 40,
+      "note": null
+    },
+    {
+      "id": 45,
+      "recordedAt": "2026-08-31T10:41:39.926Z",
+      "type": "strength",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 46,
+      "recordedAt": "2026-08-31T10:41:57.443Z",
+      "type": "cardio",
+      "durationMinutes": 35,
+      "note": null
+    },
+    {
+      "id": 47,
+      "recordedAt": "2026-09-01T10:17:54.520Z",
+      "type": "strength",
+      "durationMinutes": 15,
+      "note": null
+    },
+    {
+      "id": 48,
+      "recordedAt": "2026-09-01T10:44:41.881Z",
+      "type": "cardio",
+      "durationMinutes": 35,
+      "note": null
+    },
+    {
+      "id": 49,
+      "recordedAt": "2026-09-03T10:43:42.232Z",
+      "type": "strength",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 50,
+      "recordedAt": "2026-09-03T10:43:49.883Z",
+      "type": "cardio",
+      "durationMinutes": 35,
+      "note": null
+    },
+    {
+      "id": 51,
+      "recordedAt": "2026-09-04T11:00:11.297Z",
+      "type": "strength",
+      "durationMinutes": 25,
+      "note": null
+    },
+    {
+      "id": 52,
+      "recordedAt": "2026-09-04T11:00:17.758Z",
+      "type": "cardio",
+      "durationMinutes": 35,
+      "note": null
+    },
+    {
+      "id": 53,
+      "recordedAt": "2026-09-05T12:05:55.979Z",
+      "type": "cardio",
+      "durationMinutes": 40,
+      "note": null
+    },
+    {
+      "id": 54,
+      "recordedAt": "2026-09-06T08:37:51.103Z",
+      "type": "strength",
+      "durationMinutes": 50,
+      "note": null
+    },
+    {
+      "id": 55,
+      "recordedAt": "2026-09-06T09:22:07.101Z",
+      "type": "cardio",
+      "durationMinutes": 40,
+      "note": null
+    },
+    {
+      "id": 56,
+      "recordedAt": "2026-09-07T08:27:17.021Z",
+      "type": "strength",
+      "durationMinutes": 25,
+      "note": null
+    },
+    {
+      "id": 57,
+      "recordedAt": "2026-09-07T09:05:34.581Z",
+      "type": "cardio",
+      "durationMinutes": 45,
+      "note": null
+    },
+    {
+      "id": 58,
+      "recordedAt": "2026-09-08T10:10:35.908Z",
+      "type": "strength",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 59,
+      "recordedAt": "2026-09-09T10:32:38.661Z",
+      "type": "strength",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 60,
+      "recordedAt": "2026-09-09T10:32:44.850Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 61,
+      "recordedAt": "2026-09-10T10:16:21.083Z",
+      "type": "strength",
+      "durationMinutes": 25,
+      "note": null
+    },
+    {
+      "id": 62,
+      "recordedAt": "2026-09-10T10:43:37.085Z",
+      "type": "cardio",
+      "durationMinutes": 40,
+      "note": null
+    },
+    {
+      "id": 63,
+      "recordedAt": "2026-09-11T10:09:42.872Z",
+      "type": "strength",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 64,
+      "recordedAt": "2026-09-11T10:36:06.519Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 65,
+      "recordedAt": "2026-09-12T07:49:19.180Z",
+      "type": "strength",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 66,
+      "recordedAt": "2026-09-12T08:14:53.994Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 67,
+      "recordedAt": "2026-09-14T10:47:23.723Z",
+      "type": "strength",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 68,
+      "recordedAt": "2026-09-14T10:51:51.708Z",
+      "type": "cardio",
+      "durationMinutes": 35,
+      "note": null
+    },
+    {
+      "id": 69,
+      "recordedAt": "2026-09-15T10:40:16.332Z",
+      "type": "cardio",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 70,
+      "recordedAt": "2026-09-15T10:53:43.824Z",
+      "type": "cardio",
+      "durationMinutes": 35,
+      "note": null
+    },
+    {
+      "id": 71,
+      "recordedAt": "2026-09-16T10:05:50.180Z",
+      "type": "strength",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 72,
+      "recordedAt": "2026-09-16T10:41:10.276Z",
+      "type": "cardio",
+      "durationMinutes": 40,
+      "note": null
+    },
+    {
+      "id": 73,
+      "recordedAt": "2026-09-17T10:12:40.999Z",
+      "type": "strength",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 74,
+      "recordedAt": "2026-09-17T10:47:54.950Z",
+      "type": "cardio",
+      "durationMinutes": 35,
+      "note": null
+    },
+    {
+      "id": 75,
+      "recordedAt": "2026-09-20T10:16:40.574Z",
+      "type": "strength",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 76,
+      "recordedAt": "2026-09-20T10:39:23.434Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 77,
+      "recordedAt": "2026-09-21T10:05:45.166Z",
+      "type": "strength",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 78,
+      "recordedAt": "2026-09-21T10:31:37.670Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 79,
+      "recordedAt": "2026-09-22T10:12:06.961Z",
+      "type": "strength",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 80,
+      "recordedAt": "2026-09-23T10:08:47.618Z",
+      "type": "strength",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 81,
+      "recordedAt": "2026-09-23T10:47:07.702Z",
+      "type": "cardio",
+      "durationMinutes": 40,
+      "note": null
+    },
+    {
+      "id": 82,
+      "recordedAt": "2026-09-24T10:45:56.533Z",
+      "type": "strength",
+      "durationMinutes": 25,
+      "note": null
+    },
+    {
+      "id": 83,
+      "recordedAt": "2026-09-24T10:46:00.840Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 84,
+      "recordedAt": "2026-09-26T09:02:56.464Z",
+      "type": "strength",
+      "durationMinutes": 40,
+      "note": null
+    },
+    {
+      "id": 85,
+      "recordedAt": "2026-09-28T10:16:49.133Z",
+      "type": "strength",
+      "durationMinutes": 25,
+      "note": null
+    },
+    {
+      "id": 86,
+      "recordedAt": "2026-09-28T10:42:40.233Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 87,
+      "recordedAt": "2026-09-29T08:37:33.733Z",
+      "type": "strength",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 88,
+      "recordedAt": "2026-09-29T08:37:39.407Z",
+      "type": "cardio",
+      "durationMinutes": 35,
+      "note": null
+    },
+    {
+      "id": 89,
+      "recordedAt": "2026-09-30T10:23:22.570Z",
+      "type": "strength",
+      "durationMinutes": 45,
+      "note": null
+    },
+    {
+      "id": 90,
+      "recordedAt": "2026-09-30T10:28:33.920Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 91,
+      "recordedAt": "2026-10-01T08:44:02.434Z",
+      "type": "strength",
+      "durationMinutes": 40,
+      "note": null
+    },
+    {
+      "id": 92,
+      "recordedAt": "2026-10-01T09:10:32.685Z",
+      "type": "cardio",
+      "durationMinutes": 40,
+      "note": null
+    },
+    {
+      "id": 93,
+      "recordedAt": "2026-10-06T08:18:55.172Z",
+      "type": "strength",
+      "durationMinutes": 40,
+      "note": null
+    },
+    {
+      "id": 94,
+      "recordedAt": "2026-10-06T08:27:17.566Z",
+      "type": "cardio",
+      "durationMinutes": 40,
+      "note": null
+    },
+    {
+      "id": 95,
+      "recordedAt": "2026-10-07T09:49:21.338Z",
+      "type": "strength",
+      "durationMinutes": 35,
+      "note": null
+    },
+    {
+      "id": 96,
+      "recordedAt": "2026-10-07T11:50:07.327Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 97,
+      "recordedAt": "2026-10-08T10:08:04.764Z",
+      "type": "strength",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 98,
+      "recordedAt": "2026-10-08T10:30:41.915Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 99,
+      "recordedAt": "2026-10-09T10:29:44.711Z",
+      "type": "strength",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 100,
+      "recordedAt": "2026-10-09T10:52:08.167Z",
+      "type": "cardio",
+      "durationMinutes": 40,
+      "note": null
+    },
+    {
+      "id": 101,
+      "recordedAt": "2026-10-10T10:20:05.895Z",
+      "type": "strength",
+      "durationMinutes": 35,
+      "note": null
+    },
+    {
+      "id": 102,
+      "recordedAt": "2026-10-10T10:53:36.129Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 103,
+      "recordedAt": "2026-10-11T08:43:42.558Z",
+      "type": "strength",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 104,
+      "recordedAt": "2026-10-11T08:43:46.860Z",
+      "type": "cardio",
+      "durationMinutes": 40,
+      "note": null
+    },
+    {
+      "id": 105,
+      "recordedAt": "2026-10-12T10:15:21.605Z",
+      "type": "cardio",
+      "durationMinutes": 35,
+      "note": null
+    },
+    {
+      "id": 106,
+      "recordedAt": "2026-10-13T10:31:40.024Z",
+      "type": "strength",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 107,
+      "recordedAt": "2026-10-13T10:39:17.122Z",
+      "type": "cardio",
+      "durationMinutes": 35,
+      "note": null
+    },
+    {
+      "id": 108,
+      "recordedAt": "2026-10-14T10:27:38.181Z",
+      "type": "strength",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 109,
+      "recordedAt": "2026-10-14T10:43:44.832Z",
+      "type": "cardio",
+      "durationMinutes": 35,
+      "note": null
+    },
+    {
+      "id": 110,
+      "recordedAt": "2026-10-15T10:58:19.060Z",
+      "type": "strength",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 111,
+      "recordedAt": "2026-10-15T10:58:23.571Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 112,
+      "recordedAt": "2026-10-15T10:58:32.400Z",
+      "type": "cardio",
+      "durationMinutes": 5,
+      "note": null
+    },
+    {
+      "id": 113,
+      "recordedAt": "2026-10-16T11:05:12.463Z",
+      "type": "strength",
+      "durationMinutes": 40,
+      "note": null
+    },
+    {
+      "id": 114,
+      "recordedAt": "2026-10-17T08:51:15.554Z",
+      "type": "strength",
+      "durationMinutes": 40,
+      "note": null
+    },
+    {
+      "id": 115,
+      "recordedAt": "2026-10-17T09:12:13.121Z",
+      "type": "cardio",
+      "durationMinutes": 35,
+      "note": null
+    },
+    {
+      "id": 116,
+      "recordedAt": "2026-10-19T10:13:14.143Z",
+      "type": "strength",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 117,
+      "recordedAt": "2026-10-20T10:24:02.153Z",
+      "type": "strength",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 118,
+      "recordedAt": "2026-10-20T10:40:52.518Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 119,
+      "recordedAt": "2026-10-22T10:50:41.733Z",
+      "type": "strength",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 120,
+      "recordedAt": "2026-10-22T10:50:47.654Z",
+      "type": "cardio",
+      "durationMinutes": 40,
+      "note": null
+    },
+    {
+      "id": 121,
+      "recordedAt": "2026-10-23T10:29:02.893Z",
+      "type": "strength",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 122,
+      "recordedAt": "2026-10-23T10:29:07.769Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 123,
+      "recordedAt": "2026-10-25T09:14:18.017Z",
+      "type": "strength",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 124,
+      "recordedAt": "2026-10-25T09:14:23.035Z",
+      "type": "cardio",
+      "durationMinutes": 40,
+      "note": null
+    },
+    {
+      "id": 125,
+      "recordedAt": "2026-10-26T10:31:29.226Z",
+      "type": "strength",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 126,
+      "recordedAt": "2026-10-26T10:31:32.893Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 127,
+      "recordedAt": "2026-10-27T10:19:32.238Z",
+      "type": "strength",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 128,
+      "recordedAt": "2026-10-27T10:19:40.380Z",
+      "type": "cardio",
+      "durationMinutes": 40,
+      "note": null
+    },
+    {
+      "id": 129,
+      "recordedAt": "2026-10-28T10:13:55.612Z",
+      "type": "strength",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 130,
+      "recordedAt": "2026-10-28T10:46:01.155Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 131,
+      "recordedAt": "2026-10-29T10:27:23.663Z",
+      "type": "strength",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 132,
+      "recordedAt": "2026-10-29T10:27:34.670Z",
+      "type": "cardio",
+      "durationMinutes": 10,
+      "note": null
+    },
+    {
+      "id": 133,
+      "recordedAt": "2026-10-30T10:27:38.954Z",
+      "type": "strength",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 134,
+      "recordedAt": "2026-10-30T10:27:44.396Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 135,
+      "recordedAt": "2026-11-01T09:14:13.192Z",
+      "type": "strength",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 136,
+      "recordedAt": "2026-11-01T09:14:18.151Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 137,
+      "recordedAt": "2026-11-02T10:31:08.128Z",
+      "type": "strength",
+      "durationMinutes": 15,
+      "note": null
+    },
+    {
+      "id": 138,
+      "recordedAt": "2026-11-02T10:31:14.889Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 139,
+      "recordedAt": "2026-11-03T10:45:37.225Z",
+      "type": "strength",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 140,
+      "recordedAt": "2026-11-03T10:45:41.365Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 141,
+      "recordedAt": "2026-11-04T10:33:55.413Z",
+      "type": "strength",
+      "durationMinutes": 25,
+      "note": null
+    },
+    {
+      "id": 142,
+      "recordedAt": "2026-11-04T10:33:59.997Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 143,
+      "recordedAt": "2026-11-05T10:27:14.592Z",
+      "type": "strength",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 144,
+      "recordedAt": "2026-11-05T10:27:18.047Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 145,
+      "recordedAt": "2026-11-07T09:19:18.256Z",
+      "type": "strength",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 146,
+      "recordedAt": "2026-11-07T09:50:12.276Z",
+      "type": "cardio",
+      "durationMinutes": 40,
+      "note": null
+    },
+    {
+      "id": 147,
+      "recordedAt": "2026-11-08T09:47:31.662Z",
+      "type": "strength",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 148,
+      "recordedAt": "2026-11-08T09:47:35.713Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    },
+    {
+      "id": 149,
+      "recordedAt": "2026-11-09T10:42:49.453Z",
+      "type": "strength",
+      "durationMinutes": 20,
+      "note": null
+    },
+    {
+      "id": 150,
+      "recordedAt": "2026-11-09T10:42:53.553Z",
+      "type": "cardio",
+      "durationMinutes": 30,
+      "note": null
+    }
+  ],
+  "sleepRecords": [
+    {
+      "id": 2,
+      "fellAsleepAt": "2026-08-03T17:01:00.000Z",
+      "wokeUpAt": "2026-08-03T23:07:00.000Z",
+      "quality": 79,
+      "note": null
+    },
+    {
+      "id": 3,
+      "fellAsleepAt": "2026-08-04T16:58:00.000Z",
+      "wokeUpAt": "2026-08-04T23:28:00.000Z",
+      "quality": 86,
+      "note": null
+    },
+    {
+      "id": 4,
+      "fellAsleepAt": "2026-08-05T17:43:00.000Z",
+      "wokeUpAt": "2026-08-05T22:10:00.000Z",
+      "quality": 61,
+      "note": null
+    },
+    {
+      "id": 5,
+      "fellAsleepAt": "2026-08-06T17:31:00.000Z",
+      "wokeUpAt": "2026-08-06T22:01:00.000Z",
+      "quality": 71,
+      "note": null
+    },
+    {
+      "id": 6,
+      "fellAsleepAt": "2026-08-06T17:59:00.000Z",
+      "wokeUpAt": "2026-08-06T23:29:00.000Z",
+      "quality": 69,
+      "note": null
+    },
+    {
+      "id": 7,
+      "fellAsleepAt": "2026-08-08T18:21:00.000Z",
+      "wokeUpAt": "2026-08-08T22:21:00.000Z",
+      "quality": 55,
+      "note": null
+    },
+    {
+      "id": 8,
+      "fellAsleepAt": "2026-08-08T17:22:00.000Z",
+      "wokeUpAt": "2026-08-08T23:04:00.000Z",
+      "quality": 82,
+      "note": null
+    },
+    {
+      "id": 9,
+      "fellAsleepAt": "2026-08-10T19:04:00.000Z",
+      "wokeUpAt": "2026-08-10T23:22:00.000Z",
+      "quality": 56,
+      "note": null
+    },
+    {
+      "id": 10,
+      "fellAsleepAt": "2026-08-11T16:32:00.000Z",
+      "wokeUpAt": "2026-08-11T23:44:00.000Z",
+      "quality": 94,
+      "note": null
+    },
+    {
+      "id": 11,
+      "fellAsleepAt": "2026-08-11T18:12:00.000Z",
+      "wokeUpAt": "2026-08-11T22:57:00.000Z",
+      "quality": 67,
+      "note": null
+    },
+    {
+      "id": 12,
+      "fellAsleepAt": "2026-08-12T18:12:00.000Z",
+      "wokeUpAt": "2026-08-12T22:57:00.000Z",
+      "quality": 67,
+      "note": null
+    },
+    {
+      "id": 13,
+      "fellAsleepAt": "2026-08-12T17:48:00.000Z",
+      "wokeUpAt": "2026-08-12T22:06:00.000Z",
+      "quality": 73,
+      "note": null
+    },
+    {
+      "id": 14,
+      "fellAsleepAt": "2026-08-13T17:48:00.000Z",
+      "wokeUpAt": "2026-08-14T01:12:00.000Z",
+      "quality": 81,
+      "note": null
+    },
+    {
+      "id": 15,
+      "fellAsleepAt": "2026-08-16T17:16:00.000Z",
+      "wokeUpAt": "2026-08-16T22:16:00.000Z",
+      "quality": 77,
+      "note": null
+    },
+    {
+      "id": 16,
+      "fellAsleepAt": "2026-08-19T19:11:00.000Z",
+      "wokeUpAt": "2026-08-19T23:29:00.000Z",
+      "quality": 60,
+      "note": null
+    },
+    {
+      "id": 17,
+      "fellAsleepAt": "2026-08-20T15:59:00.000Z",
+      "wokeUpAt": "2026-08-20T23:05:00.000Z",
+      "quality": 86,
+      "note": null
+    },
+    {
+      "id": 18,
+      "fellAsleepAt": "2026-08-20T18:03:00.000Z",
+      "wokeUpAt": "2026-08-20T23:03:00.000Z",
+      "quality": 86,
+      "note": null
+    },
+    {
+      "id": 19,
+      "fellAsleepAt": "2026-08-21T18:28:00.000Z",
+      "wokeUpAt": "2026-08-22T01:58:00.000Z",
+      "quality": 88,
+      "note": null
+    },
+    {
+      "id": 20,
+      "fellAsleepAt": "2026-08-23T17:50:00.000Z",
+      "wokeUpAt": "2026-08-23T23:08:00.000Z",
+      "quality": 75,
+      "note": null
+    },
+    {
+      "id": 21,
+      "fellAsleepAt": "2026-08-24T17:50:00.000Z",
+      "wokeUpAt": "2026-08-24T23:41:00.000Z",
+      "quality": 75,
+      "note": null
+    },
+    {
+      "id": 22,
+      "fellAsleepAt": "2026-08-25T17:27:00.000Z",
+      "wokeUpAt": "2026-08-25T23:27:00.000Z",
+      "quality": 76,
+      "note": null
+    },
+    {
+      "id": 23,
+      "fellAsleepAt": "2026-08-27T17:27:00.000Z",
+      "wokeUpAt": "2026-08-27T22:57:00.000Z",
+      "quality": 75,
+      "note": null
+    },
+    {
+      "id": 24,
+      "fellAsleepAt": "2026-08-27T17:44:00.000Z",
+      "wokeUpAt": "2026-08-27T22:29:00.000Z",
+      "quality": 58,
+      "note": null
+    },
+    {
+      "id": 25,
+      "fellAsleepAt": "2026-08-28T20:53:00.000Z",
+      "wokeUpAt": "2026-08-29T01:29:00.000Z",
+      "quality": 43,
+      "note": null
+    },
+    {
+      "id": 26,
+      "fellAsleepAt": "2026-08-29T18:36:00.000Z",
+      "wokeUpAt": "2026-08-29T23:06:00.000Z",
+      "quality": 67,
+      "note": null
+    },
+    {
+      "id": 27,
+      "fellAsleepAt": "2026-08-30T17:33:00.000Z",
+      "wokeUpAt": "2026-08-30T23:09:00.000Z",
+      "quality": 81,
+      "note": null
+    },
+    {
+      "id": 28,
+      "fellAsleepAt": "2026-08-31T17:43:00.000Z",
+      "wokeUpAt": "2026-08-31T22:43:00.000Z",
+      "quality": 76,
+      "note": null
+    },
+    {
+      "id": 29,
+      "fellAsleepAt": "2026-09-01T18:49:00.000Z",
+      "wokeUpAt": "2026-09-01T23:04:00.000Z",
+      "quality": 66,
+      "note": null
+    },
+    {
+      "id": 30,
+      "fellAsleepAt": "2026-09-04T20:02:00.000Z",
+      "wokeUpAt": "2026-09-05T02:38:00.000Z",
+      "quality": 65,
+      "note": null
+    },
+    {
+      "id": 31,
+      "fellAsleepAt": "2026-09-05T18:02:00.000Z",
+      "wokeUpAt": "2026-09-05T23:32:00.000Z",
+      "quality": 81,
+      "note": null
+    },
+    {
+      "id": 32,
+      "fellAsleepAt": "2026-09-07T17:21:00.000Z",
+      "wokeUpAt": "2026-09-07T23:27:00.000Z",
+      "quality": 83,
+      "note": null
+    },
+    {
+      "id": 33,
+      "fellAsleepAt": "2026-09-08T16:30:00.000Z",
+      "wokeUpAt": "2026-09-09T00:24:00.000Z",
+      "quality": 86,
+      "note": null
+    },
+    {
+      "id": 34,
+      "fellAsleepAt": "2026-09-09T16:30:00.000Z",
+      "wokeUpAt": "2026-09-09T23:30:00.000Z",
+      "quality": 86,
+      "note": null
+    },
+    {
+      "id": 35,
+      "fellAsleepAt": "2026-09-10T16:30:00.000Z",
+      "wokeUpAt": "2026-09-10T23:30:00.000Z",
+      "quality": 86,
+      "note": null
+    },
+    {
+      "id": 36,
+      "fellAsleepAt": "2026-09-11T16:35:00.000Z",
+      "wokeUpAt": "2026-09-11T22:35:00.000Z",
+      "quality": 74,
+      "note": null
+    },
+    {
+      "id": 37,
+      "fellAsleepAt": "2026-09-12T16:09:00.000Z",
+      "wokeUpAt": "2026-09-12T23:09:00.000Z",
+      "quality": 86,
+      "note": null
+    },
+    {
+      "id": 38,
+      "fellAsleepAt": "2026-09-13T16:08:00.000Z",
+      "wokeUpAt": "2026-09-13T23:08:00.000Z",
+      "quality": 86,
+      "note": null
+    },
+    {
+      "id": 39,
+      "fellAsleepAt": "2026-09-14T16:40:00.000Z",
+      "wokeUpAt": "2026-09-14T23:04:00.000Z",
+      "quality": 89,
+      "note": null
+    },
+    {
+      "id": 40,
+      "fellAsleepAt": "2026-09-15T17:41:00.000Z",
+      "wokeUpAt": "2026-09-15T22:41:00.000Z",
+      "quality": 71,
+      "note": null
+    },
+    {
+      "id": 41,
+      "fellAsleepAt": "2026-09-18T18:14:00.000Z",
+      "wokeUpAt": "2026-09-18T23:56:00.000Z",
+      "quality": 70,
+      "note": null
+    },
+    {
+      "id": 42,
+      "fellAsleepAt": "2026-09-19T17:16:00.000Z",
+      "wokeUpAt": "2026-09-19T23:16:00.000Z",
+      "quality": 81,
+      "note": null
+    },
+    {
+      "id": 43,
+      "fellAsleepAt": "2026-09-22T16:45:00.000Z",
+      "wokeUpAt": "2026-09-22T22:15:00.000Z",
+      "quality": 72,
+      "note": null
+    },
+    {
+      "id": 44,
+      "fellAsleepAt": "2026-09-23T16:55:00.000Z",
+      "wokeUpAt": "2026-09-23T23:19:00.000Z",
+      "quality": 87,
+      "note": null
+    },
+    {
+      "id": 45,
+      "fellAsleepAt": "2026-09-25T20:00:00.000Z",
+      "wokeUpAt": "2026-09-26T00:30:00.000Z",
+      "quality": 39,
+      "note": null
+    },
+    {
+      "id": 46,
+      "fellAsleepAt": "2026-09-27T19:52:00.000Z",
+      "wokeUpAt": "2026-09-27T23:11:00.000Z",
+      "quality": 40,
+      "note": null
+    },
+    {
+      "id": 47,
+      "fellAsleepAt": "2026-09-28T17:17:00.000Z",
+      "wokeUpAt": "2026-09-28T23:37:00.000Z",
+      "quality": 88,
+      "note": null
+    },
+    {
+      "id": 48,
+      "fellAsleepAt": "2026-09-29T17:56:00.000Z",
+      "wokeUpAt": "2026-09-29T23:28:00.000Z",
+      "quality": 81,
+      "note": null
+    },
+    {
+      "id": 49,
+      "fellAsleepAt": "2026-09-30T17:33:00.000Z",
+      "wokeUpAt": "2026-09-30T23:10:00.000Z",
+      "quality": 81,
+      "note": null
+    },
+    {
+      "id": 50,
+      "fellAsleepAt": "2026-10-01T19:04:00.000Z",
+      "wokeUpAt": "2026-10-02T02:00:00.000Z",
+      "quality": 81,
+      "note": null
+    },
+    {
+      "id": 51,
+      "fellAsleepAt": "2026-10-06T18:48:00.000Z",
+      "wokeUpAt": "2026-10-07T02:52:00.000Z",
+      "quality": 90,
+      "note": null
+    },
+    {
+      "id": 52,
+      "fellAsleepAt": "2026-10-07T17:42:00.000Z",
+      "wokeUpAt": "2026-10-08T00:06:00.000Z",
+      "quality": 89,
+      "note": null
+    },
+    {
+      "id": 53,
+      "fellAsleepAt": "2026-10-08T18:29:00.000Z",
+      "wokeUpAt": "2026-10-08T23:17:00.000Z",
+      "quality": 72,
+      "note": null
+    },
+    {
+      "id": 54,
+      "fellAsleepAt": "2026-10-10T20:28:00.000Z",
+      "wokeUpAt": "2026-10-11T01:24:00.000Z",
+      "quality": 47,
+      "note": null
+    },
+    {
+      "id": 55,
+      "fellAsleepAt": "2026-10-11T15:57:00.000Z",
+      "wokeUpAt": "2026-10-11T22:03:00.000Z",
+      "quality": 61,
+      "note": null
+    },
+    {
+      "id": 56,
+      "fellAsleepAt": "2026-10-12T18:02:00.000Z",
+      "wokeUpAt": "2026-10-12T23:13:00.000Z",
+      "quality": 75,
+      "note": null
+    },
+    {
+      "id": 57,
+      "fellAsleepAt": "2026-10-13T15:40:00.000Z",
+      "wokeUpAt": "2026-10-13T23:09:00.000Z",
+      "quality": 87,
+      "note": null
+    },
+    {
+      "id": 58,
+      "fellAsleepAt": "2026-10-15T18:22:00.000Z",
+      "wokeUpAt": "2026-10-15T22:42:00.000Z",
+      "quality": 63,
+      "note": null
+    },
+    {
+      "id": 59,
+      "fellAsleepAt": "2026-10-16T17:50:00.000Z",
+      "wokeUpAt": "2026-10-17T02:38:00.000Z",
+      "quality": 99,
+      "note": null
+    },
+    {
+      "id": 60,
+      "fellAsleepAt": "2026-10-18T18:28:00.000Z",
+      "wokeUpAt": "2026-10-18T23:11:00.000Z",
+      "quality": 66,
+      "note": null
+    },
+    {
+      "id": 61,
+      "fellAsleepAt": "2026-10-20T18:34:00.000Z",
+      "wokeUpAt": "2026-10-20T23:28:00.000Z",
+      "quality": 64,
+      "note": null
+    },
+    {
+      "id": 62,
+      "fellAsleepAt": "2026-10-21T18:50:00.000Z",
+      "wokeUpAt": "2026-10-21T23:21:00.000Z",
+      "quality": 57,
+      "note": null
+    },
+    {
+      "id": 63,
+      "fellAsleepAt": "2026-10-23T19:15:00.000Z",
+      "wokeUpAt": "2026-10-24T02:58:00.000Z",
+      "quality": 85,
+      "note": null
+    },
+    {
+      "id": 64,
+      "fellAsleepAt": "2026-10-26T18:24:00.000Z",
+      "wokeUpAt": "2026-10-27T00:14:00.000Z",
+      "quality": 79,
+      "note": null
+    },
+    {
+      "id": 65,
+      "fellAsleepAt": "2026-10-27T19:25:00.000Z",
+      "wokeUpAt": "2026-10-27T23:37:00.000Z",
+      "quality": 49,
+      "note": null
+    },
+    {
+      "id": 66,
+      "fellAsleepAt": "2026-10-28T16:48:00.000Z",
+      "wokeUpAt": "2026-10-28T23:21:00.000Z",
+      "quality": 77,
+      "note": null
+    },
+    {
+      "id": 67,
+      "fellAsleepAt": "2026-10-29T16:38:00.000Z",
+      "wokeUpAt": "2026-10-29T23:21:00.000Z",
+      "quality": 88,
+      "note": null
+    },
+    {
+      "id": 68,
+      "fellAsleepAt": "2026-10-31T19:25:00.000Z",
+      "wokeUpAt": "2026-11-01T00:14:00.000Z",
+      "quality": 55,
+      "note": null
+    },
+    {
+      "id": 69,
+      "fellAsleepAt": "2026-11-01T18:12:00.000Z",
+      "wokeUpAt": "2026-11-01T23:35:00.000Z",
+      "quality": 73,
+      "note": null
+    },
+    {
+      "id": 70,
+      "fellAsleepAt": "2026-11-02T16:16:00.000Z",
+      "wokeUpAt": "2026-11-02T22:52:00.000Z",
+      "quality": 83,
+      "note": null
+    },
+    {
+      "id": 71,
+      "fellAsleepAt": "2026-11-03T18:04:00.000Z",
+      "wokeUpAt": "2026-11-03T23:17:00.000Z",
+      "quality": 70,
+      "note": null
+    },
+    {
+      "id": 72,
+      "fellAsleepAt": "2026-11-04T17:14:00.000Z",
+      "wokeUpAt": "2026-11-04T23:58:00.000Z",
+      "quality": 92,
+      "note": null
+    },
+    {
+      "id": 73,
+      "fellAsleepAt": "2026-11-06T19:04:00.000Z",
+      "wokeUpAt": "2026-11-07T00:13:00.000Z",
+      "quality": 58,
+      "note": null
+    },
+    {
+      "id": 74,
+      "fellAsleepAt": "2026-11-07T16:04:00.000Z",
+      "wokeUpAt": "2026-11-07T23:41:00.000Z",
+      "quality": 92,
+      "note": null
+    },
+    {
+      "id": 75,
+      "fellAsleepAt": "2026-11-08T16:26:00.000Z",
+      "wokeUpAt": "2026-11-08T22:55:00.000Z",
+      "quality": 73,
+      "note": null
+    },
+    {
+      "id": 76,
+      "fellAsleepAt": "2026-11-09T17:33:00.000Z",
+      "wokeUpAt": "2026-11-10T00:08:00.000Z",
+      "quality": 90,
+      "note": null
+    }
+  ]
+}
