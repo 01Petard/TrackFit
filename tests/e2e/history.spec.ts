@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
 import { expect, test } from '@playwright/test'
 
 let originalData: unknown
@@ -147,6 +147,17 @@ test('旧入口跳转且访客只能查看日期详情', async ({ page }) => {
   await expect(page.getByRole('dialog').getByRole('button', { name: '补记', exact: true })).toHaveCount(0)
 })
 
+async function pickWheelTime(page: Page, trigger: Locator, hour: number, minute: number): Promise<void> {
+  await trigger.click()
+  const hours = page.getByRole('spinbutton', { name: '小时', exact: true })
+  const minutes = page.getByRole('spinbutton', { name: '分钟', exact: true })
+  await hours.press('Home')
+  for (let step = 0; step < hour; step++) await hours.press('ArrowUp')
+  await minutes.press('Home')
+  for (let step = 0; step < minute; step++) await minutes.press('ArrowUp')
+  await page.getByRole('button', { name: '确定', exact: true }).click()
+}
+
 test('过去的空日期卡片可补记三类记录，时间默认归属所选日期', async ({ page }) => {
   await seedHistory(page)
   const initial = await page.request.get('/api/data')
@@ -166,11 +177,12 @@ test('过去的空日期卡片可补记三类记录，时间默认归属所选�
   const dialog = page.getByRole('dialog', { name: `补记 · ${target.key}`, exact: true })
   await expect(dialog).toBeVisible()
   await expect(dialog.getByRole('checkbox', { name: '身体', exact: true })).toBeChecked()
-  await dialog.getByLabel('测量时间', { exact: true }).fill('09:15')
+  await pickWheelTime(page, dialog.getByRole('button', { name: /^测量时间：/ }), 9, 15)
   await dialog.getByLabel('体重', { exact: true }).fill('70.25')
   for (const kind of ['睡眠', '健身']) await dialog.locator('label').filter({ has: page.getByRole('checkbox', { name: kind, exact: true }) }).click()
-  await expect(dialog.getByLabel('训练时间', { exact: true })).toHaveValue('18:00')
-  await dialog.getByLabel('训练时间', { exact: true }).fill('16:45')
+  const trainingTime = dialog.getByRole('button', { name: /^训练时间：/ })
+  await expect(trainingTime).toContainText('18:00')
+  await pickWheelTime(page, trainingTime, 16, 45)
   await dialog.getByLabel('时长（分钟）', { exact: true }).fill('45')
   await dialog.getByLabel('睡眠时长（小时）', { exact: true }).fill('7')
   await dialog.getByLabel('睡眠时长（分钟）', { exact: true }).fill('30')

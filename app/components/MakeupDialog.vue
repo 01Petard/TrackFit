@@ -129,8 +129,14 @@ async function save() {
           </fieldset>
           <section v-if="activeKinds.includes('body')" class="rounded-2xl border border-default p-4">
             <h3 class="mb-3 flex items-center gap-2 font-semibold"><AppIcon name="weight" class="size-5 text-primary" />{{ t('makeup.body') }}</h3>
-            <label v-if="!calendar && kind === 'weight'" class="mb-4 block text-sm">{{ t('makeup.measurementDate') }}<input v-model="measurementDate" type="date" required :max="latestSelectableDate" class="app-select mt-2 w-full border border-default text-sm"></label>
-            <label class="mb-4 block text-sm">{{ t('makeup.measurementTime') }}<input v-model="measurementTime" type="time" required class="app-select mt-2 w-full border border-default text-sm"></label>
+            <div v-if="!calendar && kind === 'weight'" class="mb-4">
+              <span class="mb-2 block text-sm">{{ t('makeup.measurementDate') }}</span>
+              <AppDateField v-model="measurementDate" :max="latestSelectableDate" />
+            </div>
+            <div class="mb-4">
+              <span class="mb-2 block text-sm">{{ t('makeup.measurementTime') }}</span>
+              <AppTimeField v-model="measurementTime" :title="t('makeup.measurementTime')" />
+            </div>
             <div class="grid gap-4 sm:grid-cols-2">
               <AppNumberField v-for="metric in enabledMetrics" :key="metric.id" v-model="values[metric.id]" :label="metricName(metric)" :unit="metric.unit" :min="metric.minimumValue ?? undefined" :max="metric.maximumValue ?? undefined" :step="metric.code === 'weight' ? 0.01 : 10 ** -metric.decimalPlaces" />
             </div>
@@ -140,7 +146,7 @@ async function save() {
           <section v-if="activeKinds.includes('sleep')" class="rounded-2xl border border-default p-4">
             <h3 class="mb-3 flex items-center gap-2 font-semibold"><AppIcon name="moon" class="size-5 text-primary" />{{ t('makeup.sleep') }}</h3>
             <p class="mb-2 text-sm">{{ t('behaviorDialog.bedtime') }}</p>
-            <AppBedtimeField v-model="bedtime" />
+            <AppDateTimeField v-model="bedtime" :title="t('behaviorDialog.bedtime')" prominent />
             <div class="mt-4 grid grid-cols-2 gap-3">
               <AppNumberField v-model.number="sleepHours" :label="t('behaviorDialog.durationHoursField')" unit="h" required :min="0" :max="24" />
               <AppNumberField v-model.number="sleepMinutes" :label="t('behaviorDialog.durationMinutesField')" unit="min" required :min="0" :max="sleepHours === 24 ? 0 : 59" :step="5" input-step="any" />
@@ -151,8 +157,14 @@ async function save() {
 
           <section v-if="activeKinds.includes('training')" class="rounded-2xl border border-default p-4">
             <h3 class="mb-3 flex items-center gap-2 font-semibold"><AppIcon name="dumbbell" class="size-5 text-primary" />{{ t('makeup.training') }}</h3>
-            <label v-if="!calendar && kind === 'training'" class="mb-4 block text-sm">{{ t('makeup.trainingDate') }}<input v-model="trainingDate" type="date" required :max="latestSelectableDate" class="app-select mt-2 w-full border border-default text-sm"></label>
-            <label class="mb-4 block text-sm">{{ t('makeup.trainingTime') }}<input v-model="trainingTime" type="time" required class="app-select mt-2 w-full border border-default text-sm"></label>
+            <div v-if="!calendar && kind === 'training'" class="mb-4">
+              <span class="mb-2 block text-sm">{{ t('makeup.trainingDate') }}</span>
+              <AppDateField v-model="trainingDate" :max="latestSelectableDate" />
+            </div>
+            <div class="mb-4">
+              <span class="mb-2 block text-sm">{{ t('makeup.trainingTime') }}</span>
+              <AppTimeField v-model="trainingTime" :title="t('makeup.trainingTime')" />
+            </div>
             <div class="mb-4 grid grid-cols-3 gap-2"><button v-for="item in trainingTypes" :key="item.value" type="button" :aria-pressed="trainingType === item.value" class="flex flex-col items-center gap-2 rounded-xl border px-2 py-3 text-xs font-semibold" :class="trainingType === item.value ? 'border-primary/50 bg-primary/5 text-primary' : 'border-default text-muted'" @click="trainingType = item.value"><AppIcon :name="item.icon" class="size-5" />{{ item.label }}</button></div>
             <AppNumberField v-model.number="trainingDuration" :label="t('behaviorDialog.durationMinutes')" unit="min" required :min="1" :max="1440" duration-unit="minutes" />
           </section>

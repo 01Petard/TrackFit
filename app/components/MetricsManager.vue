@@ -12,6 +12,7 @@ const savingMetricId = ref<number | null>(null)
 const editingId = ref<number | null>(null)
 const message = ref('')
 const form = reactive({ name: '', code: '', unit: '', decimalPlaces: 1, minimumValue: '', maximumValue: '' })
+const decimalItems = [0, 1, 2, 3].map(value => ({ label: String(value), value }))
 const drafts = reactive<Record<number, { name: string, unit: string }>>({})
 
 watch(metrics, (items) => {
@@ -95,7 +96,7 @@ const getMessage = formatError
         <label class="text-xs text-muted">{{ t('metricsManager.name') }}<input v-model="form.name" required maxlength="40" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted"></label>
         <label class="text-xs text-muted">{{ t('metricsManager.code') }}<input v-model="form.code" required pattern="[a-z][a-z0-9_]+" :placeholder="t('metricsManager.codeExample')" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted"></label>
         <label class="text-xs text-muted">{{ t('metricsManager.unit') }}<input v-model="form.unit" required maxlength="12" :placeholder="t('metricsManager.unitExample')" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted"></label>
-        <label class="text-xs text-muted">{{ t('metricsManager.decimals') }}<select v-model.number="form.decimalPlaces" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted"><option :value="0">0</option><option :value="1">1</option><option :value="2">2</option><option :value="3">3</option></select></label>
+        <AppSelect v-model="form.decimalPlaces" :label="t('metricsManager.decimals')" :items="decimalItems" />
         <AppNumberField v-model="form.minimumValue" :label="t('metricsManager.minimum')" step="any" />
         <AppNumberField v-model="form.maximumValue" :label="t('metricsManager.maximum')" step="any" />
       </div>

@@ -98,7 +98,7 @@ async function save() {
           <form class="space-y-5" @submit.prevent="save">
             <div class="block">
               <span class="mb-2 flex items-center justify-between text-sm font-medium"><span class="flex items-center gap-2"><AppIcon name="chart" class="size-4 text-primary" />{{ t('measurement.measuredAt') }}</span> <span class="text-xs font-normal text-muted">{{ t('measurement.measuredAtHint') }}</span></span>
-              <AppDateField v-model="measuredAt" mode="datetime" prominent :placeholder="t('measurement.selectMeasuredAt')" />
+              <AppDateTimeField v-model="measuredAt" :title="t('date.selectDateTime')" prominent />
             </div>
 
             <div v-if="weightMetric" class="rounded-2xl border border-primary/25 bg-primary/5 p-4">
@@ -127,8 +127,8 @@ async function save() {
                   :min="metric.minimumValue ?? undefined"
                   :max="metric.maximumValue ?? undefined"
                   :step="10 ** -metric.decimalPlaces"
-                  :recent="metricHistory.get(metric.id)?.[0]"
-                  :suggestions="(metricHistory.get(metric.id) ?? []).slice(1, 5)"
+                  :recent="metric.code === 'waist' ? undefined : metricHistory.get(metric.id)?.[0]"
+                  :suggestions="metric.code === 'waist' ? [] : (metricHistory.get(metric.id) ?? []).slice(1, 5)"
                 />
               </div>
             </section>

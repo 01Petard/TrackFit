@@ -10,6 +10,13 @@ const heightCm = ref<number | null>(store.settings.value.heightCm)
 const desiredWeightMinimum = ref<number | ''>(store.settings.value.desiredWeightMinimum ?? '')
 const desiredWeightMaximum = ref<number | ''>(store.settings.value.desiredWeightMaximum ?? '')
 const defaultDateRange = ref<AppSettingsDto['defaultDateRange']>(store.settings.value.defaultDateRange)
+const rangeItems = computed<Array<{ label: string, value: AppSettingsDto['defaultDateRange'] }>>(() => [
+  { label: t('range.24h'), value: '24h' },
+  { label: t('range.7d'), value: '7d' },
+  { label: t('range.30d'), value: '30d' },
+  { label: t('range.90d'), value: '90d' },
+  { label: t('range.all'), value: 'all' },
+])
 const sleepGoalMinutes = ref(Math.round(store.settings.value.sleepGoalHours * 60))
 const weeklyTrainingGoalMinutes = ref(store.settings.value.weeklyTrainingGoalMinutes)
 const weeklyTrainingGoalCount = ref(store.settings.value.weeklyTrainingGoalCount)
@@ -134,7 +141,7 @@ function updateSleepGoalMinutes(minutes: number) {
               <AppNumberField v-model.number="weeklyTrainingGoalCount" :label="t('settings.weeklyTrainingCount')" required :min="1" :step="1" :disabled="!store.canWrite.value" :suggestions="[3, 4, 5, 6, 7]" />
             </div>
           </fieldset>
-          <label class="block text-sm">{{ t('settings.defaultRange') }}<select v-model="defaultDateRange" :disabled="!store.canWrite.value" class="app-select mt-2 w-full border border-default text-sm disabled:opacity-60"><option value="24h">{{ t('range.24h') }}</option><option value="7d">{{ t('range.7d') }}</option><option value="30d">{{ t('range.30d') }}</option><option value="90d">{{ t('range.90d') }}</option><option value="all">{{ t('range.all') }}</option></select></label>
+          <AppSelect v-model="defaultDateRange" :label="t('settings.defaultRange')" :items="rangeItems" :disabled="!store.canWrite.value" label-class="mb-2 block text-sm" />
         </div>
         <button v-if="store.canWrite.value" :disabled="saving" class="app-btn app-btn--primary mt-6 w-full"><AppIcon name="shield" class="size-4" />{{ t(saving ? 'common.saving' : 'settings.save') }}</button>
       </form>

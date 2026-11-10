@@ -5,7 +5,8 @@ const page = ref(1)
 const pageSize = 20
 const start = ref('')
 const end = ref('')
-const metricId = ref<number | undefined>()
+// 0 表示不按指标过滤
+const metricFilter = ref(0)
 const dialogOpen = ref(false)
 const editing = ref<MeasurementDto | null>(null)
 const deletingId = ref<number | null>(null)
@@ -19,14 +20,18 @@ const query = computed(() => ({
   pageSize,
   start: start.value ? new Date(`${start.value}T00:00:00`).toISOString() : undefined,
   end: end.value ? new Date(`${end.value}T23:59:59`).toISOString() : undefined,
-  metricId: metricId.value,
+  metricId: metricFilter.value || undefined,
 }))
 const data = computed(() => store.listMeasurements(query.value))
 const metrics = store.metrics
+const metricItems = computed(() => [
+  { label: t('records.allMetrics'), value: 0 },
+  ...metrics.value.map(metric => ({ label: metricName(metric), value: metric.id })),
+])
 const status = store.status
 const totalPages = computed(() => Math.max(1, Math.ceil((data.value?.total ?? 0) / pageSize)))
 
-watch([start, end, metricId], () => {
+watch([start, end, metricFilter], () => {
   page.value = 1
 })
 
@@ -60,7 +65,7 @@ async function deleteRecord(id: number) {
     <section class="app-card mb-5 grid gap-3 rounded-2xl p-4 sm:grid-cols-3">
       <div class="text-xs text-muted"><span>{{ t('common.startDate') }}</span><div class="mt-1.5"><AppDateField v-model="start" clearable :placeholder="t('common.anyStartDate')" /></div></div>
       <div class="text-xs text-muted"><span>{{ t('common.endDate') }}</span><div class="mt-1.5"><AppDateField v-model="end" clearable :placeholder="t('common.anyEndDate')" /></div></div>
-      <label class="text-xs text-muted">{{ t('records.includesMetric') }}<select v-model="metricId" class="mt-1.5 w-full rounded-xl border border-default bg-default px-3 py-2.5 text-sm text-highlighted"><option :value="undefined">{{ t('records.allMetrics') }}</option><option v-for="metric in metrics" :key="metric.id" :value="metric.id">{{ metricName(metric) }}</option></select></label>
+      <AppSelect v-model="metricFilter" :label="t('records.includesMetric')" :items="metricItems" />
     </section>
 
     <section class="app-card overflow-hidden rounded-3xl">

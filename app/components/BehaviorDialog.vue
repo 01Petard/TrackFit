@@ -129,7 +129,7 @@ async function save() {
           <template v-else>
             <div>
               <p class="mb-2 flex items-center gap-2 text-sm font-medium"><AppIcon name="clock" class="size-4 text-primary" />{{ t('behaviorDialog.bedtime') }}</p>
-              <AppBedtimeField v-model="sleep.fellAsleepAt" />
+              <AppDateTimeField v-model="sleep.fellAsleepAt" :title="t('behaviorDialog.bedtime')" prominent />
             </div>
             <div class="space-y-3">
               <p class="flex items-center gap-2 text-sm font-medium"><AppIcon name="moon" class="size-4 text-primary" />{{ t('behaviorDialog.sleepHours') }}</p>
