@@ -146,10 +146,12 @@ test('补记支持体重和训练自选日期，体重默认使用最近记录',
   const original = await initial.json()
   const firstDay = dayjs().subtract(3, 'day').hour(8).minute(0).second(0)
   const customDay = dayjs().subtract(2, 'day').format('YYYY-MM-DD')
+  const waistMetric = original.metrics.find((metric: { code: string }) => metric.code === 'waist')
+  expect(waistMetric?.enabled).toBe(true)
   try {
     const seeded = await page.request.put('/api/data', {
       headers: { 'If-Match': initial.headers().etag! },
-      data: { ...original, settings: original.settings.map((item: object) => ({ ...item, desiredWeightMinimum: 70, desiredWeightMaximum: 75 })), bodyRecords: [{ id: 1, measuredAt: firstDay.subtract(1, 'day').toISOString(), note: null, values: [{ metricId: 1, value: 72.5 }] }, { id: 2, measuredAt: firstDay.toISOString(), note: null, values: [{ metricId: 1, value: 72.67 }] }], trainingRecords: [], sleepRecords: [] },
+      data: { ...original, settings: original.settings.map((item: object) => ({ ...item, desiredWeightMinimum: 70, desiredWeightMaximum: 75 })), bodyRecords: [{ id: 1, measuredAt: firstDay.subtract(1, 'day').toISOString(), note: null, values: [{ metricId: 1, value: 72.5 }, { metricId: waistMetric.id, value: 85 }] }, { id: 2, measuredAt: firstDay.toISOString(), note: null, values: [{ metricId: 1, value: 72.67 }] }], trainingRecords: [], sleepRecords: [] },
     })
     expect(seeded.ok()).toBe(true)
     await page.goto('/zh/')
@@ -165,6 +167,10 @@ test('补记支持体重和训练自选日期，体重默认使用最近记录',
     const currentWeight = measurementDialog.getByLabel('体重（kg）', { exact: true })
     await expect(currentWeight).toHaveValue('72.67')
     await expect(currentWeight).toHaveAttribute('step', '0.01')
+    const waist = measurementDialog.getByLabel('腰围', { exact: true })
+    await expect(waist).toHaveValue('')
+    await measurementDialog.getByRole('button', { name: '最近 85', exact: true }).click()
+    await expect(waist).toHaveValue('85')
     await measurementDialog.getByRole('button', { name: '×' }).click()
 
     await page.getByRole('button', { name: '补记' }).first().click()

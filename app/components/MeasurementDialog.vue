@@ -127,8 +127,7 @@ async function save() {
                   :min="metric.minimumValue ?? undefined"
                   :max="metric.maximumValue ?? undefined"
                   :step="10 ** -metric.decimalPlaces"
-                  :recent="metric.code === 'waist' ? undefined : metricHistory.get(metric.id)?.[0]"
-                  :suggestions="metric.code === 'waist' ? [] : (metricHistory.get(metric.id) ?? []).slice(1, 5)"
+                  :recent="metricHistory.get(metric.id)?.[0]"
                 />
               </div>
             </section>
